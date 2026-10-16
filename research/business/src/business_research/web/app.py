@@ -89,6 +89,8 @@ def create_app(port: int) -> Flask:
         response.headers["Content-Security-Policy"] = (
             DEMO_CSP if request.path in STATIC_DEMOS else live.CSP if request.path.startswith("/live") else CSP
         )
+        if response.mimetype == "application/pdf":  # the browser's PDF viewer, framed by /live
+            response.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cache-Control"] = "no-store"

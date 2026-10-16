@@ -24,7 +24,7 @@ STEPS = [
     ("email", "Email agent: Claude on Bedrock reads the mail"),
     ("web", "Web research agents"),
     ("kb", "Dossier stored in SurrealDB"),
-    ("browser", "Agentic browser (Anchor) fills the form"),
+    ("browser", "Agentic browser (Anchor) fills NY Form IT-636 (official PDF)"),
     ("forms", "Forms ready"),
 ]
 COLLECTORS = {
@@ -41,8 +41,8 @@ COLLECTORS = {
 FORM_DATA = [
     ("legal_name", "Legal name"), ("ein", "EIN"), ("hq_address", "Address"), ("entity_type", "Entity type"),
     ("naics", "NAICS"), ("employees", "Employees"), ("officer_name", "Officer"), ("officer_title", "Title"),
-    ("tax_year", "Tax year"), ("unclaimed_found_name", "Name on unclaimed funds record"),
-    ("unclaimed_holder", "Unclaimed funds held by"), ("unclaimed_amount", "Unclaimed amount"),
+    ("tax_year", "Tax year"), ("ny_beer_barrels", "Beer brewed in NY (barrels)"),
+    ("sla_license_number", "SLA license number"),
 ]
 FILL_HOLD_S = 20
 
@@ -58,7 +58,7 @@ def start(email: str) -> str:
     job = {
         "id": uuid.uuid4().hex[:12], "email": email, "started": time.time(), "done": False, "error": None,
         "steps": [{"id": k, "label": label, "state": "pending"} for k, label in STEPS],
-        "log": [], "live_view": None, "screenshot": None, "fill": None, "forms": None, "data": None,
+        "log": [], "pdf": None, "live_view": None, "screenshot": None, "fill": None, "forms": None, "data": None,
     }
     with _lock:
         _jobs[job["id"]] = job
@@ -173,7 +173,7 @@ def _web_research(job: dict, profile: dict) -> None:
 def _browser(job: dict, slug: str) -> None:
     _step(job, "browser", "running")
     cmd = ["uv", "run", "--project", str(REPO_DIR / "kb"), "--with", "playwright", "python",
-           str(REPO_DIR / "form-filling" / "fill.py"), "--slug", slug, "--hold", str(FILL_HOLD_S), "--watch-delay", "4"]
+           str(REPO_DIR / "form-filling" / "fill_pdf.py"), "--slug", slug, "--hold", str(FILL_HOLD_S), "--watch-delay", "4"]
     # fill.py also opens the live view in its own browser tab, in case the embedded frame doesn't render it
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}  # uv would warn about the app's venv
     proc = subprocess.Popen(cmd, cwd=REPO_DIR, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
@@ -193,6 +193,9 @@ def _browser(job: dict, slug: str) -> None:
         if m := re.search(r"screenshot (\S+\.png)", line):
             with _lock:
                 job["screenshot"] = str(REPO_DIR / m.group(1))
+        if m := re.search(r"filled pdf (\S+\.pdf)", line):
+            with _lock:
+                job["pdf"] = str(REPO_DIR / m.group(1))
         if m := re.search(r"receipt (\S+\.json)", line):
             receipt = REPO_DIR / m.group(1)
         _log(job, "browser", line)

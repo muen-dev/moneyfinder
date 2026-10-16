@@ -9,7 +9,7 @@ from .. import live_demo
 # The page polls its status (connect-src) and embeds Anchor's live view of the browser (frame-src).
 CSP = (
     "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self'; "
-    "frame-src https://live.anchorbrowser.io; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+    "frame-src 'self' https://live.anchorbrowser.io; form-action 'self'; base-uri 'none'; frame-ancestors 'self'"
 )
 
 
@@ -36,6 +36,7 @@ def register(app) -> None:
     def live_status(job_id: str):
         job = live_demo.get(job_id) or abort(404)
         job["screenshot"] = url_for("live_screenshot", job_id=job_id) if job.get("screenshot") else None
+        job["pdf"] = url_for("live_pdf", job_id=job_id) if job.get("pdf") else None
         return jsonify(job)
 
     @app.get("/live/<job_id>/screenshot.png")
@@ -45,3 +46,11 @@ def register(app) -> None:
         if not job.get("screenshot") or not path.is_file():
             abort(404)
         return send_file(path, mimetype="image/png")
+
+    @app.get("/live/<job_id>/IT-636.pdf")
+    def live_pdf(job_id: str):
+        job = live_demo.get(job_id) or abort(404)
+        path = Path(job.get("pdf") or "")
+        if not job.get("pdf") or not path.is_file():
+            abort(404)
+        return send_file(path, mimetype="application/pdf")

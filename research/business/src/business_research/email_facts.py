@@ -51,6 +51,9 @@ HEADCOUNT = re.compile(r"\b(\d{1,5})\s+(?:employees|full[- ]time employees|staff
 HIRING = re.compile(r"\b(offer letter|new hire|onboarding|job posting|we're hiring|applied for|application for)\b", re.I)
 CAPEX = re.compile(r"\b(equipment (?:purchase|lease|financing)|purchase order|machinery|build[- ]?out|renovation)\b", re.I)
 RD = re.compile(r"\b(research and development|R&D|prototype|patent|SBIR|STTR)\b", re.I)
+# Values the IT-636 beer production credit form needs: NY barrels brewed (MT-40 returns) and the SLA license serial.
+BARRELS = re.compile(r"\b(\d{1,3},\d{3}|\d{3,})\s*(?:barrels|bbl)\b", re.I)
+SLA_SERIAL = re.compile(r"\blicense serial (?:no\.?|number)\s*:?\s*(\d{6,8})\b", re.I)
 RELEVANT = re.compile(r"\b(EIN|employer identification|payroll|W-2|1099|tax|IRS|invoice|employee|hire|hiring|lease|equipment|R&D|"
                       r"incorporat|LLC|registered agent|annual report|grant|credit|loan)\b", re.I)
 
@@ -96,6 +99,10 @@ def deterministic(messages: list[dict]) -> list[dict]:
                 if (key, value.lower()) not in seen:
                     seen.add((key, value.lower()))
                     facts.append(_fact(key, value, m, "email", 0.3 if key == "employee_count" else 0.4, at, f"pattern match: {match.group(0)}"))
+        for pattern, key in ((BARRELS, "ny_beer_barrels"), (SLA_SERIAL, "sla_license_number")):
+            if (match := pattern.search(text)) and not any(k == key for k, _ in seen):
+                seen.add((key, match.group(1)))
+                facts.append(_fact(key, match.group(1), m, "email", 0.7, at, f"pattern match: {match.group(0)}"))
     return facts
 
 

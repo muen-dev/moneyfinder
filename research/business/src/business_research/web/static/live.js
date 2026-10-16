@@ -43,17 +43,23 @@
       const data = $("data").tBodies[0];
       job.data.forEach((d) => row(data, [d.label, String(d.value), d.source]));
       const filled = $("filled").tBodies[0];
-      Object.entries((job.fill || {}).filled || {}).forEach(([k, v]) => row(filled, [k, v.value, `${v.source} (${v.from})`]));
+      Object.entries((job.fill || {}).filled || {}).forEach(([k, v]) => row(filled, [v.label || k, v.value, `${v.source} (${v.from})`]));
       const needs = ((job.fill || {}).needs_user || []).map((n) => n.field);
       $("needs").textContent = needs.length ? `Needs your input: ${needs.join(", ")}` : "";
       formsShown = true;
+    }
+    if (job.pdf && $("final").hidden && (job.fill || job.done)) {
+      $("final").hidden = false;
+      $("pdf-frame").src = job.pdf;
+      $("pdf-link").href = job.pdf;
+      $("final").scrollIntoView({ behavior: "smooth", block: "start" });
     }
     if (job.screenshot && $("shot").hidden) { $("shot").src = job.screenshot; $("shot").hidden = false; }
     const browserStep = job.steps.find((s) => s.id === "browser");
     if (frameSet && browserStep && (browserStep.state === "done" || browserStep.state === "failed") && !$("live-frame").hidden) {
       $("live-frame").src = "about:blank";
       $("live-frame").hidden = true;
-      $("live-link").replaceWith(el("p", "Browser session ended. The screenshot of the filled form is under Forms."));
+      $("live-link").replaceWith(el("p", "Browser session ended. The filled PDF is shown above."));
     }
   }
 

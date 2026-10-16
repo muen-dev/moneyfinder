@@ -55,3 +55,6 @@ node_modules/
 
 # Form filler screenshots and receipts
 form-filling/out/
+
+# claude worktree
+.claude/worktrees
