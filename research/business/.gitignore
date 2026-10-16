@@ -1,0 +1,12 @@
+.env.*
+# Google OAuth client secret (downloaded from Cloud Console)
+credentials.json
+client_secret*.json
+# Per-business refresh tokens: grant ongoing access to that inbox
+.tokens/
+# Fetched mail
+data/
+.venv/
+__pycache__/
+
+!.env.example

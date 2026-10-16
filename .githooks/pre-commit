@@ -1,0 +1,49 @@
+#!/bin/sh
+# Blocks commits containing secrets or real business data, even when force-added past .gitignore.
+# Installed by `make setup` (sets core.hooksPath to .githooks). Bypass only with care: --no-verify.
+
+# 1. Paths. Keep in sync with the root .gitignore. -z keeps unusual file names unquoted.
+blocked=$(git diff --cached --name-only -z --diff-filter=ACMR | tr '\000' '\n' \
+  | grep -E '(^|/)(\.env(\..+)?|[^/]+\.env|\.netrc|\.pypirc|credentials\.json|client_secret[^/]*\.json|service-account[^/]*\.json|token\.json|token\.pickle|messages\.jsonl|\.DS_Store)$|(^|/)(\.tokens|\.firecrawl|\.surreal-data)/|^([^/]+/){0,2}data/|^kb/lake/|\.(pem|key|p12|pfx|db|sqlite3?|duckdb)$' \
+  | grep -v -E '(^|/)\.env\.example$')
+
+if [ -n "$blocked" ]; then
+  echo "Commit blocked: these files may contain secrets or real business data:" >&2
+  echo "$blocked" | sed 's/^/  /' >&2
+  echo "Unstage them with: git restore --staged <file>" >&2
+  exit 1
+fi
+
+# 2. Content. Added lines shaped like a live credential. Only file:line and the kind are printed.
+added=$(git diff --cached -U0 --no-color --no-ext-diff --diff-filter=ACMR | awk '
+  /^diff --git / { hdr = 1; next }
+  hdr && /^\+\+\+ / { f = substr($0, 7); next }
+  /^@@/ { hdr = 0; split($3, a, ","); n = substr(a[1], 2) + 0; next }
+  !hdr && /^\+/ { print f ":" n ":" substr($0, 2); n++ }')
+
+b='(^|[^A-Za-z0-9_-])'
+found=$(printf '%s\n' \
+  "private key block|-----BEGIN ([A-Z0-9]+ )*PRIVATE KEY-----" \
+  "AWS access key|${b}(AKIA|ASIA)[0-9A-Z]{16}" \
+  "Google OAuth client secret|GOCSPX-[A-Za-z0-9_-]{20,}" \
+  "Google API key|${b}AIza[0-9A-Za-z_-]{35}" \
+  "Google OAuth token|${b}(ya29\.[0-9A-Za-z_-]{20,}|1//0[0-9A-Za-z_-]{20,})" \
+  "Firecrawl key|${b}fc-[A-Za-z0-9]{32,}" \
+  "Tavily key|${b}tvly-[A-Za-z0-9_-]{20,}" \
+  "OpenAI/Anthropic key|${b}sk-[A-Za-z0-9_-]{32,}" \
+  "GitHub token|${b}(gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,})" \
+  "Slack token|${b}xox[abposr]-[0-9A-Za-z-]{10,}" \
+  "Stripe key|${b}[rs]k_live_[0-9A-Za-z]{20,}" \
+  "npm token|${b}npm_[A-Za-z0-9]{36}" \
+  "JWT|${b}eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}" \
+  | while IFS='|' read -r kind re; do
+      printf '%s\n' "$added" | grep -E -e "$re" | cut -d: -f1,2 | sed "s|\$|: $kind|"
+    done)
+
+if [ -n "$found" ]; then
+  echo "Commit blocked: these added lines look like credentials (values not shown):" >&2
+  echo "$found" | sed 's/^/  /' >&2
+  echo "Move the value to an ignored .env file, rotate it if it was real, and re-stage." >&2
+  echo "Certain it is a false positive? Commit with --no-verify." >&2
+  exit 1
+fi

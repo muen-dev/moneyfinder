@@ -1,0 +1,19 @@
+[project]
+name = "moneyfinder-kb"
+version = "0.1.0"
+description = "Data lake and knowledge base of New York tax incentives for moneyfinder agents"
+requires-python = ">=3.11"
+dependencies = [
+    "surrealdb==2.0.0",
+    "httpx>=0.27",
+    "pypdf>=5.0",
+    "boto3>=1.35",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+kb = "moneyfinder_kb.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
