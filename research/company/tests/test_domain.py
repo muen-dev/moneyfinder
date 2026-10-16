@@ -32,3 +32,14 @@ def test_email_prefill_skips_free_providers():
     assert from_email("owner@JoesPizza.com") == "joespizza.com"
     assert from_email("owner@gmail.com") is None
     assert from_email("owner@hotmail.co.uk") is None
+
+
+def test_demo_domain_only_for_stored_lookups():
+    from company_research.domain import is_demo_domain, normalize_stored
+
+    with pytest.raises(InvalidDomain):
+        normalize("gowanuskettle.example")  # signup and research never accept it
+    assert normalize_stored("GowanusKettle.example") == "gowanuskettle.example" and is_demo_domain("gowanuskettle.example")
+    assert normalize_stored("joespizza.com") == "joespizza.com"
+    with pytest.raises(InvalidDomain):
+        normalize_stored("other.example")

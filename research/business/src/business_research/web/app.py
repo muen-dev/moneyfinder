@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 
 from company_research import config as company_config
 from company_research import store as company_store
-from company_research.domain import InvalidDomain, normalize
+from company_research.domain import InvalidDomain, is_demo_domain, normalize_stored
 from company_research.profile import FIELDS
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_from_directory, session, url_for
 from googleapiclient.errors import HttpError
@@ -185,7 +185,7 @@ def create_app(port: int) -> Flask:
     def company_profile(domain: str):
         """A stored research/company profile (make company-research DOMAIN=...) with matched credits; no Gmail needed."""
         try:
-            domain = normalize(domain)
+            domain = normalize_stored(domain)
         except InvalidDomain:
             abort(404)
         profile = _stored_profile(domain)
@@ -193,6 +193,7 @@ def create_app(port: int) -> Flask:
             abort(404)
         return render_template(
             "company.html", conn=None, domain=domain, profile=profile, research=None, refresh=False,
+            demo=bool(profile.get("demo")) and is_demo_domain(domain),
             fields=FIELDS, glance=GLANCE, signals=SIGNALS, collector_names=COLLECTOR_NAMES, credits=_credits(profile),
             **_dossier_context(_domain_dossier(domain), url_for("company_dossier", domain=domain)),
         )
@@ -200,7 +201,7 @@ def create_app(port: int) -> Flask:
     @app.get("/companies/<domain>/dossier.json")
     def company_dossier(domain: str):
         try:
-            domain = normalize(domain)
+            domain = normalize_stored(domain)
         except InvalidDomain:
             abort(404)
         if _stored_profile(domain) is None:
@@ -361,8 +362,9 @@ def _stored_companies() -> list[dict]:
         profile = _stored_profile(path.parent.name)
         if profile:
             best = profile.get("best") or {}
-            out.append({"domain": profile.get("domain") or path.parent.name, "name": profile.get("name") or best.get("legal_name"),
-                        "industry": best.get("industry")})
+            domain = profile.get("domain") or path.parent.name
+            out.append({"domain": domain, "name": profile.get("name") or best.get("legal_name"),
+                        "industry": best.get("industry"), "demo": bool(profile.get("demo")) and is_demo_domain(domain)})
     return out
 
 

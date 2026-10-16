@@ -3,6 +3,7 @@
 {% block title %}{{ profile.name or profile.get("best", {}).get("legal_name") or domain }}{% endblock %}
 {% block content %}
 {{ ui.steps(3) }}
+{% if demo %}<p class="flash ok"><span class="tag rare">Demo business (synthetic data)</span> {{ profile.name }} is a made-up business for the demo: every name, ID, address and email here is synthetic (repo folder <code>demo/</code>).</p>{% endif %}
 {% include "dossier.html" %}
 {% include "research.html" %}
 {% endblock %}

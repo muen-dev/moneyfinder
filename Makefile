@@ -7,6 +7,7 @@
 #   make demo                      # then open http://localhost:8000
 #   make dossier DOMAIN=themaincapital.com && make dossier-push ID=themaincapital.com
 #   make dossier-get SLUG=themaincapital-com
+#   make demo-seed                 # synthetic demo business -> /companies/gowanuskettle.example
 #
 # Arguments are read by the shell ("$$Q"), so values with spaces or quotes pass through intact.
 
@@ -16,7 +17,7 @@
 	company-research company-show company-keys company-test \
 	legal-research legal-show legal-match legal-seeds legal-load-kb legal-test \
 	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats kb-ping kb-test \
-	dossier dossier-push dossier-get
+	dossier dossier-push dossier-get demo-seed
 
 PORT ?= 8000
 
@@ -51,6 +52,12 @@ dossier: ## Build dossier.json: DOMAIN=<domain> and/or BUSINESS=<business id> [N
 dossier-push: ## Load dossier.json into SurrealDB: ID=<slug|domain|path to dossier.json> or ALL=1 [YEAR=2025]
 	@test -n "$$ID$$ALL" || { echo "usage: make dossier-push ID=themaincapital.com   (or ALL=1 for every research/*/data/**/dossier.json)"; exit 1; }
 	uv run --project kb kb dossier-push $${ALL:+--all} $${ID:+"$$ID"} $${YEAR:+--tax-year "$$YEAR"}
+
+DEMO ?= demo/gowanus-kettle
+
+demo-seed: ## Load the synthetic demo business (demo/gowanus-kettle): data dirs, dossier (Bedrock email facts), SurrealDB push [NO_LLM=1] [NO_PUSH=1]
+	cd research/business && uv run business-research demo-seed "$(CURDIR)/$(DEMO)" $${NO_LLM:+--no-llm}
+	@if [ -z "$$NO_PUSH" ]; then uv run --project kb kb dossier-push "$$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["domain"])' "$(DEMO)/business.json")"; fi
 
 dossier-get: ## Print fn::business_dossier from SurrealDB: SLUG=<slug, e.g. themaincapital-com>
 	@test -n "$$SLUG" || { echo "usage: make dossier-get SLUG=themaincapital-com"; exit 1; }

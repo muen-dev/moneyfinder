@@ -2,15 +2,17 @@
 
 Every researched business has one **dossier** (`schema: moneyfinder.dossier/v1`). Fill forms from it; never from raw scraper output.
 
+**Demo business:** Gowanus Kettle Brewing Co. LLC (`gowanuskettle.example`, slug `gowanuskettle-example`) is synthetic and complete: `missing_info` is empty, EIN `00-4271985` (the IRS never issues the `00` prefix), officer Marisol Vance, tax year 2025. Good first forms: NYS beer production credit (`nys_beer_prod`, CT-636), hire-a-veteran (`nys_hire_a_veteran`, DTF-75 / CT-643), federal small-employer health (8941). `make demo-seed` rebuilds it from `demo/gowanus-kettle/` and pushes it to SurrealDB.
+
 ## Getting it (any one of these)
 
 | Where | How |
 |---|---|
-| SurrealDB Cloud (ns `moneyfinder`, db `main`) | `RETURN fn::business_dossier('themaincapital-com');` (or `make dossier-get SLUG=themaincapital-com`). Returns `{slug, business, record, missing_info, email_signals, facts, credits, claimed}`; `business` is `NONE` for an unknown slug. Full JSON: `RETURN type::record('business', 'themaincapital-com').dossier;` |
+| SurrealDB Cloud (ns `moneyfinder`, db `main`) | `RETURN fn::business_dossier('gowanuskettle-example');` (or `make dossier-get SLUG=gowanuskettle-example`). Returns `{slug, business, record, missing_info, email_signals, facts, credits, claimed}`; `business` is `NONE` for an unknown slug. Full JSON: `RETURN type::record('business', 'gowanuskettle-example').dossier;` |
 | Web app (`make demo`) | `GET /companies/<domain>/dossier.json`, or `/businesses/<business_id>/dossier.json` for a Gmail-connected business. `?refresh=1` rebuilds it. |
 | File | `research/company/data/<domain>/dossier.json`, `research/business/data/<business_id>/dossier.json` |
 
-The **slug** is the dossier's `slug` field (the domain with non-alphanumerics as `-`, e.g. `themaincapital-com`; a connected business without a domain uses its business id). Refresh: `make dossier DOMAIN=<domain>` then `make dossier-push ID=<domain>`.
+The **slug** is the dossier's `slug` field (the domain with non-alphanumerics as `-`, e.g. `gowanuskettle-example`; a connected business without a domain uses its business id). Refresh: `make dossier DOMAIN=<domain>` then `make dossier-push ID=<domain>`.
 
 ## Fields
 
@@ -25,13 +27,31 @@ The **slug** is the dossier's `slug` field (the domain with non-alphanumerics as
 | Entity type | `entity_type` | Raw registry text (e.g. "Domestic Limited Liability Company"); `record.entity_type` is one of `c_corp s_corp partnership llc sole_prop nonprofit`. |
 | State of formation / DOS ID | `state_of_formation`, `ny_dos_id` | From NY DOS. |
 | Employees | `employees` | May be text like "3 employees on LinkedIn" (`record.employees` is then `NONE`); forms want a payroll count, so confirm with the user. |
-| Officer name / title | `officer_name`, `officer_title` | Not researched today: always in `missing_info`. |
-| Tax year | credit's `tax_year` | Defaults to last calendar year; confirm with the user. |
+| Officer name / title | `officer_name`, `officer_title` | From signup answers (business.json) or mail; otherwise in `missing_info`. |
+| Tax year | `tax_year`, else credit's `tax_year` | `business.tax_year` when the owner gave it; credits default to last calendar year; confirm with the user. |
 | Phone / email / payroll | `phone`, `contact_email`, `payroll_provider` | `payroll_provider` comes from email signals. |
 
 ## `missing_info`
 
 Keys a credit form needs that no source provided (e.g. `ein`, `officer_name`, `tax_year`). **Ask the user for each one in the product UI and never guess, derive or leave a placeholder.** A field that is missing and that the user did not supply stays blank and the form is not submitted. Answers the user types are new facts with `source_kind: "user"`.
+
+## Writing results back (SurrealDB)
+
+A user's answer is a fact. The unique index on business + key + value + source makes a retry harmless:
+
+```sql
+CREATE fact CONTENT { business: business:`gowanuskettle-example`, key: 'officer_title', value: 'Managing Member',
+                      source: 'user', source_kind: 'user', confidence: 1.0 };
+```
+
+A filled or filed form is a `claimed` edge from the business to the credit (one per tax year). `status` is `drafted | filed | accepted | paid | denied`, and `form` is `form:['<code>', <tax_year>]`:
+
+```sql
+RELATE business:`gowanuskettle-example` -> claimed -> incentive:nys_beer_prod
+    CONTENT { tax_year: 2025, status: 'drafted', form: form:['CT-636', 2025] };
+```
+
+`fn::business_dossier` returns these under `claimed`. `make dossier-push` rewrites a business's facts from its dossier file, so also save the user's answers through the app (or in `business.json`), not only in SurrealDB.
 
 ## Safety (from `docs/DAYTONA_BROWSER_SAFETY.md`)
 

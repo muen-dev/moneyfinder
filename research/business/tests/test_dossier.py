@@ -109,3 +109,30 @@ def test_dossier_json_endpoint_and_card_masks_ein(dirs):
     data = client.get("/companies/joespizza.com/dossier.json", base_url="http://localhost:8000").get_json()
     assert data["schema"] == "moneyfinder.dossier/v1" and data["business"]["legal_name"] == "JOE'S PIZZA LLC"
     assert client.get("/companies/nothere.com/dossier.json", base_url="http://localhost:8000").status_code == 404
+
+
+def test_demo_seed_builds_a_complete_synthetic_dossier(dirs):
+    from pathlib import Path
+
+    from company_research.domain import InvalidDomain
+
+    from business_research import demo
+
+    fixture = Path(__file__).resolve().parents[3] / "demo" / "gowanus-kettle"
+    d, paths = demo.seed(fixture, use_llm=False)
+    assert d["demo"] is True and d["slug"] == "gowanuskettle-example" and d["missing_info"] == []
+    b = d["business"]
+    assert b["naics"] == ["312120"] and b["ein"] == "00-4271985" and b["officer_title"] == "Managing Member"
+    assert next(f for f in d["facts"] if f["key"] == "ein")["source"].startswith("gmail:synthetic-gk-")
+    assert {"nys_beer_prod", "nys_hire_a_veteran", "nys_investment", "fed_small_employer_health"} <= {c["id"] for c in d["credits"]}
+    assert all(p.exists() for p in paths)
+    assert demo.seed(fixture, use_llm=False)[0]["missing_info"] == []  # idempotent
+
+    client = create_app(8000).test_client()
+    assert b"Demo business (synthetic data)" in client.get("/", base_url="http://localhost:8000").data
+    page = client.get("/companies/gowanuskettle.example", base_url="http://localhost:8000")
+    assert page.status_code == 200 and b"Demo business (synthetic data)" in page.data
+    data = client.get("/companies/gowanuskettle.example/dossier.json?refresh=1", base_url="http://localhost:8000").get_json()
+    assert data["missing_info"] == [] and data["email"]["message_count"] == 25  # refresh keeps the synthetic inbox
+    with pytest.raises(InvalidDomain):
+        company.set_domain("someone", "gowanuskettle.example")  # signup still rejects the demo domain

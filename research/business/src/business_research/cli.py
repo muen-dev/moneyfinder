@@ -3,6 +3,7 @@
 import argparse
 import json
 import sys
+from pathlib import Path
 from collections.abc import Iterable, Iterator
 
 from googleapiclient.errors import HttpError
@@ -70,6 +71,21 @@ def cmd_dossier(args: argparse.Namespace) -> None:
     print(f"  credits: {len(result['credits'])}   missing: {', '.join(result['missing_info'])}")
 
 
+def cmd_demo_seed(args: argparse.Namespace) -> None:
+    from collections import Counter
+
+    from . import demo
+
+    result, paths = demo.seed(args.fixture_dir, use_llm=not args.no_llm)
+    kinds = Counter(f["source_kind"] for f in result["facts"])
+    with_forms = [c for c in result["credits"] if c.get("forms")]
+    print(f"seeded demo business {result['business'].get('name')} ({result['domain']}, slug {result['slug']})")
+    print(f"  facts: {len(result['facts'])} {dict(kinds)}; email: {result['email']['message_count']} messages, llm {result['email'].get('llm')}")
+    print(f"  credits: {len(result['credits'])} ({len(with_forms)} with PDF forms); missing: {', '.join(result['missing_info']) or 'none'}")
+    for path in paths:
+        print(f"  wrote {path}")
+
+
 def _with_progress(messages: Iterable[EmailMessage]) -> Iterator[EmailMessage]:
     for count, message in enumerate(messages, 1):
         print(f"\rfetched {count}", end="", file=sys.stderr)
@@ -102,6 +118,11 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--no-llm", action="store_true", help="skip the Bedrock pass over mail")
     build.add_argument("--json", action="store_true", help="print the dossier JSON (EIN unmasked)")
     build.set_defaults(func=cmd_dossier)
+
+    seed = commands.add_parser("demo-seed", help="load a synthetic demo business (repo-root demo/<name>/) and build its dossier")
+    seed.add_argument("fixture_dir", type=Path, help="e.g. ../../demo/gowanus-kettle")
+    seed.add_argument("--no-llm", action="store_true", help="skip the Bedrock pass over the synthetic mail")
+    seed.set_defaults(func=cmd_demo_seed)
 
     args = parser.parse_args(argv)
     try:

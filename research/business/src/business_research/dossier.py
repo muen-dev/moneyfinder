@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from company_research import store as company_store
-from company_research.domain import normalize
+from company_research.domain import is_demo_domain, normalize_stored
 from legal_research import store as legal_store
 from legal_research.match import match_programs
 
@@ -25,7 +25,10 @@ SCHEMA = "moneyfinder.dossier/v1"
 BUSINESS_KEYS = (
     "name", "legal_name", "dba", "website", "naics", "industry", "entity_type", "state_of_formation", "ny_dos_id",
     "hq_address", "county", "nyc_borough", "phone", "employees", "founded_year", "ein", "payroll_provider", "contact_email",
+    "officer_name", "officer_title", "tax_year",
 )
+# Answers the owner gave at signup (business.json) that become user facts.
+USER_KEYS = ("legal_name", "contact_email", "phone", "officer_name", "officer_title", "tax_year")
 # Fact key -> business key, where they differ.
 ALIASES = {"employee_count": "employees"}
 KIND_RANK = {"user": 0, "registry": 1, "enrichment": 2, "web": 3, "email": 4, "llm": 5}
@@ -43,14 +46,19 @@ MULTI_LIMIT = 5
 
 def build_for_domain(domain: str, business_id: str | None = None, *, use_llm: bool = True, write: bool = True) -> dict:
     """Dossier for a researched domain (research/company/data/<domain>), plus a business's mail if given."""
-    domain = normalize(domain)
+    domain = normalize_stored(domain)
     profile = None
     if business_id:
         profile = company.profile(business_id)
     profile = profile or _read_profile(company_store.default_dir(domain))
+    demo_inbox = False
+    if not business_id and is_demo_domain(domain) and (profile or {}).get("demo"):
+        # A synthetic demo business (make demo-seed) keeps its synthetic inbox under this id.
+        business_id = ((profile or {}).get("inputs") or {}).get("business_id")
+        demo_inbox = bool(business_id)
     dossier = assemble(domain, profile, business_id, use_llm=use_llm)
     if write:
-        out = company.business_dir(business_id) if business_id else company_store.default_dir(domain)
+        out = company.business_dir(business_id) if business_id and not demo_inbox else company_store.default_dir(domain)
         write_dossier(out, dossier)
     return dossier
 
@@ -72,7 +80,7 @@ def dossier_path(out_dir: Path) -> Path:
 
 
 def cached_for_domain(domain: str) -> dict | None:
-    return _read_json(dossier_path(company_store.default_dir(normalize(domain))))
+    return _read_json(dossier_path(company_store.default_dir(normalize_stored(domain))))
 
 
 def cached_for_business(business_id: str) -> dict | None:
@@ -89,13 +97,17 @@ def assemble(domain: str | None, profile: dict | None, business_id: str | None, 
     at = _now()
     facts = profile_facts(profile) if profile else []
     info = company.info(business_id) if business_id else {}
+    user_source = "demo:synthetic" if info.get("demo") and is_demo_domain(domain) else "user:signup"
     if info.get("name"):
-        facts.insert(0, _fact("name", info["name"], "user:signup", "user", 1.0, info.get("updated_at") or at))
+        facts.insert(0, _fact("name", info["name"], user_source, "user", 1.0, info.get("updated_at") or at))
+    for key in USER_KEYS:
+        if info.get(key) not in (None, ""):
+            facts.append(_fact(key, info[key], user_source, "user", 1.0, info.get("updated_at") or at))
     contact = _contact_email(business_id)
     if contact:
         facts.append(_fact("contact_email", contact, "google:signin", "user", 0.9, at))
     if domain:
-        facts.append(_fact("website", f"https://{domain}", "user:signup" if business_id else f"https://{domain}", "user" if business_id else "web", 0.9, at))
+        facts.append(_fact("website", f"https://{domain}", user_source if business_id else f"https://{domain}", "user" if business_id else "web", 0.9, at))
 
     email = {"business_id": business_id, "fetched_at": None, "message_count": 0, "categories": {}, "signals": []}
     if business_id:
@@ -114,7 +126,9 @@ def assemble(domain: str | None, profile: dict | None, business_id: str | None, 
     business = best_values(facts)
     if not business.get("name"):
         business["name"] = (profile or {}).get("name") or business.get("dba") or business.get("legal_name")
+    demo = bool((profile or {}).get("demo") or info.get("demo")) and is_demo_domain(domain)
     return {
+        **({"demo": True, "demo_note": "Synthetic demo business: every value is made up (demo/ in the repo)."} if demo else {}),
         "schema": SCHEMA,
         "slug": re.sub(r"[^a-z0-9]+", "-", domain).strip("-") if domain else business_id,
         "domain": domain,

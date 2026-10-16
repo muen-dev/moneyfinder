@@ -32,6 +32,11 @@ FREE_EMAIL_DOMAINS = frozenset(
 )
 
 
+# Synthetic demo businesses (repo-root demo/). Reserved .example names can never be a real site, so they are
+# accepted only when reading stored data (normalize_stored); signup and research still reject them via normalize.
+DEMO_DOMAINS = frozenset({"gowanuskettle.example"})
+
+
 class InvalidDomain(ValueError):
     """The input isn't a public company domain we can research."""
 
@@ -77,6 +82,16 @@ def normalize(raw: str) -> str:
     if not registrable:
         raise InvalidDomain("That isn't a public domain (it needs a real suffix like .com or .nyc).")
     return registrable
+
+
+def normalize_stored(raw: str) -> str:
+    """normalize(), plus the synthetic demo domains: for looking up stored profiles and dossiers only."""
+    text = (raw or "").strip().lower()
+    return text if text in DEMO_DOMAINS else normalize(raw)
+
+
+def is_demo_domain(domain: str | None) -> bool:
+    return (domain or "").strip().lower() in DEMO_DOMAINS
 
 
 def is_free_email_domain(domain: str) -> bool:
