@@ -171,8 +171,8 @@ def _web_research(job: dict, profile: dict) -> None:
 def _browser(job: dict, slug: str) -> None:
     _step(job, "browser", "running")
     cmd = ["uv", "run", "--project", str(REPO_DIR / "kb"), "--with", "playwright", "python",
-           str(REPO_DIR / "form-filling" / "fill.py"), "--slug", slug, "--no-open",
-           "--hold", str(FILL_HOLD_S), "--watch-delay", "4"]
+           str(REPO_DIR / "form-filling" / "fill.py"), "--slug", slug, "--hold", str(FILL_HOLD_S), "--watch-delay", "4"]
+    # fill.py also opens the live view in its own browser tab, in case the embedded frame doesn't render it
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}  # uv would warn about the app's venv
     proc = subprocess.Popen(cmd, cwd=REPO_DIR, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                             bufsize=1)
@@ -184,7 +184,7 @@ def _browser(job: dict, slug: str) -> None:
         if m := re.search(r"LIVE VIEW:\s*(\S+)", line):
             with _lock:
                 job["live_view"] = m.group(1)
-            _log(job, "browser", "Anchor cloud browser started: watch it below")
+            _log(job, "browser", "Anchor cloud browser started: the live view opens in a new tab and below")
             continue
         if "rt=" in line or "live_view" in line:
             continue  # the live-view link carries an access token

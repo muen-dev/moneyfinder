@@ -49,6 +49,12 @@
       formsShown = true;
     }
     if (job.screenshot && $("shot").hidden) { $("shot").src = job.screenshot; $("shot").hidden = false; }
+    const browserStep = job.steps.find((s) => s.id === "browser");
+    if (frameSet && browserStep && (browserStep.state === "done" || browserStep.state === "failed") && !$("live-frame").hidden) {
+      $("live-frame").src = "about:blank";
+      $("live-frame").hidden = true;
+      $("live-link").replaceWith(el("p", "Browser session ended. The screenshot of the filled form is under Forms."));
+    }
   }
 
   async function poll() {
