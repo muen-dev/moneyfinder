@@ -199,6 +199,16 @@
     .view-toggle button { border-radius: 999px; padding: 8px 12px; }
     .list-view .claim-card { min-height: auto; }
     #liveRegion { position: absolute; left: -9999px; }
+    .landing-mode .sidebar { display: none; }
+    .landing-mode .shell { grid-template-columns: 1fr; }
+    .landing-main { max-width: 980px; padding-top: 52px; }
+    .landing-main .hero { grid-template-columns: 1fr; text-align: center; padding: 42px 28px 30px; }
+    .landing-main .hero h1 { max-width: 18ch; margin: 0 auto; }
+    .landing-main .hero p { margin-left: auto; margin-right: auto; }
+    .landing-main .actions { justify-content: center; }
+    .landing-main .counter-panel { max-width: 520px; width: 100%; margin: 8px auto 0; }
+    .landing-main .thermo { max-width: 760px; margin: 18px auto 0; }
+    .landing-main .thermo-stats { grid-template-columns: repeat(2, 1fr); }
     @media (max-width: 900px) {
       .shell { grid-template-columns: 1fr; }
       .sidebar { flex-direction: row; overflow-x: auto; padding: 10px; }
@@ -230,16 +240,16 @@
         <button class="nav-btn" data-nav="tracker" type="button"><span>▣</span>Tracker</button>
         <button class="nav-btn" data-nav="memory" type="button"><span>◎</span>Memory</button>
       </nav>
-      <main>
+      <main id="mainContent">
         <div id="liveRegion" aria-live="polite"></div>
         <div id="error" class="error hide" role="alert"></div>
 
         <!-- LANDING -->
-        <section id="view-landing" class="view">
+        <section id="view-landing" class="view landing-main">
           <div class="hero">
             <div>
               <h1>Find money New York may owe your business.</h1>
-              <p>We research your company first, prepare accurate claim forms you must approve, then track agency evidence separately from bank confirmation.</p>
+              <p>Possible funds first. Proof before payment.</p>
               <div class="actions">
                 <button class="btn" type="button" data-nav="research">Research my business</button>
                 <button class="btn secondary" type="button" data-nav="manual" style="color:#fff;border-color:rgba(255,255,255,.35)">I do not have a website</button>
@@ -260,18 +270,6 @@
               <div><b id="statReview">0</b><span>Needs review</span></div>
               <div><b id="statConfirmed">$0</b><span>Demo deposits</span></div>
             </div>
-          </div>
-          <div class="steps" aria-label="Five step journey">
-            <div class="step-chip"><b>1. Research</b><small>Website or manual profile</small></div>
-            <div class="step-chip"><b>2. Verify</b><small>Confirm facts + consent</small></div>
-            <div class="step-chip"><b>3. Match</b><small>Possible NY funds</small></div>
-            <div class="step-chip"><b>4. Approve</b><small>Conflicts cleared first</small></div>
-            <div class="step-chip"><b>5. Evidence</b><small>Agency ≠ bank</small></div>
-          </div>
-          <div class="grid stats">
-            <div class="card"><h3>B2B first</h3><p class="sub">Built for NYC businesses, not consumer claims.</p></div>
-            <div class="card"><h3>Proof rails</h3><p class="sub">Agency approval and bank deposit are separate evidence.</p></div>
-            <div class="card"><h3>$0 state fee</h3><p class="sub">NY unclaimed fund claims are free. Demo uses synthetic data.</p></div>
           </div>
         </section>
 
@@ -570,6 +568,7 @@ function setNav(view) {
 function show(view) {
   clearError();
   state.view = view;
+  document.body.classList.toggle('landing-mode', view === 'landing');
   document.querySelectorAll('.view').forEach((el) => el.classList.toggle('hide', el.id !== `view-${view}`));
   setNav(view);
   const hash = view === 'claim' && state.activeClaimId ? `claim/${state.activeClaimId}` : view;
