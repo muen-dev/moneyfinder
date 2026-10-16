@@ -15,6 +15,12 @@ make demo           # web app on http://localhost:8000 (PORT=... to change; Goog
 make fill           # Anchor cloud browser fills a claim form from the SurrealDB dossier (live view opens)
 ```
 
+**One-page run:** http://localhost:8000/live. Enter the demo email (`marisol@gowanuskettle.example`), and the page
+shows each step as it runs: Gmail linked, then the email agent (Claude on Bedrock) and the web research agents in
+parallel, the dossier stored in SurrealDB, the Anchor browser filling the form (live view embedded), and the
+matched forms with the data that goes on them. About 35 seconds to the filled form. The demo mailbox and the
+demo business's web research are stored synthetic data; everything else runs live.
+
 1. **Connect the business.** Sign in with Google (read-only Gmail) and enter the company domain, or skip sign-in and
    open a stored profile under **Company profiles** on the home page (`gowanuskettle.example`, the synthetic demo
    business; `themaincapital.com`; add more with `make company-research DOMAIN=...`).

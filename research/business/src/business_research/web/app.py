@@ -18,6 +18,7 @@ from legal_research import store as legal_store
 from legal_research.match import match_programs
 
 from .. import company, config, dossier as dossiers, inbox, kb_sync, store
+from . import live
 from ..gmail import auth
 from ..gmail.client import DEFAULT_QUERY, GmailClient
 
@@ -85,7 +86,9 @@ def create_app(port: int) -> Flask:
 
     @app.after_request
     def security_headers(response):
-        response.headers["Content-Security-Policy"] = DEMO_CSP if request.path in STATIC_DEMOS else CSP
+        response.headers["Content-Security-Policy"] = (
+            DEMO_CSP if request.path in STATIC_DEMOS else live.CSP if request.path.startswith("/live") else CSP
+        )
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cache-Control"] = "no-store"
@@ -103,6 +106,8 @@ def create_app(port: int) -> Flask:
         if "csrf" not in session:
             session["csrf"] = secrets.token_urlsafe(32)
         return {"csrf": session["csrf"]}
+
+    live.register(app)
 
     @app.get("/")
     def index():
