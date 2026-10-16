@@ -198,7 +198,7 @@ IF array::len($uses) > 0 {
 DELETE eligible_for WHERE in = $b AND tax_year = $year AND assessed_by = $by AND out NOTINSIDE $credit_ids RETURN NONE;
 IF array::len($edges) > 0 {
     INSERT RELATION INTO eligible_for $edges ON DUPLICATE KEY UPDATE
-        status = $input.status, confidence = $input.confidence, reasons = $input.reasons,
+        status = $input.status, rank = $input.rank, confidence = $input.confidence, reasons = $input.reasons,
         missing_info = $input.missing_info, assessed_by = $input.assessed_by
     RETURN NONE;
 };
@@ -295,6 +295,7 @@ def build_push(d: dict[str, Any], tax_year: int | None = None, now: datetime | N
                     "out": inc,
                     "tax_year": year,
                     "status": status,
+                    "rank": c.get("rank") if isinstance(c.get("rank"), int) else None,
                     "confidence": as_confidence(c.get("confidence")),
                     "reasons": reasons,
                     "missing_info": [str(m) for m in c.get("missing_info") or []],

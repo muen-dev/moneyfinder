@@ -162,6 +162,7 @@ DEFINE TABLE OVERWRITE eligible_for TYPE RELATION IN business OUT incentive SCHE
 DEFINE FIELD OVERWRITE tax_year ON eligible_for TYPE int;
 DEFINE FIELD OVERWRITE status ON eligible_for TYPE "likely" | "possible" | "needs_info" | "ineligible";
 DEFINE FIELD OVERWRITE confidence ON eligible_for TYPE option<float> ASSERT $value = NONE OR ($value >= 0 AND $value <= 1);
+DEFINE FIELD OVERWRITE rank ON eligible_for TYPE option<int>;  -- matcher order, 1 = best
 DEFINE FIELD OVERWRITE reasons ON eligible_for TYPE array<string> DEFAULT [];
 DEFINE FIELD OVERWRITE missing_info ON eligible_for TYPE array<string> DEFAULT [];
 DEFINE FIELD OVERWRITE evidence ON eligible_for TYPE array<record<chunk>> DEFAULT [];
@@ -246,11 +247,12 @@ DEFINE FUNCTION OVERWRITE fn::business_dossier($slug: string) {
                 out.agency AS agency,
                 tax_year,
                 status,
+                rank,
                 confidence,
                 reasons,
                 missing_info,
                 out->uses_form.{ role, code: out.code, tax_year: out.tax_year, title: out.title, url: out.pdf.url, instructions: out.instructions.url } AS forms
-            FROM eligible_for WHERE in = $b ORDER BY status, confidence DESC),
+            FROM eligible_for WHERE in = $b ORDER BY status, rank, confidence DESC),
         claimed: (SELECT record::id(out) AS id, tax_year, status, amount FROM claimed WHERE in = $b)
     };
 };

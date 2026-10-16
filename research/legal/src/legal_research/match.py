@@ -1,7 +1,11 @@
 """Match a research/company profile to catalog programs, using the niches' NAICS prefixes and profile_keywords.
 
-Niche-specific credits come first, fewest claimants first. Credits most employers can claim (benefits,
-accessibility, targeted hiring) follow, ranked lower. Matching is a lead for a person to check, not a ruling.
+A niche that groups several topics (clean energy: EV chargers, bioheat, solar, ...) lists `program_keywords`, so
+"solar" is evidence for the solar abatement only, not for every clean-energy program.
+
+Order: niche-specific credits ("likely") before credits most employers can claim ("possible"); expired programs
+last within each; then the strongest evidence (a NAICS or industry match, then a keyword in what the business is,
+then a softer signal); then fewest claimants first. Matching is a lead for a person to check, not a ruling.
 """
 
 import re
@@ -31,14 +35,25 @@ def match_programs(profile: dict, catalog: dict | None = None) -> list[dict]:
     if not catalog or not profile:
         return []
     niches = {n["id"]: n for n in catalog.get("niches", [])}
-    hits = {nid: _niche_evidence(profile, niche) for nid, niche in niches.items()}
-    hits = {nid: ev for nid, ev in hits.items() if ev}
+    cache: dict[tuple, list[dict]] = {}
+
+    def evidence_for(nid: str, pid: str) -> list[dict]:
+        niche = niches.get(nid)
+        if niche is None:
+            return []
+        keywords = (niche.get("program_keywords") or {}).get(pid)  # this program's own keywords, if the niche lists them
+        key = (nid, tuple(keywords) if keywords is not None else None)
+        if key not in cache:
+            cache[key] = _niche_evidence(profile, niche, keywords)
+        return cache[key]
 
     matches = []
     for program in catalog.get("programs", []):
         tags = set(program.get("niches") or [])
         if not tags or tags & CLOSED_NICHES:
             continue
+        hits = {t: evidence_for(t, program["id"]) for t in program["niches"]}
+        hits = {t: ev for t, ev in hits.items() if ev}
         industry = {t for t in tags if niches.get(t, {}).get("naics")}
         matched = [t for t in program["niches"] if t in hits]
         if industry and not industry <= set(matched):
@@ -51,10 +66,13 @@ def match_programs(profile: dict, catalog: dict | None = None) -> list[dict]:
             continue
         matches.append(_entry(program, tier, matched, evidence, niches))
     matches.sort(key=_rank)
+    for i, m in enumerate(matches, 1):
+        m["rank"] = i  # 1 = best lead; lets stores that re-sort (e.g. by status) keep this order
     return matches
 
 
-def _niche_evidence(profile: dict, niche: dict) -> list[dict]:
+def _niche_evidence(profile: dict, niche: dict, keywords: list[str] | None = None) -> list[dict]:
+    keywords = niche.get("profile_keywords", []) if keywords is None else keywords
     evidence = []
     for code, source in _naics_codes(profile):
         prefix = next((p for p in niche.get("naics", []) if code.startswith(p)), None)
@@ -66,7 +84,7 @@ def _niche_evidence(profile: dict, niche: dict) -> list[dict]:
     names = SIGNAL_FIELDS + ("ownership_certifications",) if niche["id"] in BROAD_NICHES else CORE_FIELDS + SIGNAL_FIELDS
     for name in names:
         for text, source in _texts(profile, name):
-            keyword = next((k for k in niche.get("profile_keywords", []) if _keyword_re(k).search(text)), None)
+            keyword = next((k for k in keywords if _keyword_re(k).search(text)), None)
             if keyword:
                 kind = "keyword" if name in CORE_FIELDS else "signal"
                 evidence.append({"niche": niche["id"], "kind": kind, "field": name, "value": text[:160],
@@ -132,13 +150,18 @@ def _field(name: str) -> str:
     return FIELD_LABELS.get(name) or name.replace("_", " ").capitalize()
 
 
+def _strength(m: dict) -> int:
+    """3 NAICS or industry match, 2 keyword in what the business is (description, products), 1 signal, 0 none."""
+    return max((3 if e["kind"] == "naics" or e["field"] == "industry" else 2 if e["kind"] == "keyword" else 1
+                for e in m["evidence"]), default=0)
+
+
 def _rank(m: dict) -> tuple:
-    strong = any(e["kind"] in ("naics", "keyword") for e in m["evidence"])
     return (
-        m["tier"] != "niche",
-        m["status"] == "expired",
-        not strong,
-        m["claimants"] if m["claimants"] is not None else float("inf"),
+        m["tier"] != "niche",  # likely before possible
+        m["status"] == "expired",  # expired programs last within each
+        -_strength(m),
+        m["claimants"] if m["claimants"] is not None else float("inf"),  # rarely claimed first among equals
         -m["score"],
         m["name"],
     )
@@ -197,7 +220,7 @@ def _keyword_re(keyword: str) -> re.Pattern:
     all-caps acronyms (ADA, AED) are case-sensitive."""
     if keyword not in _KEYWORD_CACHE:
         stem = len(keyword) >= 6 and keyword.isalpha() and keyword.islower()
-        tail = r"\w*" if stem else r"(?:s|es)?\b"
+        tail = r"\w*" if stem else r"(?:s|es)?(?!\w)"  # (?!\w), not \b: keywords may end in ")" as in 401(k)
         flags = 0 if keyword.isupper() and len(keyword) <= 4 else re.IGNORECASE
         _KEYWORD_CACHE[keyword] = re.compile(rf"(?<!\w){re.escape(keyword)}{tail}", flags)
     return _KEYWORD_CACHE[keyword]

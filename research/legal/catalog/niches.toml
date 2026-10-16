@@ -4,6 +4,8 @@
 # A program joins a niche when its name (or another name it goes by) matches one of `name_patterns`
 # (case-insensitive regex), or when programs.toml lists the niche for it.
 # `naics` (code prefixes) and `profile_keywords` are for matching a research/company profile to niches.
+# A niche that groups several topics adds a `[niche.program_keywords]` table (program id = keywords): for those
+# programs only their own keywords count, so "solar" does not match the bioheat credit. NAICS matches still count.
 # `search` is the query `legal-research run --search` sends to find programs the index pages miss.
 
 # Industries
@@ -177,6 +179,14 @@ naics = ["454310", "457210", "2211"]
 name_patterns = ['alternative fuels', 'electric vehicle', 'clean heating fuel', 'heating oil', '\bsolar\b', 'clean energy', 'green roof', 'green building', 'energy cost']
 profile_keywords = ["solar", "EV charging", "electric vehicle", "biodiesel", "heating oil", "green roof", "energy efficiency"]
 
+[niche.program_keywords]
+nys_alt_fuels_elec_vehicles = ["EV charging", "EV charger", "charging station", "electric vehicle", "alternative fuel"]
+nys_clean_heating_fuel = ["biodiesel", "bioheat", "heating oil", "heating fuel"]
+nyc_solar_roof = ["solar"]
+nyc_clean_energy_systems_exemption = ["solar", "energy storage", "battery storage", "wind turbine", "fuel cell", "geothermal"]
+nyc_green_roof = ["green roof"]
+nyc_energy_cost_savings_program = ["energy cost", "relocat"]
+
 [[niche]]
 id = "nyc_relocation"
 label = "Moving jobs into or within NYC"
@@ -242,12 +252,24 @@ description = "Child care, health insurance, retirement plans and paid leave off
 name_patterns = ['child ?care', 'health (care|insurance)', 'retirement plan', 'pension', 'paid (family )?(and medical )?leave', 'long-term care']
 profile_keywords = ["benefits", "health insurance", "401(k)", "retirement plan", "child care", "paid leave"]
 
+[niche.program_keywords]
+fed_small_employer_health = ["health insurance", "health plan", "health benefits"]
+fed_retirement_startup = ["retirement plan", "401(k)", "SIMPLE IRA", "SEP IRA", "pension plan"]
+fed_paid_leave = ["paid leave", "paid family leave", "medical leave"]
+fed_employer_childcare = ["child care", "childcare", "daycare"]
+nys_employer_provided_childcare = ["child care", "childcare", "daycare"]
+nys_longterm_care_insurance = ["long-term care"]
+
 [[niche]]
 id = "accessibility_safety"
 label = "Accessibility and safety equipment"
 description = "Small businesses making premises accessible, or buying defibrillators for the workplace."
 name_patterns = ['defibrillator', 'disabled access']
 profile_keywords = ["ADA", "accessibility", "wheelchair", "AED", "defibrillator"]
+
+[niche.program_keywords]
+fed_disabled_access = ["ADA", "accessibility", "wheelchair"]
+nys_defibrillator = ["AED", "defibrillator"]
 
 # Approval-first programs
 

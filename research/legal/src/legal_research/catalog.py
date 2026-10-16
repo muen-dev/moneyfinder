@@ -52,6 +52,8 @@ class Niche:
     naics: list[str] = field(default_factory=list)
     name_patterns: list[str] = field(default_factory=list)
     profile_keywords: list[str] = field(default_factory=list)
+    # program id -> the keywords that are evidence for that program, for niches grouping several topics
+    program_keywords: dict[str, list[str]] = field(default_factory=dict)
     search: str = ""  # query for `run --search`; defaults to the label
 
     def matches(self, text: str) -> bool:

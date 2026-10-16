@@ -83,3 +83,67 @@ def test_flat_profile_and_empty_inputs():
     assert "fed_fica_tip" in by_id(match_programs(flat, CATALOG))
     assert match_programs({}, CATALOG) == []
     assert match_programs(PROFILE, {"niches": [], "programs": []}) == []
+
+
+ENERGY_CATALOG = {
+    "niches": [
+        {"id": "beverage_alcohol", "label": "Breweries", "naics": ["31212"], "profile_keywords": ["brewery"]},
+        {"id": "manufacturing", "label": "Manufacturers", "naics": ["31"], "profile_keywords": ["factory"]},
+        {"id": "restaurants_hospitality", "label": "Bars", "naics": ["722"], "profile_keywords": ["bar"]},
+        {"id": "clean_energy", "label": "Clean energy", "naics": ["2211"],
+         "profile_keywords": ["solar", "EV charging", "biodiesel"],
+         "program_keywords": {"ev_charging": ["EV charging", "electric vehicle"], "heating_fuel": ["biodiesel"],
+                              "solar_roof": ["solar"]}},
+        {"id": "hiring_veterans", "label": "Veterans", "naics": [], "profile_keywords": ["veteran"]},
+        {"id": "employee_benefits", "label": "Benefits", "naics": [], "profile_keywords": ["benefits", "401(k)"]},
+    ],
+    "programs": [
+        {"id": "wotc", "name": "Work opportunity", "status": "expired", "niches": ["hiring_veterans"]},
+        {"id": "hire_vet", "name": "Hire a veteran", "status": "active", "niches": ["hiring_veterans"],
+         "claims": [{"taxpayers": 900, "latest_year": 2023}]},
+        {"id": "retirement", "name": "Retirement plan startup", "status": "unknown", "niches": ["employee_benefits"]},
+        {"id": "ev_charging", "name": "EV charging property", "status": "active", "niches": ["clean_energy"],
+         "claims": [{"taxpayers": 3, "latest_year": 2023}]},
+        {"id": "heating_fuel", "name": "Clean heating fuel", "status": "active", "niches": ["clean_energy"],
+         "claims": [{"taxpayers": 1, "latest_year": 2023}]},
+        {"id": "solar_roof", "name": "Solar abatement", "status": "unknown", "niches": ["clean_energy"]},
+        {"id": "tip_credit", "name": "FICA tip credit", "status": "unknown", "niches": ["restaurants_hospitality"]},
+        {"id": "investment", "name": "Investment credit", "status": "active", "niches": ["manufacturing"],
+         "claims": [{"taxpayers": 11000, "latest_year": 2023}]},
+        {"id": "beer", "name": "Beer production", "status": "active", "niches": ["beverage_alcohol"],
+         "claims": [{"taxpayers": 800, "latest_year": 2023}]},
+    ],
+}
+
+BREWERY = {
+    "naics": "312120",
+    "description": "Brooklyn brewery and taproom bar.",
+    "summary": "Brewery that added rooftop solar.",
+    "incentive_signals": ["Level 2 EV charging station", "Offers a 401(k) plan"],
+    "hiring_signals": ["Hired two veterans"],
+}
+
+
+def test_order_likely_then_match_strength_then_fewest_claimants_expired_last():
+    matches = match_programs(BREWERY, ENERGY_CATALOG)
+    assert [(m["id"], m["tier"]) for m in matches] == [
+        ("beer", "niche"),  # NAICS 31212, 800 claimants
+        ("investment", "niche"),  # NAICS 31, 11,000 claimants
+        ("tip_credit", "niche"),  # "bar" in the description
+        ("solar_roof", "niche"),  # "solar" in the summary
+        ("ev_charging", "niche"),  # a signal only, though only 3 claimants
+        ("hire_vet", "broad"),
+        ("retirement", "broad"),  # "401(k)" ends in ")" and still matches
+        ("wotc", "broad"),  # expired
+    ]
+    assert [m["rank"] for m in matches] == list(range(1, len(matches) + 1))
+
+
+def test_program_keywords_keep_solar_off_unrelated_clean_energy_programs():
+    matches = by_id(match_programs({"description": "Bakery with rooftop solar panels."}, ENERGY_CATALOG))
+    assert "solar_roof" in matches and "heating_fuel" not in matches and "ev_charging" not in matches
+    assert matches["solar_roof"]["why"][0].startswith("Description mentions “solar”")
+    # without program_keywords every program in the niche would match "solar"
+    loose = {**ENERGY_CATALOG, "niches": [{k: v for k, v in n.items() if k != "program_keywords"}
+                                          for n in ENERGY_CATALOG["niches"]]}
+    assert "heating_fuel" in by_id(match_programs({"description": "Bakery with rooftop solar panels."}, loose))

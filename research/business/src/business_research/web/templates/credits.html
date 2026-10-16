@@ -35,7 +35,8 @@
 <div class="card credits">
   <h2>Credits you may qualify for <span class="count">{{ niche|length }}</span></h2>
   <p class="muted small">Matched from this profile's industry, NAICS code and signals against New York State, NYC and federal programs.
-    Credits for this kind of business come first, fewest claimants first. These are leads to check, not tax advice.</p>
+    Credits for this kind of business come first, strongest match first (NAICS or industry, then description, then signals),
+    fewest claimants first among equals. These are leads to check, not tax advice.</p>
   {% if niche %}
     <ul class="credit-list">{% for c in niche %}{{ credit(c) }}{% endfor %}</ul>
   {% else %}
