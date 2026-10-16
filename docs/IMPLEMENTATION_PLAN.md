@@ -8,6 +8,28 @@ This document is the source of truth for scope, money proof, agent architecture,
 
 ---
 
+## Current gap: data comes before money search
+
+The first user experience must establish **which business** is being searched before showing money. Prefer:
+
+```text
+Business website/domain
+  → sourced company research
+  → user reviews legal name, DBAs, addresses, and representative
+  → normalized BusinessSearchProfile
+  → unclaimed-funds search
+```
+
+Manual legal-name entry remains the fallback when no domain is available.
+
+`research/company` currently collects website facts, NYS DOS records, NYC Open Data, BBB, LinkedIn search snippets, and news. Each fact carries a source, fetch timestamp, confidence, and conflict information. The reviewed output must be mapped into `contracts/b2b_input.schema.json` before money search.
+
+The company-research runtime loads `TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, and `NIMBLE_API_KEY` from the root ignored `.env` (with `research/company/.env.local` as an optional override). It must never copy or commit secret values.
+
+The current mock money adapter is still synthetic. Company research is not yet connected to `src/search/adapter.py`, and a real/imported NY unclaimed-funds source is still required before claiming real search capability.
+
+---
+
 ## 1. Product contract
 
 MoneyFinder helps a **business** recover forgotten New York State unclaimed property (uncashed checks, refunds, credits, deposits).
@@ -136,6 +158,20 @@ Search variants generated from the profile:
 6. Prior addresses
 
 See [`contracts/b2b_input.schema.json`](../contracts/b2b_input.schema.json) and [`src/search/variants.py`](../src/search/variants.py).
+
+---
+
+## 4a. Domain-first UI requirements
+
+1. Ask whether the business has a website/domain.
+2. Run company research and show source-by-source progress.
+3. Show a profile review screen with source, timestamp, confidence, and conflicts.
+4. Require the representative to confirm or correct the profile.
+5. Only then show “Search for unclaimed funds.”
+6. Support manual profile entry when no domain is available.
+7. Include loading, no-results, provider-error, retry, and consent states.
+
+The frontend must call a backend/service boundary; it must not directly own company research, money search, or durable claim state.
 
 ---
 

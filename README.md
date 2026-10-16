@@ -81,6 +81,10 @@ Copy [.env.example](.env.example). Required for full demo:
 - Arize API key + **ARIZE_SPACE_ID** from the Arize dashboard
 - `ARIZE_PROJECT_NAME=moneyfinder` (chosen name; created on first export)
 - ElevenLabs optional (voice data entry only)
+- Company research providers: `TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, `NIMBLE_API_KEY`
+
+Company research loads `research/company/.env.local` first and falls back to
+the root `.env`, so provider secrets do not need to be duplicated.
 
 Verify Arize credentials via OTLP (not GraphQL):
 
