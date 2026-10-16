@@ -1,6 +1,8 @@
 # MoneyFinder
 
-**▶ [Watch the demo video](https://pub-d5248ecedccf4da6ad39e4b0750001ba.r2.dev/demo-videos-non-portfolio/Screen%20Recording%202026-10-16%20at%203.27.49%E2%80%AFPM.mov)**
+[![Watch the MoneyFinder demo](https://img.youtube.com/vi/ltOwx898b8c/maxresdefault.jpg)](https://youtu.be/ltOwx898b8c)
+
+**▶ [Watch the demo video on YouTube](https://youtu.be/ltOwx898b8c)**
 
 > Your business is leaving tax credits on the table. MoneyFinder learns how you operate from your data, finds the
 > niche NY credits you qualify for, and fills the forms for you.
