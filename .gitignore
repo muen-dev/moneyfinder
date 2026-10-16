@@ -61,4 +61,4 @@ form-filling/out/
 
 # Demo recordings (upload to GitHub as attachments, not into the repo)
 docs/*.mov
-docs/moneyfinder-demo-*.mp4
+docs/moneyfinder-demo*.mp4
