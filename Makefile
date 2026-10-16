@@ -5,6 +5,8 @@
 #   make company-research DOMAIN=joespizza.com
 #   make legal-match DOMAIN=warbyparker.com
 #   make demo                      # then open http://localhost:8000
+#   make dossier DOMAIN=themaincapital.com && make dossier-push ID=themaincapital.com
+#   make dossier-get SLUG=themaincapital-com
 #
 # Arguments are read by the shell ("$$Q"), so values with spaces or quotes pass through intact.
 
@@ -13,7 +15,8 @@
 	business-serve business-list business-fetch business-disconnect business-test \
 	company-research company-show company-keys company-test \
 	legal-research legal-show legal-match legal-seeds legal-load-kb legal-test \
-	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats
+	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats kb-ping kb-test \
+	dossier dossier-push dossier-get
 
 PORT ?= 8000
 
@@ -27,7 +30,7 @@ setup: ## Install every package's dependencies and the commit guard hook
 	cd research/legal && uv sync
 	cd kb && uv sync
 
-test: business-test company-test legal-test pipeline-test ## Run all tests
+test: business-test company-test legal-test kb-test pipeline-test ## Run all tests
 
 # MVP demo
 
@@ -38,6 +41,20 @@ pipeline-test: ## Unclaimed-funds pipeline checks (src/, synthetic data)
 
 evals: ## Unclaimed-funds evals on synthetic profiles
 	python3 evals/run_evals.py
+
+# Dossiers: one form-ready JSON per business (research/), loaded into SurrealDB for the form filler
+
+dossier: ## Build dossier.json: DOMAIN=<domain> and/or BUSINESS=<business id> [NO_LLM=1]
+	@test -n "$$DOMAIN$$BUSINESS" || { echo "usage: make dossier DOMAIN=themaincapital.com [BUSINESS=<id>] [NO_LLM=1]"; exit 1; }
+	cd research/business && uv run business-research dossier $${DOMAIN:+"$$DOMAIN"} $${BUSINESS:+--business-id "$$BUSINESS"} $${NO_LLM:+--no-llm}
+
+dossier-push: ## Load dossier.json into SurrealDB: ID=<slug|domain|path to dossier.json> or ALL=1 [YEAR=2025]
+	@test -n "$$ID$$ALL" || { echo "usage: make dossier-push ID=themaincapital.com   (or ALL=1 for every research/*/data/**/dossier.json)"; exit 1; }
+	uv run --project kb kb dossier-push $${ALL:+--all} $${ID:+"$$ID"} $${YEAR:+--tax-year "$$YEAR"}
+
+dossier-get: ## Print fn::business_dossier from SurrealDB: SLUG=<slug, e.g. themaincapital-com>
+	@test -n "$$SLUG" || { echo "usage: make dossier-get SLUG=themaincapital-com"; exit 1; }
+	cd kb && uv run kb dossier-get "$$SLUG"
 
 # research/business: Gmail connector
 
@@ -104,7 +121,7 @@ kb-up: ## Start local SurrealDB in Docker (port 8000)
 kb-down: ## Stop local SurrealDB
 	cd kb && docker compose down
 
-kb-init: ## Apply the database schema (safe to re-run)
+kb-init: ## Apply the database schema to SurrealDB (safe to re-run)
 	cd kb && uv run kb init
 
 kb-seed: ## Crawl seeds/sources.toml [PAGES=200 per seed]
@@ -130,3 +147,9 @@ kb-missed: ## Likely incentives not yet claimed: BUSINESS=<slug> YEAR=<tax year>
 
 kb-stats: ## Row counts
 	cd kb && uv run kb stats
+
+kb-ping: ## Check the SurrealDB connection (root .env: SurrealDB Cloud; kb/.env overrides)
+	cd kb && uv run kb ping
+
+kb-test: ## kb tests (in-process SurrealDB, no server needed)
+	cd kb && uv run pytest -q

@@ -23,6 +23,17 @@ make demo           # web app on http://localhost:8000 (PORT=... to change; Goog
 4. **Unclaimed funds.** **Unclaimed funds** in the header opens the B2B NY unclaimed-funds flow (`ui/index.html`,
    synthetic data) at `/unclaimed/`; its mock claim portal is at `/mock-portal/`.
 
+5. **Dossier in SurrealDB.** Each business gets one form-ready `dossier.json` (best value per field, every fact
+   with provenance, matched credits and forms, `missing_info` to ask the user). Load it into SurrealDB Cloud
+   (ns `moneyfinder`, db `main`) and read it back with `fn::business_dossier`:
+   ```bash
+   make kb-ping && make kb-init                     # connection check; schema (safe to re-run)
+   make dossier DOMAIN=themaincapital.com           # build research/company/data/<domain>/dossier.json
+   make dossier-push ID=themaincapital.com          # or ALL=1; idempotent
+   make dossier-get SLUG=themaincapital-com         # RETURN fn::business_dossier('themaincapital-com')
+   ```
+   The form filler reads this; see [docs/FORM_FILLER_HANDOFF.md](docs/FORM_FILLER_HANDOFF.md).
+
 Agentic browser filling of the official PDFs (review, approve, fill, verify) is in progress by a teammate and is
 not wired into the app yet.
 
@@ -110,7 +121,8 @@ Business UI → Agent tools → Bedrock (reasoning)
 Copy [.env.example](.env.example). Required for full demo:
 
 - AWS Bedrock (`AWS_BEDROCK_MODEL_ID`, region, temporary credentials)
-- SurrealDB (`SURREAL_WS_URL`, `SURREAL_NAMESPACE=moneyfinder`, `SURREAL_DATABASE=main`, **database JWT**)
+- SurrealDB (`SURREAL_WS_URL`, `SURREAL_NAMESPACE=moneyfinder`, `SURREAL_DATABASE=main`, and a database-level user
+  `SURREAL_USER`/`SURREAL_PASS`, or a database JWT in `SURREAL_TOKEN`; `kb/` reads these, `kb/.env` overrides)
 - Daytona API key
 - Arize API key + **ARIZE_SPACE_ID** from the Arize dashboard
 - `ARIZE_PROJECT_NAME=moneyfinder` (chosen name; created on first export)

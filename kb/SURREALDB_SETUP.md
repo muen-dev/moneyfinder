@@ -8,7 +8,7 @@ Audited 2026-10-16 (read-only: nothing was started, initialized or edited). Run 
 - **Missing:** no database exists anywhere. There's no `kb/.env`, no Surreal Cloud endpoint or credentials, no `surreal` CLI, and no AWS credentials, so search is full-text only.
 - **Blocking:** the Docker daemon isn't running, so every `kb` command fails with `ConnectionRefusedError: [Errno 61]`. SurrealDB and `make business-serve` both bind `127.0.0.1:8000`.
 
-How kb connects: `kb/src/moneyfinder_kb/config.py` loads **only `kb/.env`**. Defaults: `SURREAL_URL=ws://127.0.0.1:8000`, `SURREAL_USER=root`, `SURREAL_PASS=root`, `SURREAL_NS=moneyfinder`, `SURREAL_DB=kb`. It signs in with a root-level username and password; there's no token support. Variables already exported in your shell override `kb/.env`.
+How kb connects (updated, see `src/moneyfinder_kb/config.py` and README "Connection"): kb loads the **repo-root `.env`** (SurrealDB Cloud: `SURREAL_WS_URL`, `SURREAL_NAMESPACE=moneyfinder`, `SURREAL_DATABASE=main`), then `kb/.env` overrides per key, and exported variables beat both. On a remote URL with `SURREAL_USER`/`SURREAL_PASS` it tries a **database-level** signin (namespace + database + username + password), then a **root-level** system user (which also runs `DEFINE NAMESPACE/DATABASE IF NOT EXISTS`); a JWT in `SURREAL_TOKEN` is used with `authenticate`; local URLs keep root/root. `uv run kb ping` shows the target without secrets. The status notes below predate this.
 
 Pick **Option A** (about 5 minutes) unless you specifically want Cloud for the demo.
 
@@ -43,8 +43,8 @@ Root `.env` has `SURREALDB_ORG_ID` and `SURREALDB_MONEY-FINDER_INSTANCE_ID`, but
 1. Open https://studio.surrealdb.com, find the instance, and make sure it isn't paused. It must run **SurrealDB 3.x**: the schema uses 3.x syntax and was tested on 3.3.0. If it's on 2.x, upgrade it under Settings > Versions.
 2. Under **Connect**, copy the endpoint. Don't type the hostname by hand. With the CLI installed, `surreal cloud instance endpoint <instance-name>` prints the same value.
 3. Create namespace `moneyfinder` and database `kb`. If you keep Studio's defaults instead, set `SURREAL_NS` and `SURREAL_DB` to match.
-4. Open **Authentication > Root Authentication > + > New system user** and pick the **Owner** role (`kb init` defines tables, functions and analyzers). It has to be a **root-level** user: kb signs in without a namespace or database and can't use tokens.
-5. Create `kb/.env` (`cp kb/.env.example kb/.env`) and set:
+4. Create a **database-level** user on ns `moneyfinder`, db `main` (Studio: Authentication, or `DEFINE USER app ON DATABASE PASSWORD '...' ROLES EDITOR;`). `kb init` defines tables, fields, indexes, analyzers and functions, which EDITOR is allowed to do (it only lacks IAM: users and access methods). If `kb init` says "Not enough permissions", give the user OWNER.
+5. Put `SURREAL_USER` / `SURREAL_PASS` in the repo-root `.env` (no `kb/.env` needed). The older root-user layout still works via `kb/.env`:
 
 ```dotenv
 SURREAL_URL=wss://<endpoint-from-Connect-menu>

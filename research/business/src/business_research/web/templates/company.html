@@ -3,5 +3,6 @@
 {% block title %}{{ profile.name or profile.get("best", {}).get("legal_name") or domain }}{% endblock %}
 {% block content %}
 {{ ui.steps(3) }}
+{% include "dossier.html" %}
 {% include "research.html" %}
 {% endblock %}

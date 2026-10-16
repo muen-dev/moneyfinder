@@ -11,9 +11,11 @@
   <form method="post" action="{{ url_for('save_domain', business_id=conn.business_id) }}" class="domain-form"
         data-busy="Starting…">
     <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label for="name">Company name</label>
+    <input id="name" name="name" value="{{ name or '' }}" placeholder="Joe's Pizza LLC" autocomplete="organization" maxlength="120">
     <label for="domain">Website domain</label>
     <div class="input-row">
-      <input id="domain" name="domain" value="{{ value }}" placeholder="joespizza.com" autocomplete="url" required autofocus>
+      <input id="domain" name="domain" value="{{ value }}" placeholder="joespizza.com" autocomplete="url" required>
       <button class="primary">{{ "Save and re-run research" if current else "Build my profile" }}</button>
     </div>
   </form>

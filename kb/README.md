@@ -21,7 +21,31 @@ Everything our agents know about New York tax incentives, stored so they can fin
 - **SurrealDB** holds the index and the structured facts. It handles tables, graph edges, full-text and vector search together, so one query can go from "question" to "matching passage" to "which credit and form it belongs to."
 - **Provenance**: every structured fact (`incentive`, `criterion`, `form`) links to the `chunk`s it came from, and every chunk knows its URL, page and fetch date. When a page changes, the old version is kept for audit and dropped from search.
 
-## Quickstart
+## Connection
+
+`kb` reads the repo-root `.env` (shared SurrealDB Cloud: `SURREAL_WS_URL`, `SURREAL_NAMESPACE=moneyfinder`,
+`SURREAL_DATABASE=main`, `SURREAL_USER`/`SURREAL_PASS` or a JWT in `SURREAL_TOKEN`). On a remote URL it signs in
+database-level first and falls back to a root-level system user, which also creates the namespace and database if missing. `kb/.env`
+overrides it per key, and exported variables beat both, so a local database still works: put
+`SURREAL_URL=ws://127.0.0.1:8000`, `SURREAL_DATABASE=kb` (root/root signin is the local default) in `kb/.env`.
+`uv run kb ping` shows where it connects and how (never the secrets). `SURREAL_AUTH=root|namespace|database|token`
+forces the signin level. See `src/moneyfinder_kb/config.py`.
+
+## Dossiers (per-business, for the form filler)
+
+```bash
+uv run kb dossier-push themaincapital.com     # a path, slug or domain under research/*/data/; --all for every one
+uv run kb dossier-get themaincapital-com      # RETURN fn::business_dossier('themaincapital-com')
+```
+
+A push upserts `business:<slug>` (typed columns, `profile`, the whole JSON in `dossier`), replaces its `fact` rows,
+inserts missing `incentive`/`form`/`source` rows and `uses_form` links, and writes one `eligible_for` edge per credit
+for last year (stale dossier edges are removed). One transaction; re-running it changes nothing.
+See [docs/FORM_FILLER_HANDOFF.md](../docs/FORM_FILLER_HANDOFF.md).
+
+Tests: `uv run pytest -q` (uses the SDK's in-process engine; no server).
+
+## Quickstart (local database)
 
 ```bash
 cd kb
@@ -75,7 +99,7 @@ Add an entry to [seeds/sources.toml](seeds/sources.toml): a URL, its `authority`
 | Concern | Today | When it grows |
 |---|---|---|
 | Raw storage | `kb/lake/` folder | `LAKE_URI=s3://bucket/prefix`; same layout, no code change |
-| Database | local SurrealDB | SurrealDB Cloud: set `SURREAL_URL=wss://…` and credentials |
+| Database | SurrealDB Cloud (root `.env`) or local | `kb/.env` picks the database; see Connection |
 | Re-crawls | text-hash dedupe skips re-chunking and re-embedding unchanged pages | schedule `kb seed` plus `kb crawl-pending` |
 | Vector memory | HNSW index at 1024 dimensions ≈ 4 KB per chunk (1M chunks ≈ 4 GB) | drop to 512 dimensions: change `chunk_vec` and `EMBED_DIM` together |
 | Crawl throughput | one worker, 0.5 s delay per request | `crawl-pending` has no row locking, so shard parallel workers by domain |

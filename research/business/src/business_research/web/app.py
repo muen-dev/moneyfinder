@@ -12,12 +12,12 @@ from company_research import config as company_config
 from company_research import store as company_store
 from company_research.domain import InvalidDomain, normalize
 from company_research.profile import FIELDS
-from flask import Flask, abort, flash, redirect, render_template, request, send_from_directory, session, url_for
+from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_from_directory, session, url_for
 from googleapiclient.errors import HttpError
 from legal_research import store as legal_store
 from legal_research.match import match_programs
 
-from .. import company, config, inbox, store
+from .. import company, config, dossier as dossiers, inbox, store
 from ..gmail import auth
 from ..gmail.client import DEFAULT_QUERY, GmailClient
 
@@ -96,6 +96,7 @@ def create_app(port: int) -> Flask:
     app.jinja_env.filters["host"] = _host
     app.jinja_env.filters["short_url"] = _short_url
     app.jinja_env.filters["confidence"] = _confidence
+    app.jinja_env.filters["mask_ein"] = dossiers.mask_ein
 
     @app.context_processor
     def csrf_token():
@@ -177,6 +178,7 @@ def create_app(port: int) -> Flask:
             collector_names=COLLECTOR_NAMES,
             refresh=bool(research and research.get("status") in ("queued", "running")),
             credits=_credits(profile),
+            **_dossier_context(_business_dossier(business_id, research), url_for("business_dossier", business_id=business_id)),
         )
 
     @app.get("/companies/<domain>")
@@ -192,7 +194,23 @@ def create_app(port: int) -> Flask:
         return render_template(
             "company.html", conn=None, domain=domain, profile=profile, research=None, refresh=False,
             fields=FIELDS, glance=GLANCE, signals=SIGNALS, collector_names=COLLECTOR_NAMES, credits=_credits(profile),
+            **_dossier_context(_domain_dossier(domain), url_for("company_dossier", domain=domain)),
         )
+
+    @app.get("/companies/<domain>/dossier.json")
+    def company_dossier(domain: str):
+        try:
+            domain = normalize(domain)
+        except InvalidDomain:
+            abort(404)
+        if _stored_profile(domain) is None:
+            abort(404)
+        return _json(_domain_dossier(domain, refresh=request.args.get("refresh") == "1"))
+
+    @app.get("/businesses/<business_id>/dossier.json")
+    def business_dossier(business_id: str):
+        _connection_or_404(business_id)
+        return _json(_business_dossier(business_id, None, refresh=request.args.get("refresh") == "1"))
 
     @app.get("/unclaimed/")
     def unclaimed_demo():
@@ -207,18 +225,20 @@ def create_app(port: int) -> Flask:
         conn = _connection_or_404(business_id)
         current = company.get_domain(business_id)
         return render_template(
-            "domain.html", conn=conn, value=current or company.suggested_domain(conn.email), current=current
+            "domain.html", conn=conn, value=current or company.suggested_domain(conn.email), current=current,
+            name=company.info(business_id).get("name"),
         )
 
     @app.post("/businesses/<business_id>/domain")
     def save_domain(business_id: str):
         conn = _connection_or_404(business_id)
         raw = request.form.get("domain", "")
+        name = request.form.get("name", "")
         try:
-            domain = company.set_domain(business_id, raw)
+            domain = company.set_domain(business_id, raw, name=name)
         except InvalidDomain as e:
             current = company.get_domain(business_id)
-            return render_template("domain.html", conn=conn, value=raw[:300], current=current, error=str(e)), 400
+            return render_template("domain.html", conn=conn, value=raw[:300], current=current, name=name[:120], error=str(e)), 400
         _start_research(business_id, domain, conn.email)
         return redirect(url_for("business", business_id=business_id))
 
@@ -261,6 +281,55 @@ def create_app(port: int) -> Flask:
         return redirect(url_for("index"))
 
     return app
+
+
+DOSSIER_KEYS = ("name", "legal_name", "ein", "entity_type", "hq_address", "naics", "industry", "employees", "founded_year",
+                "phone", "payroll_provider", "contact_email", "website")
+
+
+def _domain_dossier(domain: str, refresh: bool = False) -> dict | None:
+    """Cached dossier.json for a stored profile; built (without the LLM) when missing, stale or asked for."""
+    cached = None if refresh else dossiers.cached_for_domain(domain)
+    profile_at = (_stored_profile(domain) or {}).get("generated_at") or ""
+    if cached and cached.get("generated_at", "") >= profile_at:
+        return cached
+    try:
+        return dossiers.build_for_domain(domain, use_llm=False)
+    except Exception:
+        return cached
+
+
+def _business_dossier(business_id: str, research: dict | None, refresh: bool = False) -> dict | None:
+    if research and research.get("status") in ("queued", "running"):
+        return None  # shown once research finishes
+    cached = None if refresh else dossiers.cached_for_business(business_id)
+    inputs = [(company.profile(business_id) or {}).get("generated_at") or "", store.fetched_at(business_id) or "",
+              company.info(business_id).get("updated_at") or ""]
+    if cached and all(cached.get("generated_at", "") >= t for t in inputs):
+        return cached
+    try:
+        return dossiers.build_for_business(business_id, use_llm=False)
+    except Exception:
+        return cached
+
+
+def _dossier_context(dossier: dict | None, json_url: str) -> dict:
+    sources = {}
+    if dossier:
+        business = dossier.get("business") or {}
+        for fact in dossier.get("facts") or []:
+            key = {"employee_count": "employees"}.get(fact["key"], fact["key"])
+            if key in business and key not in sources and fact.get("value") is not None:
+                value = business[key]
+                if fact["value"] == value or (isinstance(value, list) and isinstance(fact["value"], dict) and fact["value"].get("code") in value):
+                    sources[key] = fact
+    return {"dossier": dossier, "dossier_keys": DOSSIER_KEYS, "dossier_sources": sources, "dossier_json_url": json_url}
+
+
+def _json(data):
+    if data is None:
+        abort(404)
+    return jsonify(data)
 
 
 def _credits(profile: dict | None) -> list[dict]:

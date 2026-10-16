@@ -10,6 +10,7 @@ from surrealdb import RecordID
 
 from .config import Settings
 from .db import DB, without_none
+from .dossier import PUSH_SQL, build_push, push_summary
 from .embed import Embedder, make_embedder
 from .ingest import IngestResult, SourceSpec, crawl, ingest_pending, ingest_url, normalize_url
 from .lake import Lake, open_lake
@@ -228,6 +229,18 @@ class KB:
             {"e": edge},
         )
 
+    # ─── Dossiers (research/ output; read by the form filler) ────────────────
+
+    def push_dossier(self, dossier: dict[str, Any], tax_year: int | None = None) -> dict[str, Any]:
+        """Upsert business:<slug>, replace its facts, link its credits and forms. Idempotent, one transaction."""
+        params = build_push(dossier, tax_year)
+        self.db.run(PUSH_SQL, params)
+        return push_summary(params)
+
+    def business_dossier(self, slug: str) -> dict[str, Any] | None:
+        """fn::business_dossier: business columns + profile, facts with provenance, credits with forms."""
+        return self.db.one("RETURN fn::business_dossier($slug);", {"slug": slug})
+
     # ─── Housekeeping ────────────────────────────────────────────────────────
 
     def stats(self) -> dict[str, int]:
@@ -243,6 +256,7 @@ class KB:
                 incentives: (SELECT count() FROM incentive GROUP ALL)[0].count ?? 0,
                 forms:      (SELECT count() FROM form GROUP ALL)[0].count ?? 0,
                 businesses: (SELECT count() FROM business GROUP ALL)[0].count ?? 0,
+                facts:      (SELECT count() FROM fact GROUP ALL)[0].count ?? 0,
             };
             """
         )

@@ -51,9 +51,18 @@ def get_domain(business_id: str) -> str | None:
     return _read(business_dir(business_id) / "business.json").get("domain")
 
 
-def set_domain(business_id: str, raw: str) -> str:
+def info(business_id: str) -> dict:
+    """What the owner entered at signup: domain, company name (optional), updated_at."""
+    return _read(business_dir(business_id) / "business.json")
+
+
+def set_domain(business_id: str, raw: str, name: str | None = None) -> str:
     domain = validate_domain(raw)
-    _write(business_dir(business_id) / "business.json", {"domain": domain, "updated_at": _now()})
+    data = {"domain": domain, "updated_at": _now()}
+    name = " ".join((name or "").split())[:120] or info(business_id).get("name")
+    if name:
+        data["name"] = name
+    _write(business_dir(business_id) / "business.json", data)
     return domain
 
 

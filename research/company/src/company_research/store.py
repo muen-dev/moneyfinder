@@ -18,13 +18,15 @@ def profile_path(out_dir: Path) -> Path:
     return out_dir / "profile.json"
 
 
-def write_run(out_dir: Path, profile: dict, calls: list[dict]) -> Path:
-    """Replace the profile and its raw responses in out_dir."""
+def write_run(out_dir: Path, profile: dict, calls: list[dict], append: bool = False) -> Path:
+    """Replace the profile and its raw responses in out_dir (append=True keeps earlier raw responses)."""
     _private_dir(out_dir)
     raw = out_dir / "raw"
-    shutil.rmtree(raw, ignore_errors=True)
+    if not append:
+        shutil.rmtree(raw, ignore_errors=True)
     _private_dir(raw)
-    for i, call in enumerate(calls, 1):
+    start = len(list(raw.glob("*.json"))) + 1 if append else 1
+    for i, call in enumerate(calls, start):
         endpoint = re.sub(r"[^a-z0-9]+", "-", call.get("endpoint", "").lower().split("//")[-1])[-60:].strip("-")
         write_json(raw / f"{i:02d}-{call.get('provider', 'call')}-{endpoint}.json", call)
     path = profile_path(out_dir)

@@ -146,3 +146,17 @@ def test_disconnect_deletes_domain_and_research(client, research_calls, monkeypa
     assert not (config.DATA_DIR / business_id).exists()
     assert company.get_domain(business_id) is None and company.profile(business_id) is None
     assert store.read_messages(business_id) == []
+
+
+def test_domain_form_stores_company_name_and_business_page_shows_dossier(client, research_calls):
+    business_id = connect_fake_business()
+    form = client.get(f"/businesses/{business_id}/domain", base_url=BASE)
+    assert b'name="name"' in form.data
+    token = set_csrf(client)
+    client.post(f"/businesses/{business_id}/domain", data={"domain": "joespizza.com", "name": "  Joe's   Pizza ", "csrf": token}, base_url=BASE)
+    assert company.info(business_id)["name"] == "Joe's Pizza"
+    page = client.get(f"/businesses/{business_id}", base_url=BASE)
+    assert b"Form-ready dossier" in page.data
+    data = client.get(f"/businesses/{business_id}/dossier.json", base_url=BASE).get_json()
+    assert data["business"]["name"] == "Joe's Pizza" and data["business"]["contact_email"] == EMAIL
+    assert any(f["key"] == "name" and f["source_kind"] == "user" for f in data["facts"])

@@ -24,6 +24,7 @@ def cmd_run(args: argparse.Namespace) -> None:
         out_dir=out,
         use_llm=not args.no_llm,
         only=only,
+        merge=args.merge,
         log=lambda message: print(f"  {message}", file=sys.stderr),
     )
     _print_summary(profile)
@@ -87,6 +88,7 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--out", help=f"output folder (default: {config.DATA_DIR}/<domain>)")
     run.add_argument("--only", help=f"comma-separated collectors: {','.join(pipeline.COLLECTORS)}")
     run.add_argument("--no-llm", action="store_true", help="skip the optional Bedrock synthesis")
+    run.add_argument("--merge", action="store_true", help="keep the stored profile's other facts (use with --only)")
     run.set_defaults(func=cmd_run)
 
     show = commands.add_parser("show", help="print a stored profile")

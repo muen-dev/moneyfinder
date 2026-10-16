@@ -1,4 +1,5 @@
-"""`kb` command line: init, seed, ingest, crawl-pending, search, embed-missing, missed, stats."""
+"""`kb` command line: init, ping, seed, ingest, crawl-pending, search, embed-missing, missed, stats,
+dossier-push, dossier-get."""
 
 from __future__ import annotations
 
@@ -8,7 +9,9 @@ import sys
 import tomllib
 from pathlib import Path
 
-from .config import KB_ROOT
+from .config import KB_ROOT, Settings
+from .db import QueryError
+from .dossier import find_dossiers, load_dossier, resolve_dossier, slugify, to_jsonable
 from .ingest import IngestResult, SourceSpec
 from .kb import KB
 
@@ -16,6 +19,14 @@ DEFAULT_SEEDS = KB_ROOT / "seeds" / "sources.toml"
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        return _main(argv)
+    except (ValueError, FileNotFoundError, QueryError) as e:
+        print(f"kb: {e}", file=sys.stderr)
+        return 1
+
+
+def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="kb", description="moneyfinder tax-incentive knowledge base")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
@@ -50,11 +61,43 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("stats", help="row counts")
 
+    sub.add_parser("ping", help="check the SurrealDB connection and credentials (prints no secrets)")
+
+    p = sub.add_parser("dossier-push", help="load research/ dossier.json files into business, fact, eligible_for")
+    p.add_argument("dossier", nargs="*", help="path to dossier.json, or a slug/domain found under research/*/data/")
+    p.add_argument("--all", action="store_true", help="every research/*/data/**/dossier.json")
+    p.add_argument("--tax-year", type=int, help="default: last calendar year")
+
+    p = sub.add_parser("dossier-get", help="print fn::business_dossier(<slug>) as JSON")
+    p.add_argument("slug", help="e.g. themaincapital-com (a domain also works)")
+
     args = parser.parse_args(argv)
-    with KB.connect() as kb:
+    if args.cmd == "dossier-push":
+        paths = find_dossiers() if args.all else [resolve_dossier(a) for a in args.dossier]
+        if not paths:
+            parser.error("give a dossier path/slug, or --all")
+    settings = Settings.from_env()
+    with KB.connect(settings) as kb:
         match args.cmd:
             case "init":
-                print(f"applied {kb.db.apply_schema()} schema statements")
+                print(f"applied {kb.db.apply_schema()} schema statements to {settings.describe()} (signed in: {kb.db.auth})")
+            case "ping":
+                info = kb.db.one("RETURN { fn: (INFO FOR DB).functions.keys(), tables: (INFO FOR DB).tables.keys() };")
+                print(f"ok: {settings.describe()} (signed in: {kb.db.auth})")
+                print(f"  tables: {', '.join(sorted(info['tables'])) or '(none: run kb init)'}")
+                print(f"  functions: {', '.join(sorted(info['fn'])) or '(none)'}")
+            case "dossier-push":
+                for path in paths:
+                    summary = kb.push_dossier(load_dossier(path), tax_year=args.tax_year)
+                    print(json.dumps({"file": str(path), **summary}))
+            case "dossier-get":
+                result = kb.business_dossier(args.slug)
+                if not (result or {}).get("business") and slugify(args.slug) != args.slug:
+                    result = kb.business_dossier(slugify(args.slug))  # a domain was given
+                print(json.dumps(to_jsonable(result), default=str, indent=2))
+                if not result or not result.get("business"):
+                    print(f"no business:{args.slug} (push it with: kb dossier-push {args.slug})", file=sys.stderr)
+                    return 1
             case "seed":
                 for seed in load_seeds(args.file):
                     print(f"\n== {seed.url} (depth {seed.depth})")

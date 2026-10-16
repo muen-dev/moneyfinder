@@ -1,0 +1,24 @@
+{#- Form-ready dossier card: best value per field with its source kind, and what forms still need. -#}
+{% if dossier %}
+<section class="card dossier">
+  <h2>Form-ready dossier</h2>
+  <p class="muted small">What the form filler gets for {{ dossier.business.name or dossier.domain }} · {{ dossier.facts|length }} sourced facts
+    · {{ dossier.credits|length }} matched credits · generated {{ dossier.generated_at[:16]|replace("T", " ") }} UTC
+    · <a href="{{ dossier_json_url }}">dossier.json</a></p>
+  <dl class="glance dossier-values">
+    {% for key in dossier_keys %}{% set value = dossier.business.get(key) %}{% if value not in (none, "", []) %}
+      <div class="fact"><dt class="label">{{ key|replace("_", " ")|capitalize }}</dt>
+        <dd class="value">{% if key == "ein" %}{{ value|mask_ein }}{% elif value is sequence and value is not string %}{{ value|join(", ") }}{% else %}{{ value|string|truncate(140) }}{% endif %}
+          {% set src = dossier_sources.get(key) %}{% if src %} <span class="tag" title="{{ src.source }}">{{ src.source_kind }}</span>{% endif %}</dd></div>
+    {% endif %}{% endfor %}
+  </dl>
+  {% if dossier.missing_info %}
+  <p class="small"><strong>Still needed for forms:</strong> {{ dossier.missing_info|join(", ")|replace("_", " ") }}</p>
+  {% endif %}
+  {% if dossier.email and dossier.email.message_count %}
+  <p class="muted small">Email: {{ dossier.email.message_count }} messages
+    {%- for name, n in dossier.email.categories.items() %} · {{ name }} {{ n }}{% endfor %}
+    {%- if dossier.email.signals %} · {{ dossier.email.signals|length }} signals{% endif %}</p>
+  {% endif %}
+</section>
+{% endif %}
