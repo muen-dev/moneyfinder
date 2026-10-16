@@ -2,81 +2,1176 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MoneyFinder — Business Research</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MoneyFinder — Find money NY may owe your business</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root{--ink:#0b2545;--muted:#60748b;--bg:#eef3f8;--card:#fff;--line:#d5e0ec;--gold:#ffc53d;--green:#14a98a;--greenbg:#ddf5ee;--red:#e8553f;--redbg:#fde6e1}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
-    header{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center}.wrap{max-width:760px;margin:auto;padding:0 20px}
-    header .wrap{width:100%;display:flex;justify-content:space-between;align-items:center}.brand{font-weight:800;font-size:21px}
-    main{padding:28px 0 60px}.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:16px}
-    .hero{background:var(--ink);color:white}.hero p{color:#c5d4e4;max-width:54ch}.hero h1{font-size:clamp(32px,6vw,54px);line-height:1.03;margin:0;max-width:12ch}
-    h2,h3{line-height:1.1;margin:0 0 8px}.sub,.muted{color:var(--muted)}.hero .muted{color:#c5d4e4}
-    label{display:block;font-weight:650;font-size:14px;margin:14px 0 5px}input,select{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
-    button{border:0;border-radius:12px;padding:12px 16px;background:var(--gold);color:var(--ink);font-weight:750;cursor:pointer}button.secondary{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-    .pill{display:inline-block;padding:3px 9px;border-radius:99px;background:var(--greenbg);color:var(--green);font-size:12px;font-weight:700}.pill.warn{background:var(--redbg);color:var(--red)}.pill.demo{background:#e9edf2;color:var(--muted)}
-    .fact{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.fact:last-child{border:0}.fact small{color:var(--muted)}
-    .step{display:flex;gap:10px;align-items:center;margin:9px 0}.dot{width:24px;height:24px;border:2px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:12px}.dot.done{background:var(--green);border-color:var(--green);color:white}
-    .result{cursor:pointer}.result.selected{outline:3px solid var(--green)}.amount{font-size:24px;font-weight:800;color:var(--green);float:right}.timeline{border-left:3px solid var(--line);padding-left:16px}.timeline div{margin:13px 0}
-    .error{background:var(--redbg);color:var(--red);padding:10px 12px;border-radius:10px}.hide{display:none!important}
-    @media(max-width:560px){.fact{grid-template-columns:1fr}.row>*{flex-basis:100%}}
+    :root {
+      --bg: #f3f6fd;
+      --card: #fff;
+      --ink: #0b2545;
+      --muted: #5b6f88;
+      --line: #d5e0ec;
+      --gold: #ffc53d;
+      --sea: #14a98a;
+      --seaS: #ddf5ee;
+      --coral: #ff5d50;
+      --coralS: #fde6e1;
+      --hero: #0b2545;
+      --heroInk: #f4f8fc;
+      --sidebar: #1f1c2e;
+      --progress: #ff5d50;
+      --ok: #14a98a;
+      --wait: #ffc53d;
+      --shadow: 0 10px 30px rgba(11, 37, 69, .08);
+      --radius: 20px;
+      --focus: #3b82f6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #111827; --card: #1f2937; --ink: #eaf1f8; --muted: #9db1c8;
+        --line: #334155; --seaS: #0e3a34; --coralS: #42201c; --hero: #0f2441;
+        --sidebar: #0b1220; --shadow: 0 10px 30px rgba(0,0,0,.35);
+      }
+    }
+    [data-theme="dark"] {
+      --bg: #111827; --card: #1f2937; --ink: #eaf1f8; --muted: #9db1c8;
+      --line: #334155; --seaS: #0e3a34; --coralS: #42201c; --hero: #0f2441;
+      --sidebar: #0b1220; --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font: 400 16px/1.5 'DM Sans', system-ui, sans-serif;
+    }
+    h1, h2, h3, .display { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -.02em; line-height: 1.1; margin: 0; }
+    a { color: inherit; }
+    button, input, select, textarea { font: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, .card.result:focus-visible {
+      outline: 3px solid var(--focus); outline-offset: 2px;
+    }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+    .hide { display: none !important; }
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar {
+      height: 68px; border-bottom: 1px solid var(--line); background: var(--card);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; border: 0; background: none; color: var(--ink); cursor: pointer; font: 800 22px 'Bricolage Grotesque', sans-serif; }
+    .brand i { width: 12px; height: 12px; border-radius: 50%; background: var(--coral); display: block; box-shadow: 0 0 0 4px rgba(255,93,80,.2); }
+    .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+      background: var(--seaS); color: var(--sea); font-size: 12px; font-weight: 700;
+    }
+    .pill.warn { background: var(--coralS); color: var(--coral); }
+    .pill.demo, .pill.muted { background: #e9edf2; color: var(--muted); }
+    .pill.wait { background: #fff4d6; color: #9a6b00; }
+    .shell { display: grid; grid-template-columns: 88px 1fr; min-height: calc(100vh - 68px); }
+    .sidebar {
+      background: var(--sidebar); color: #fff; padding: 18px 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .nav-btn {
+      width: 100%; border: 0; border-radius: 14px; background: transparent; color: rgba(255,255,255,.75);
+      padding: 12px 8px; cursor: pointer; font-weight: 700; font-size: 11px; text-align: center;
+    }
+    .nav-btn.active, .nav-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .nav-btn span { display: block; font-size: 18px; margin-bottom: 4px; }
+    main { padding: 24px; max-width: 1200px; width: 100%; margin: 0 auto; }
+    .hero {
+      background: var(--hero); color: var(--heroInk); border-radius: 28px; padding: 40px 32px; box-shadow: var(--shadow);
+      display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: center;
+    }
+    .hero h1 { font-size: clamp(34px, 5vw, 56px); max-width: 14ch; }
+    .hero p { color: #b9cbe0; font-size: 18px; max-width: 46ch; margin: 14px 0 22px; }
+    .counter-panel {
+      background: linear-gradient(180deg, #222, #1a1a1a); border-radius: 22px; padding: 22px; text-align: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .counter-panel small { color: #9ca3af; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; }
+    .counter {
+      margin: 12px 0 8px; font: 800 clamp(36px, 6vw, 54px)/1.1 'Bricolage Grotesque', sans-serif; color: #eee;
+      font-variant-numeric: tabular-nums; letter-spacing: .02em;
+    }
+    .counter span {
+      display: inline-block; min-width: .85em; margin: 0 1px; padding: 6px 4px; border-radius: 8px;
+      background: linear-gradient(0deg, #222 0%, #2c2c2c 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .btn {
+      border: 0; border-radius: 14px; padding: 12px 18px; font-weight: 750; cursor: pointer;
+      background: var(--gold); color: #0b2545;
+    }
+    .btn.secondary { background: transparent; border: 1.5px solid var(--line); color: inherit; }
+    .btn.danger { background: var(--coralS); color: var(--coral); }
+    .btn.dark { background: var(--ink); color: var(--bg); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn.w { width: 100%; }
+    .grid { display: grid; gap: 14px; }
+    .grid.stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-top: 18px; }
+    .grid.cards { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+    }
+    .card h3 { margin-bottom: 6px; }
+    .muted, .sub { color: var(--muted); }
+    .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 18px; }
+    .step-chip { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+    .step-chip b { display: block; margin-bottom: 4px; }
+    .step-chip small { color: var(--muted); }
+    .thermo {
+      background: #142f4c; color: #fff; border-radius: 22px; padding: 20px; margin: 18px 0;
+    }
+    .thermo .goal { font: 800 34px 'Bricolage Grotesque', sans-serif; text-align: right; }
+    .glass { width: 100%; height: 18px; background: #c7c7c7; border-radius: 999px; overflow: hidden; margin: 12px 0; }
+    .glass > i { display: block; height: 100%; background: var(--progress); width: 0; transition: width .4s ease; }
+    .thermo-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .thermo-stats div { padding: 8px 0; }
+    .thermo-stats b { display: block; font-size: 20px; }
+    .thermo-stats span { color: #c5d4e4; font-size: 13px; }
+    label.field { display: block; font-weight: 700; font-size: 14px; margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%; padding: 12px 13px; border-radius: 12px; border: 1.5px solid var(--line);
+      background: var(--card); color: var(--ink);
+    }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 140px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .check { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0; }
+    .check input { width: auto; margin-top: 4px; }
+    .progress-list .item { display: flex; gap: 10px; align-items: center; margin: 10px 0; }
+    .dot {
+      width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 12px; flex: none;
+    }
+    .dot.run { border-color: var(--gold); border-top-color: transparent; animation: spin .8s linear infinite; }
+    .dot.ok { background: var(--sea); border-color: var(--sea); color: #fff; }
+    .dot.err { background: var(--coral); border-color: var(--coral); color: #fff; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fact { display: grid; grid-template-columns: 160px 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .fact:last-child { border: 0; }
+    .result { cursor: pointer; transition: outline .15s ease; }
+    .result.selected { outline: 3px solid var(--sea); }
+    .amount { float: right; font: 800 24px 'Bricolage Grotesque', sans-serif; color: var(--sea); }
+    .bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 8px 0 4px; }
+    .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--sea), #3dd6b5); }
+    .bar.warn > i { background: var(--wait); }
+    .bar.bad > i { background: var(--coral); }
+    .dash-head { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 16px; flex-wrap: wrap; }
+    .claim-card { display: flex; flex-direction: column; gap: 8px; min-height: 220px; }
+    .claim-card .meta { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .activity { max-height: 420px; overflow: auto; }
+    .activity .row-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .timeline { border-left: 3px solid var(--line); padding-left: 16px; }
+    .timeline .ev { margin: 0 0 14px; position: relative; }
+    .timeline .ev::before {
+      content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--sea);
+      position: absolute; left: -22px; top: 6px;
+    }
+    .timeline .ev.agency::before { background: var(--gold); }
+    .timeline .ev.bank::before { background: #60a5fa; }
+    .timeline .ev.bad::before { background: var(--coral); }
+    .log {
+      background: var(--hero); color: #cfe0f2; border-radius: 16px; padding: 14px;
+      font: 13px/1.7 ui-monospace, Menlo, monospace; min-height: 160px;
+    }
+    .log em { color: var(--gold); font-style: normal; }
+    .paper { background: #fffdf6; color: #0b2545; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+    .paper .field-row { margin: 12px 0; }
+    .paper .field-row label { display: flex; justify-content: space-between; font-size: 12px; color: #5b6f88; margin-bottom: 4px; }
+    .paper input.flag { border-color: var(--coral); background: var(--coralS); }
+    .error, .toast-stack { position: relative; }
+    .error {
+      background: var(--coralS); color: var(--coral); padding: 12px 14px; border-radius: 12px; margin: 12px 0;
+    }
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+      padding: 12px 18px; border-radius: 999px; font-weight: 700; z-index: 40; box-shadow: var(--shadow);
+    }
+    .split { display: grid; grid-template-columns: 1.4fr .9fr; gap: 16px; }
+    .memory {
+      background: linear-gradient(180deg, #0f2441, #142f4c); color: #dbeafe; border-radius: 20px; padding: 18px;
+    }
+    .memory h3 { color: #fff; }
+    .memory .mem { border-left: 2px solid rgba(255,197,61,.7); padding: 8px 0 8px 12px; margin: 10px 0; }
+    .view-toggle { display: flex; gap: 6px; }
+    .view-toggle button { border-radius: 999px; padding: 8px 12px; }
+    .list-view .claim-card { min-height: auto; }
+    #liveRegion { position: absolute; left: -9999px; }
+    .landing-mode .sidebar { display: none; }
+    .landing-mode .shell { grid-template-columns: 1fr; }
+    .landing-main { max-width: 980px; padding-top: 52px; }
+    .landing-main .hero { grid-template-columns: 1fr; text-align: center; padding: 42px 28px 30px; }
+    .landing-main .hero h1 { max-width: 18ch; margin: 0 auto; }
+    .landing-main .hero p { margin-left: auto; margin-right: auto; }
+    .landing-main .actions { justify-content: center; }
+    .landing-main .counter-panel { max-width: 520px; width: 100%; margin: 8px auto 0; }
+    .landing-main .thermo { max-width: 760px; margin: 18px auto 0; }
+    .landing-main .thermo-stats { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { flex-direction: row; overflow-x: auto; padding: 10px; }
+      .nav-btn { min-width: 84px; }
+      .hero, .split, .steps, .thermo-stats { grid-template-columns: 1fr; }
+      .thermo .goal { text-align: left; }
+      .fact { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-<header><div class="wrap"><div class="brand">MoneyFinder</div><span class="pill demo">Synthetic demo unless imported data is configured</span></div></header>
-<main class="wrap">
-  <section id="start">
-    <div class="hero"><h1>Start with your business, not a money guess.</h1><p>We research your company first, let you verify the facts, then search for possible New York unclaimed funds.</p><button onclick="show('research')">Research my business</button></div>
-    <div class="card"><h2>What we need first</h2><p class="sub">A website helps us find legal names, DBAs, addresses, and public records. You review everything before we search.</p><button class="secondary" onclick="show('manual')">I do not have a website</button></div>
-  </section>
+  <div class="app" id="app">
+    <header class="topbar">
+      <button class="brand" type="button" data-nav="landing" aria-label="MoneyFinder home"><i></i> MoneyFinder</button>
+      <div class="top-actions">
+        <span class="pill demo" id="demoBadge">Synthetic demo · JSON memory (Surreal-ready)</span>
+        <button class="btn secondary" type="button" id="themeBtn" aria-label="Toggle theme">Theme</button>
+        <button class="btn secondary" type="button" data-nav="tracker">Tracker</button>
+        <button class="btn" type="button" data-nav="start">Start search</button>
+      </div>
+    </header>
+    <div class="shell">
+      <nav class="sidebar" aria-label="Primary">
+        <button class="nav-btn active" data-nav="landing" type="button"><span>⌂</span>Home</button>
+        <button class="nav-btn" data-nav="start" type="button"><span>⌕</span>Search</button>
+        <button class="nav-btn" data-nav="tracker" type="button"><span>▣</span>Tracker</button>
+        <button class="nav-btn" data-nav="memory" type="button"><span>◎</span>Memory</button>
+      </nav>
+      <main id="mainContent">
+        <div id="liveRegion" aria-live="polite"></div>
+        <div id="error" class="error hide" role="alert"></div>
 
-  <section id="research" class="hide">
-    <div class="card"><h2>Find your business profile</h2><p class="sub">Enter the public website. We do not need Gmail access to search unclaimed funds.</p>
-      <label for="domain">Business website</label><input id="domain" placeholder="joespizza.com">
-      <label><input id="researchConsent" type="checkbox" checked style="width:auto;margin-right:8px"> I authorize public business research for this demo.</label>
-      <div class="actions"><button onclick="research()">Research business</button><button class="secondary" onclick="show('start')">Back</button></div>
+        <!-- LANDING -->
+        <section id="view-landing" class="view landing-main">
+          <div class="hero">
+            <div>
+              <h1>Find money New York may owe your business.</h1>
+              <p>Possible funds first. Proof before payment.</p>
+              <div class="actions">
+                <button class="btn" type="button" data-nav="research">Research my business</button>
+                <button class="btn secondary" type="button" data-nav="manual" style="color:#fff;border-color:rgba(255,255,255,.35)">I do not have a website</button>
+              </div>
+            </div>
+            <div class="counter-panel" aria-label="Possible funds counter">
+              <small>Possible funds identified</small>
+              <div class="counter" id="heroCounter">$000,000</div>
+              <p class="muted" style="color:#9ca3af;margin:0;font-size:13px">Estimate from demo matches — not approved money</p>
+            </div>
+          </div>
+          <div class="thermo" aria-label="Claim journey thermometer">
+            <div class="goal" id="landingGoal">$0 goal path</div>
+            <div class="glass"><i id="landingThermo" style="width:8%"></i></div>
+            <div class="thermo-stats">
+              <div><b id="statPossible">$0</b><span>Possible</span></div>
+              <div><b id="statClaims">0</b><span>Claims tracked</span></div>
+              <div><b id="statReview">0</b><span>Needs review</span></div>
+              <div><b id="statConfirmed">$0</b><span>Demo deposits</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- START / CHOICE -->
+        <section id="view-start" class="view hide">
+          <div class="card">
+            <h2>Start with your business, not a money guess</h2>
+            <p class="sub">Choose how MoneyFinder should build the search profile.</p>
+            <div class="actions">
+              <button class="btn" type="button" data-nav="research">I have a website</button>
+              <button class="btn secondary" type="button" data-nav="manual">Enter details manually</button>
+              <button class="btn secondary" type="button" id="resetDemo">Load seeded demo business</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- RESEARCH -->
+        <section id="view-research" class="view hide">
+          <div class="card">
+            <h2>Find your business profile</h2>
+            <p class="sub">Enter the public website. We do not need Gmail access to search unclaimed funds.</p>
+            <label class="field" for="domain">Business website</label>
+            <input id="domain" placeholder="example.com" value="example.com" autocomplete="url">
+            <label class="check"><input id="researchConsent" type="checkbox" checked> I authorize public business research for this demo.</label>
+            <div class="actions">
+              <button class="btn" type="button" id="researchBtn">Research business</button>
+              <button class="btn secondary" type="button" data-nav="start">Back</button>
+            </div>
+          </div>
+          <div id="researchProgress" class="card hide">
+            <h3>Research progress</h3>
+            <div class="progress-list" id="progressList"></div>
+            <div class="actions">
+              <button class="btn secondary hide" type="button" id="retryResearch">Retry failed sources</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MANUAL -->
+        <section id="view-manual" class="view hide">
+          <div class="card">
+            <h2>Enter business details</h2>
+            <p class="sub">Fallback when there is no public website. Required for accurate matching.</p>
+            <label class="field" for="manualName">Legal business name</label>
+            <input id="manualName" value="Example NYC Foods LLC">
+            <label class="field" for="manualDbas">DBAs (comma separated)</label>
+            <input id="manualDbas" value="Example Foods, Example NYC Market">
+            <label class="field" for="manualType">Business type</label>
+            <select id="manualType"><option>LLC</option><option>Corp</option><option>SoleProp</option><option>Partnership</option></select>
+            <label class="field">Current address</label>
+            <div class="row">
+              <input id="manualStreet" placeholder="Street" value="123 Main Street">
+              <input id="manualCity" placeholder="City" value="Brooklyn">
+              <input id="manualZip" placeholder="ZIP" value="11201">
+            </div>
+            <label class="field" for="manualFormer">Former addresses (optional)</label>
+            <input id="manualFormer" placeholder="88 Queens Blvd, Queens, NY 11101" value="88 Queens Blvd, Queens, NY 11101">
+            <label class="field">Authorized representative</label>
+            <div class="row">
+              <input id="manualRep" placeholder="Full name" value="Maria Alvarez">
+              <input id="manualRole" placeholder="Role" value="Managing Member">
+            </div>
+            <label class="field" for="manualDocs">Optional docs (placeholders)</label>
+            <input id="manualDocs" placeholder="authorization.pdf, dba.pdf, cancelled-check.pdf">
+            <label class="check"><input id="manualConsent" type="checkbox" checked> I authorize MoneyFinder to search NY unclaimed funds using this business information (demo).</label>
+            <div class="actions">
+              <button class="btn" type="button" id="manualBtn">Review profile</button>
+              <button class="btn secondary" type="button" data-nav="start">Back</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section id="view-profile" class="view hide">
+          <div class="card">
+            <h2>Review your business profile</h2>
+            <p class="sub">Confirm the facts before MoneyFinder searches for money. Every fact shows its source.</p>
+            <div id="facts"></div>
+            <label class="field">Authorized representative</label>
+            <div class="row">
+              <input id="rep" placeholder="Full name">
+              <input id="role" placeholder="Role">
+            </div>
+            <label class="check"><input id="profileConsent" type="checkbox" checked> I confirm this profile is accurate enough to search.</label>
+            <div class="actions">
+              <button class="btn" type="button" id="confirmProfileBtn">Search for possible money</button>
+              <button class="btn secondary" type="button" data-nav="start">Start over</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SEARCH -->
+        <section id="view-search" class="view hide">
+          <div class="card">
+            <h2>Possible money</h2>
+            <p class="sub" id="searchMode"></p>
+            <div id="results" class="grid cards"></div>
+            <div class="actions">
+              <button class="btn" type="button" id="prepareBtn" disabled>Prepare selected claims</button>
+              <button class="btn secondary" type="button" id="retrySearch">Retry search</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- FORMS -->
+        <section id="view-forms" class="view hide">
+          <div class="card">
+            <h2>Review claim forms</h2>
+            <p class="sub">Nothing is sent until conflicts are cleared and you approve each exact form.</p>
+            <div id="formList"></div>
+            <label class="check"><input id="masterApprove" type="checkbox"> I am authorized for this business and approve sending ready forms.</label>
+            <div class="actions">
+              <button class="btn" type="button" id="submitReadyBtn" disabled>Send ready forms</button>
+              <button class="btn danger" type="button" id="cancelFormsBtn">Cancel</button>
+              <button class="btn secondary" type="button" data-nav="tracker">Open tracker</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- FORM DETAIL -->
+        <section id="view-form-detail" class="view hide">
+          <div class="card">
+            <button class="btn secondary" type="button" id="backForms">‹ Back to forms</button>
+            <h2 id="formTitle" style="margin-top:12px">Claim form</h2>
+            <p class="sub" id="formSub"></p>
+            <div class="paper" id="paper"></div>
+            <div class="actions">
+              <button class="btn" type="button" id="saveFormBtn">Save changes</button>
+              <button class="btn danger" type="button" id="removeFormBtn">Remove this form</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SUBMIT LOG -->
+        <section id="view-submit" class="view hide">
+          <div class="card">
+            <h2>Sandbox submission</h2>
+            <p class="sub">Daytona-style cloud browser fills the mock NY portal with approved values only.</p>
+            <div class="log" id="submitLog" aria-live="polite"></div>
+            <div class="actions">
+              <button class="btn danger" type="button" id="stopSubmit">Stop</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TRACKER -->
+        <section id="view-tracker" class="view hide">
+          <div class="dash-head">
+            <div>
+              <h2 class="display">Claim tracker</h2>
+              <p class="sub">Dashboard for what the agent is doing with each claim and where the money evidence stands.</p>
+            </div>
+            <div class="actions" style="margin:0">
+              <div class="view-toggle">
+                <button class="btn secondary" type="button" id="gridViewBtn">Grid</button>
+                <button class="btn secondary" type="button" id="listViewBtn">List</button>
+              </div>
+              <button class="btn secondary" type="button" id="refreshTracker">Refresh</button>
+              <button class="btn" type="button" data-nav="start">New search</button>
+            </div>
+          </div>
+          <div class="thermo">
+            <div class="goal" id="trackerGoal">$0 possible</div>
+            <div class="glass"><i id="trackerThermo"></i></div>
+            <div class="thermo-stats">
+              <div><b id="tPossible">$0</b><span>Possible funds</span></div>
+              <div><b id="tReview">0</b><span>Needs review</span></div>
+              <div><b id="tProcessing">0</b><span>In process</span></div>
+              <div><b id="tConfirmed">$0</b><span>Demo deposits</span></div>
+            </div>
+          </div>
+          <div class="split">
+            <div>
+              <div id="claimCards" class="grid cards"></div>
+            </div>
+            <aside class="card activity">
+              <h3>Activity feed</h3>
+              <p class="sub">Append-only evidence and status events</p>
+              <div id="activityFeed"></div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- CLAIM DETAIL -->
+        <section id="view-claim" class="view hide">
+          <div class="actions" style="margin-top:0">
+            <button class="btn secondary" type="button" data-nav="tracker">‹ Back to tracker</button>
+          </div>
+          <div class="dash-head">
+            <div>
+              <h2 id="claimTitle">Claim</h2>
+              <p class="sub" id="claimSub"></p>
+            </div>
+            <span class="pill" id="claimStatusPill">STATUS</span>
+          </div>
+          <div class="thermo">
+            <div class="goal" id="claimGoal">$0</div>
+            <div class="glass"><i id="claimThermo"></i></div>
+            <div class="thermo-stats" id="claimThermoStats"></div>
+          </div>
+          <div class="split">
+            <div class="grid">
+              <div class="card">
+                <h3>Money flow evidence</h3>
+                <p class="sub">Agency rail and bank rail stay separate. Payment confirmation is never inferred from submission alone.</p>
+                <div class="timeline" id="claimTimeline"></div>
+                <div class="actions" id="claimActions"></div>
+              </div>
+              <div class="card">
+                <h3>Form readiness</h3>
+                <div id="claimFormState"></div>
+              </div>
+            </div>
+            <div class="memory">
+              <h3>Agent memory / decision trail</h3>
+              <p class="sub" style="color:#93c5fd">JSON-backed demo trail shaped like SurrealDB claim memory. Not a live Surreal connection.</p>
+              <div id="memoryTrail"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- GLOBAL MEMORY -->
+        <section id="view-memory" class="view hide">
+          <div class="memory">
+            <h2 style="color:#fff;margin-bottom:8px">Agent memory</h2>
+            <p style="color:#93c5fd">What MoneyFinder remembered across profiles, forms, conflicts, and evidence. Persistence today is JSON; schema target is <code>schemas/surreal/schema.surql</code>.</p>
+            <div id="globalMemory"></div>
+          </div>
+        </section>
+      </main>
     </div>
-    <div id="researchProgress" class="card hide"><h3>Research progress</h3><div id="progress"></div></div>
-  </section>
+  </div>
 
-  <section id="manual" class="hide">
-    <div class="card"><h2>Enter business details</h2><p class="sub">Use this fallback when there is no public website.</p>
-      <label>Legal business name</label><input id="manualName" value="Example NYC Foods LLC">
-      <label>DBAs (comma separated)</label><input id="manualDbas" value="Example Foods, Example NYC Market">
-      <label>City and ZIP</label><div class="row"><input id="manualCity" value="Brooklyn"><input id="manualZip" value="11201"></div>
-      <label>Authorized representative</label><div class="row"><input id="manualRep" value="Maria Alvarez"><input id="manualRole" value="Managing Member"></div>
-      <label><input id="manualConsent" type="checkbox" checked style="width:auto;margin-right:8px"> I authorize the search.</label>
-      <div class="actions"><button onclick="manualProfile()">Review profile</button><button class="secondary" onclick="show('start')">Back</button></div>
-    </div>
-  </section>
-
-  <section id="profile" class="hide"><div class="card"><h2>Review your business profile</h2><p class="sub">Confirm the facts before MoneyFinder searches for money.</p><div id="facts"></div>
-    <label>Authorized representative</label><div class="row"><input id="rep" placeholder="Full name"><input id="role" placeholder="Role"></div>
-    <label><input id="profileConsent" type="checkbox" checked style="width:auto;margin-right:8px"> I confirm this profile is accurate enough to search.</label>
-    <div class="actions"><button onclick="confirmProfile()">Search for possible money</button><button class="secondary" onclick="show('start')">Start over</button></div>
-  </div></section>
-
-  <section id="search" class="hide"><div class="card"><h2>Possible money</h2><p class="sub" id="searchMode"></p><div id="results"></div><div class="actions"><button id="prepare" disabled onclick="prepare()">Prepare selected claim</button></div></div></section>
-
-  <section id="form" class="hide"><div class="card"><h2>Review claim form</h2><p class="sub">Nothing is sent until you approve this exact form.</p><div id="formFields"></div><label><input id="approve" type="checkbox" style="width:auto;margin-right:8px" onchange="document.getElementById('submit').disabled=!this.checked"> I am authorized and approve this form.</label><div class="actions"><button id="submit" disabled onclick="submitClaim()">Submit to demo portal</button></div></div></section>
-
-  <section id="status" class="hide"><div class="card"><h2>Claim evidence timeline</h2><p class="sub">Agency approval and bank receipt are separate. This demo marks synthetic events.</p><div id="timeline" class="timeline"></div><div class="actions"><button onclick="show('start')">Find another business</button></div></div></section>
-  <div id="error" class="error hide"></div>
-</main>
 <script>
-let state={profile:null,research:null,hits:[],selected:null,claim:null};
-const $=id=>document.getElementById(id);
-function show(id){['start','research','manual','profile','search','form','status'].forEach(x=>$(x).classList.toggle('hide',x!==id));$('error').classList.add('hide');scrollTo(0,0)}
-function fail(e){$('error').textContent=e.message||String(e);$('error').classList.remove('hide')}
-async function api(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const x=await r.json();if(!r.ok)throw Error(x.error||'Request failed');return x}
-function renderProfile(p){state.research=p;$('facts').innerHTML='';const b=p.best||{};[['Legal name',b.legal_name],['Address',b.hq_address],['City',b.city],['State',b.state],['ZIP',b.zip],['Business type',b.entity_type],['Research source',p.domain]].forEach(([k,v])=>$('facts').insertAdjacentHTML('beforeend',`<div class="fact"><small>${k}</small><span>${v||'<span class="pill warn">Needs confirmation</span>'}</span></div>`));$('rep').value='';$('role').value='';show('profile')}
-async function research(){try{if(!$('researchConsent').checked)throw Error('Research consent is required');$('researchProgress').classList.remove('hide');$('progress').innerHTML=['Website','NYS Department of State','NYC Open Data','BBB / public snippets'].map(x=>`<div class="step"><span class="dot">…</span>${x}</div>`).join('');const p=await api('/api/research',{domain:$('domain').value});renderProfile(p)}catch(e){fail(e)}}
-function manualProfile(){if(!$('manualConsent').checked)return fail(Error('Search consent is required'));state.research={domain:null,best:{legal_name:$('manualName').value,hq_address:'',city:$('manualCity').value,state:'NY',zip:$('manualZip').value,entity_type:'User supplied'},fields:{},demo_only:true};renderProfile(state.research);$('rep').value=$('manualRep').value;$('role').value=$('manualRole').value}
-async function confirmProfile(){try{if(!$('profileConsent').checked)throw Error('Confirm the profile before searching');const p=state.research;p.best=p.best||{};p.best.authorized_representative={name:$('rep').value,role:$('role').value};const out=await api('/api/profile/review',{profile:{...p,dbas:p.best.dbas||[]},consent:true});state.profile=out.profile;const result=await api('/api/search',{profile:state.profile});state.hits=result.hits;$('searchMode').innerHTML=result.source_mode==='demo_only'?'<span class="pill demo">Demo corpus — not government data</span>':'<span class="pill">Imported NY data</span>';$('results').innerHTML=state.hits.length?state.hits.map((h,i)=>`<div class="card result" onclick="selectHit(${i})"><span class="amount">${h.amount_cents==null?'Amount unavailable':'$'+(h.amount_cents/100).toFixed(2)}</span><b>${h.found_name}</b><p class="sub">${h.property_type} · ${h.city} ${h.zip}</p><span class="pill">Confidence ${Math.round(h.confidence*100)}%</span><p class="muted">${h.reasons.join(' · ')} · Source: ${h.source}</p></div>`).join(''):'<p class="sub">No possible matches found. Try a DBA or former address.</p>';show('search')}catch(e){fail(e)}}
-function selectHit(i){state.selected=state.hits[i];document.querySelectorAll('.result').forEach((x,n)=>x.classList.toggle('selected',n===i));$('prepare').disabled=false}
-function prepare(){const h=state.selected;const p=state.profile;const fields=[['Legal name',p.legal_name,'profile'],['Representative',$('rep').value,'user'],['Role',$('role').value,'user'],['City',p.addresses[0].city,'profile'],['ZIP',p.addresses[0].zip,'profile'],['Property',h.found_name,'search result'],['Amount',h.amount_cents==null?'Unavailable':'$'+(h.amount_cents/100).toFixed(2),'search result']];$('formFields').innerHTML=fields.map(x=>`<div class="fact"><small>${x[0]}<br><span class="pill">${x[2]}</span></small><input value="${x[1]}" data-field="${x[0]}"></div>`).join('');$('approve').checked=false;$('submit').disabled=true;show('form')}
-async function submitClaim(){try{const event={claim_id:'claim_'+Date.now(),from_status:'USER_APPROVED',to_status:'SUBMITTED',evidence_kind:'submission',actor:'user',source:'local_demo'};await api('/api/events',event);await api('/api/events',{claim_id:event.claim_id,from_status:'SUBMITTED',to_status:'CLAIM_RECEIVED',evidence_kind:'agency_receipt',actor:'mock_portal',source:'mock_ny_portal'});state.claim=event.claim_id;$('timeline').innerHTML=['USER_APPROVED','SUBMITTED','CLAIM_RECEIVED'].map((x,i)=>`<div><b>${x}</b><br><span class="muted">${i===2?'Mock agency receipt — synthetic demo':'Recorded event'}</span></div>`).join('');show('status')}catch(e){fail(e)}}
-show('start');
+const state = {
+  view: 'landing',
+  research: null,
+  profile: null,
+  hits: [],
+  selected: new Set(),
+  claims: [],
+  formsByClaim: {},
+  activeClaimId: null,
+  activeFormClaimId: null,
+  submitTimers: [],
+  stopped: false,
+  tracker: null,
+  listMode: false,
+};
+
+const $ = (id) => document.getElementById(id);
+const money = (cents) => {
+  if (cents == null) return 'Amount unavailable';
+  return '$' + (cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+};
+const esc = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const announce = (msg) => { $('liveRegion').textContent = msg; };
+const toast = (msg) => {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg; document.body.append(el);
+  announce(msg);
+  setTimeout(() => el.remove(), 2400);
+};
+const statusTone = (status) => {
+  if (['REJECTED', 'STOPPED_BY_USER'].includes(status)) return 'warn';
+  if (['NEEDS_DOCS', 'FORM_READY', 'MATCH_FOUND'].includes(status)) return 'wait';
+  if (status === 'PAYMENT_CONFIRMED') return '';
+  return 'muted';
+};
+const fail = (e) => {
+  const msg = e?.message || String(e);
+  $('error').textContent = msg;
+  $('error').classList.remove('hide');
+  announce(msg);
+};
+const clearError = () => $('error').classList.add('hide');
+
+async function api(path, body, method = 'POST') {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  const x = await r.json().catch(() => ({}));
+  if (!r.ok) throw Error(x.error || 'Request failed');
+  return x;
+}
+
+function setNav(view) {
+  document.querySelectorAll('.nav-btn').forEach((btn) => {
+    const target = btn.getAttribute('data-nav');
+    btn.classList.toggle('active', target === view || (view === 'claim' && target === 'tracker') || (['research','manual','profile','search','forms','form-detail','submit'].includes(view) && target === 'start'));
+  });
+}
+
+function show(view) {
+  clearError();
+  state.view = view;
+  document.body.classList.toggle('landing-mode', view === 'landing');
+  document.querySelectorAll('.view').forEach((el) => el.classList.toggle('hide', el.id !== `view-${view}`));
+  setNav(view);
+  const hash = view === 'claim' && state.activeClaimId ? `claim/${state.activeClaimId}` : view;
+  if (location.hash.replace(/^#/, '') !== hash) history.replaceState(null, '', `#${hash}`);
+  window.scrollTo(0, 0);
+}
+
+function renderCounter(el, cents) {
+  const text = money(cents);
+  el.innerHTML = [...text].map((ch) => (/[0-9,$]/.test(ch) ? `<span>${esc(ch)}</span>` : esc(ch))).join('');
+}
+
+function applySummary(summary) {
+  const possible = summary?.possible_funds_cents || 0;
+  const confirmed = summary?.confirmed_demo_cents || 0;
+  renderCounter($('heroCounter'), possible || 59750);
+  $('landingGoal').textContent = `${money(possible || 59750)} claim path`;
+  $('statPossible').textContent = money(possible || 59750);
+  $('statClaims').textContent = String(summary?.claims_total || 0);
+  $('statReview').textContent = String(summary?.needs_review || 0);
+  $('statConfirmed').textContent = money(confirmed);
+  const pct = summary?.claims_total ? Math.min(100, Math.round(((summary.confirmed || 0) / summary.claims_total) * 100) || 8) : 8;
+  $('landingThermo').style.width = `${Math.max(8, pct)}%`;
+}
+
+async function loadTracker(silent = false) {
+  const data = await api('/api/tracker', undefined, 'GET');
+  state.tracker = data;
+  state.claims = data.claims || [];
+  applySummary(data.summary);
+  if (!silent && state.view === 'tracker') renderTracker();
+  if (!silent && state.view === 'memory') renderGlobalMemory();
+  return data;
+}
+
+function renderTracker() {
+  const data = state.tracker || { summary: {}, claims: [], events: [] };
+  const s = data.summary || {};
+  $('trackerGoal').textContent = `${money(s.possible_funds_cents || 0)} possible`;
+  $('tPossible').textContent = money(s.possible_funds_cents || 0);
+  $('tReview').textContent = String(s.needs_review || 0);
+  $('tProcessing').textContent = String(s.processing || 0);
+  $('tConfirmed').textContent = money(s.confirmed_demo_cents || 0);
+  const progress = s.claims_total ? Math.round(((s.confirmed || 0) * 100) / s.claims_total) : Math.round((s.possible_funds_cents ? 35 : 8));
+  $('trackerThermo').style.width = `${Math.max(8, Math.min(100, progress || 8))}%`;
+
+  const cards = $('claimCards');
+  cards.classList.toggle('list-view', state.listMode);
+  if (!(data.claims || []).length) {
+    cards.innerHTML = '<div class="card"><p class="sub">No claims yet. Start a business search or load the seeded demo.</p></div>';
+  } else {
+    cards.innerHTML = data.claims.map((c) => {
+      const tone = statusTone(c.status);
+      const barClass = c.status === 'REJECTED' || c.status === 'STOPPED_BY_USER' ? 'bad' : (['NEEDS_DOCS','FORM_READY'].includes(c.status) ? 'warn' : '');
+      return `<article class="card claim-card" role="button" tabindex="0" data-open-claim="${esc(c.id)}" onclick="openClaim('${esc(c.id)}').catch(fail)">
+        <div class="meta"><span class="pill ${tone}">${esc(c.status)}</span><strong>${esc(money(c.amount_cents))}</strong></div>
+        <h3>${esc(c.match_name || c.business_name)}</h3>
+        <p class="sub">${esc(c.property_type || '')} · ${esc(c.city || '')} ${esc(c.zip || '')}</p>
+        <div class="bar ${barClass}"><i style="width:${esc(c.progress_pct || 0)}%"></i></div>
+        <small class="muted">${esc(c.next_action || 'View claim')} ${c.confirmation_id ? '· ' + esc(c.confirmation_id) : ''}</small>
+      </article>`;
+    }).join('');
+  }
+
+  $('activityFeed').innerHTML = (data.events || []).slice(0, 20).map((e) => `
+    <div class="row-item">
+      <div>
+        <b>${esc(e.to_status || 'event')}</b>
+        <small class="muted" style="display:block">${esc(e.note || e.source || '')}</small>
+        <small class="muted">${esc(e.created_at || '')} · ${esc(e.claim_id || '')}</small>
+      </div>
+    </div>`).join('') || '<p class="sub">No events yet.</p>';
+}
+
+async function openClaim(claimId) {
+  state.activeClaimId = claimId;
+  const bundle = await api(`/api/claims/${encodeURIComponent(claimId)}`, undefined, 'GET');
+  renderClaim(bundle);
+  show('claim');
+}
+
+function railClass(kind, status) {
+  if (status === 'REJECTED' || status === 'STOPPED_BY_USER') return 'bad';
+  if (kind === 'bank_deposit' || status === 'PAYMENT_CONFIRMED') return 'bank';
+  if (['agency_receipt','agency_approval','agency_payment_issued'].includes(kind) || ['CLAIM_RECEIVED','PROCESSING','APPROVED','PAYMENT_ISSUED'].includes(status)) return 'agency';
+  return '';
+}
+
+function renderClaim(bundle) {
+  const c = bundle.claim;
+  const form = bundle.form;
+  $('claimTitle').textContent = c.match_name || c.business_name || 'Claim';
+  $('claimSub').textContent = `${c.property_type || ''} · ${c.business_name || ''} · ${c.confirmation_id || 'No confirmation yet'}`;
+  $('claimStatusPill').textContent = c.status;
+  $('claimStatusPill').className = `pill ${statusTone(c.status)}`;
+  $('claimGoal').textContent = money(c.amount_cents);
+  $('claimThermo').style.width = `${c.progress_pct || 0}%`;
+  $('claimThermoStats').innerHTML = `
+    <div><b>${esc(c.progress_pct || 0)}%</b><span>Progress</span></div>
+    <div><b>${esc((c.confidence || 0) * 100 | 0)}%</b><span>Match confidence</span></div>
+    <div><b>${c.demo_only ? 'Demo' : 'Live'}</b><span>Data mode</span></div>
+    <div><b>${esc((c.next_action || '').split(' ').slice(0,2).join(' ') || '—')}</b><span>Next focus</span></div>`;
+
+  const events = (bundle.events || []).slice().sort((a,b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  $('claimTimeline').innerHTML = events.map((e) => `
+    <div class="ev ${railClass(e.evidence_kind, e.to_status)}">
+      <b>${esc(e.to_status)}</b>
+      <div class="muted">${esc(e.note || '')}</div>
+      <div><span class="pill ${e.evidence_kind === 'bank_deposit' ? 'muted' : ''}">${esc(e.evidence_kind || 'status')}</span>
+      <span class="pill demo">${esc(e.source || '')}</span></div>
+      <small class="muted">${esc(e.created_at || '')}${e.reference ? ' · ' + esc(e.reference) : ''}</small>
+    </div>`).join('') || '<p class="sub">No timeline events.</p>';
+
+  const errors = form?.validation_errors || [];
+  const conflicted = (form?.fields || []).some((f) => f.requires_confirmation);
+  let readiness = '';
+  if (!form) readiness = '<span class="pill wait">No form prepared</span><p class="sub">Prepare the form from search results.</p>';
+  else if (c.status === 'REJECTED') readiness = '<span class="pill warn">Rejected</span><p class="sub">Agency rejected this claim. Review the reason in the timeline.</p>';
+  else if (c.status === 'NEEDS_DOCS') readiness = '<span class="pill wait">Needs documents</span><p class="sub">Upload the requested docs (demo) before processing continues.</p>';
+  else if (conflicted || errors.length) readiness = `<span class="pill warn">Not ready</span><p class="sub">${esc(errors.join('; ') || 'Unresolved conflicts block submission.')}</p>`;
+  else if (form.approved || ['USER_APPROVED','SUBMITTED','CLAIM_RECEIVED','PROCESSING','APPROVED','PAYMENT_ISSUED','PAYMENT_CONFIRMED'].includes(c.status))
+    readiness = `<span class="pill">Ready / approved</span><p class="sub">Form hash: ${esc(form.form_hash || c.form_hash || '—')}</p>`;
+  else readiness = '<span class="pill wait">Draft ready for approval</span>';
+  $('claimFormState').innerHTML = readiness;
+
+  const actions = [];
+  if (c.status === 'FORM_READY') actions.push(`<button class="btn" type="button" data-claim-action="open-form" onclick="claimAction('open-form')">Review form</button>`);
+  if (c.status === 'CLAIM_RECEIVED' || c.status === 'PROCESSING' || c.status === 'APPROVED')
+    actions.push(`<button class="btn" type="button" data-claim-action="agency" onclick="claimAction('agency')">Simulate agency update</button>`);
+  if (c.status === 'CLAIM_RECEIVED') {
+    actions.push(`<button class="btn secondary" type="button" data-claim-action="needs_docs" onclick="claimAction('needs_docs')">Mark needs docs</button>`);
+    actions.push(`<button class="btn danger" type="button" data-claim-action="reject" onclick="claimAction('reject')">Simulate rejection</button>`);
+  }
+  if (c.status === 'NEEDS_DOCS') actions.push(`<button class="btn" type="button" data-claim-action="resume_docs" onclick="claimAction('resume_docs')">Docs provided (demo)</button>`);
+  if (c.status === 'PAYMENT_ISSUED') actions.push(`<button class="btn" type="button" data-claim-action="bank" onclick="claimAction('bank')">Simulate demo bank deposit</button>`);
+  if (!['PAYMENT_CONFIRMED','REJECTED','STOPPED_BY_USER'].includes(c.status))
+    actions.push(`<button class="btn danger" type="button" data-claim-action="stop" onclick="claimAction('stop')">Stop claim</button>`);
+  $('claimActions').innerHTML = actions.join('') || '<p class="sub">No actions available for this status.</p>';
+
+  $('memoryTrail').innerHTML = (bundle.memory_trail || []).slice().reverse().map((m) => `
+    <div class="mem">
+      <b>${esc(m.summary || m.kind)}</b>
+      <div style="color:#93c5fd">${esc(m.reason || '')}</div>
+      <small style="color:#7dd3fc">${esc(m.created_at || '')} · ${esc(m.source || '')}</small>
+    </div>`).join('') || '<p>No memory entries for this claim yet.</p>';
+}
+
+function renderGlobalMemory() {
+  const items = state.tracker?.memory_trail || [];
+  $('globalMemory').innerHTML = items.map((m) => `
+    <div class="mem">
+      <b>${esc(m.summary || m.kind)}</b>
+      <div style="color:#93c5fd">${esc(m.reason || '')}</div>
+      <small style="color:#7dd3fc">${esc(m.claim_id || 'profile')} · ${esc(m.created_at || '')}</small>
+    </div>`).join('') || '<p>No memory yet. Save a profile or advance a claim.</p>';
+}
+
+function renderProfile(p) {
+  state.research = p;
+  const b = p.best || {};
+  const fields = p.fields || {};
+  const rows = [
+    ['Legal name', b.legal_name, fields.legal_name?.[0]],
+    ['Address', b.hq_address, fields.hq_address?.[0]],
+    ['City', b.city, fields.city?.[0]],
+    ['State', b.state, fields.state?.[0]],
+    ['ZIP', b.zip, fields.zip?.[0]],
+    ['Business type', b.entity_type, fields.entity_type?.[0]],
+    ['Research source', p.domain, { source: p.domain, confidence: 1, captured_at: p.generated_at }],
+  ];
+  $('facts').innerHTML = rows.map(([label, value, meta]) => {
+    const missing = !value;
+    const conf = meta?.confidence != null ? Math.round(meta.confidence * 100) + '%' : '—';
+    const source = meta?.source || 'user/demo';
+    const when = meta?.captured_at || p.generated_at || '—';
+    return `<div class="fact">
+      <small>${esc(label)}</small>
+      <div>
+        <div>${missing ? '<span class="pill warn">Needs confirmation</span>' : esc(value)}</div>
+        <small class="muted">Source: ${esc(source)} · Confidence: ${esc(conf)} · ${esc(when)}</small>
+      </div>
+    </div>`;
+  }).join('');
+  $('rep').value = b.authorized_representative?.name || $('rep').value || '';
+  $('role').value = b.authorized_representative?.role || $('role').value || '';
+  show('profile');
+}
+
+async function runResearch() {
+  try {
+    if (!$('researchConsent').checked) throw Error('Research consent is required');
+    $('researchProgress').classList.remove('hide');
+    const sources = [
+      ['website', 'Website'],
+      ['nys_dos', 'NYS Department of State'],
+      ['nyc_open_data', 'NYC Open Data'],
+      ['bbb_public', 'BBB / public snippets'],
+      ['news', 'News'],
+    ];
+    $('progressList').innerHTML = sources.map(([, label]) => `<div class="item"><span class="dot run"></span><span>${esc(label)}</span></div>`).join('');
+    const p = await api('/api/research', { domain: $('domain').value.trim() });
+    const collectors = p.collectors || {};
+    [...$('progressList').children].forEach((row, i) => {
+      const key = sources[i][0];
+      const st = collectors[key]?.status || 'demo';
+      const dot = row.querySelector('.dot');
+      if (st === 'error') { dot.className = 'dot err'; dot.textContent = '!'; }
+      else { dot.className = 'dot ok'; dot.textContent = '✓'; }
+    });
+    $('retryResearch').classList.toggle('hide', !Object.values(collectors).some((c) => c.status === 'error'));
+    renderProfile(p);
+    toast('Business research complete');
+  } catch (e) { fail(e); }
+}
+
+function buildManualProfile() {
+  if (!$('manualConsent').checked) return fail(Error('Search consent is required'));
+  const former = $('manualFormer').value.trim();
+  state.research = {
+    domain: null,
+    generated_at: new Date().toISOString(),
+    best: {
+      legal_name: $('manualName').value.trim(),
+      hq_address: $('manualStreet').value.trim(),
+      city: $('manualCity').value.trim(),
+      state: 'NY',
+      zip: $('manualZip').value.trim(),
+      entity_type: $('manualType').value,
+      dbas: $('manualDbas').value.split(',').map((s) => s.trim()).filter(Boolean),
+      authorized_representative: { name: $('manualRep').value.trim(), role: $('manualRole').value.trim() },
+      former_addresses: former ? [former] : [],
+      documents: $('manualDocs').value.trim(),
+    },
+    fields: {},
+    collectors: { manual: { status: 'ok', source: 'user_input' } },
+    demo_only: true,
+  };
+  renderProfile(state.research);
+  $('rep').value = $('manualRep').value;
+  $('role').value = $('manualRole').value;
+}
+
+async function confirmProfile() {
+  try {
+    if (!$('profileConsent').checked) throw Error('Confirm the profile before searching');
+    if (!$('rep').value.trim()) throw Error('Authorized representative is required');
+    const p = structuredClone(state.research);
+    p.best = p.best || {};
+    p.best.authorized_representative = { name: $('rep').value.trim(), role: $('role').value.trim() };
+    p.dbas = p.best.dbas || [];
+    const manual = {
+      legal_name: p.best.legal_name,
+      dbas: p.best.dbas || [],
+      business_type: p.best.entity_type,
+      addresses: [
+        {
+          street: p.best.hq_address || '',
+          city: p.best.city || '',
+          state: p.best.state || 'NY',
+          zip: p.best.zip || '',
+          current: true,
+          source: p.domain ? 'company_research' : 'user_input',
+        },
+      ],
+      authorized_representative: p.best.authorized_representative,
+      search_consent: true,
+    };
+    if (p.best.former_addresses?.[0]) {
+      manual.addresses.push({
+        street: p.best.former_addresses[0],
+        city: '',
+        state: 'NY',
+        zip: '',
+        current: false,
+        source: 'user_input',
+      });
+    }
+    const out = await api('/api/profile/review', { profile: p, consent: true, manual });
+    state.profile = out.profile;
+    await runSearch();
+  } catch (e) { fail(e); }
+}
+
+async function runSearch() {
+  try {
+    show('search');
+    $('results').innerHTML = '<p class="sub">Searching mock NY unclaimed corpus…</p>';
+    const result = await api('/api/search', { profile: state.profile });
+    state.hits = result.hits || [];
+    state.selected = new Set();
+    $('searchMode').innerHTML = result.source_mode === 'demo_only'
+      ? '<span class="pill demo">Demo corpus — not government data</span>'
+      : '<span class="pill">Imported NY data</span>';
+    if (!state.hits.length) {
+      $('results').innerHTML = '<p class="sub">No possible matches found. Try a DBA or former address.</p>';
+      $('prepareBtn').disabled = true;
+      return;
+    }
+    $('results').innerHTML = state.hits.map((h, i) => `
+      <div class="card result" tabindex="0" role="checkbox" aria-checked="false" data-hit="${i}">
+        <span class="amount">${esc(money(h.amount_cents))}</span>
+        <b>${esc(h.found_name)}</b>
+        <p class="sub">${esc(h.property_type)} · ${esc(h.city)} ${esc(h.zip)}</p>
+        <span class="pill">Confidence ${Math.round((h.confidence || 0) * 100)}%</span>
+        <span class="pill demo">Estimate</span>
+        <p class="muted">${esc((h.reasons || []).join(' · '))} · Source: ${esc(h.source)}</p>
+      </div>`).join('');
+    $('prepareBtn').disabled = true;
+  } catch (e) { fail(e); }
+}
+
+function toggleHit(index) {
+  const key = String(index);
+  if (state.selected.has(key)) state.selected.delete(key); else state.selected.add(key);
+  document.querySelectorAll('[data-hit]').forEach((el) => {
+    const on = state.selected.has(el.getAttribute('data-hit'));
+    el.classList.toggle('selected', on);
+    el.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
+  $('prepareBtn').disabled = !state.selected.size;
+  $('prepareBtn').textContent = state.selected.size
+    ? `Prepare ${state.selected.size} claim${state.selected.size > 1 ? 's' : ''}`
+    : 'Prepare selected claims';
+}
+
+async function prepareSelected() {
+  try {
+    const ids = [];
+    for (const idx of state.selected) {
+      const hit = state.hits[Number(idx)];
+      const created = await api('/api/claims', { profile: state.profile, hit });
+      const prepared = await api('/api/forms/prepare', {
+        claim_id: created.claim.id,
+        profile: state.profile,
+        hit,
+      });
+      ids.push(created.claim.id);
+      state.formsByClaim[created.claim.id] = prepared.form;
+    }
+    await loadTracker(true);
+    renderFormList(ids);
+    show('forms');
+    toast('Forms prepared — resolve any conflicts before send');
+  } catch (e) { fail(e); }
+}
+
+function renderFormList(claimIds) {
+  const ids = claimIds || Object.keys(state.formsByClaim);
+  $('formList').innerHTML = ids.map((id) => {
+    const form = state.formsByClaim[id];
+    const claim = state.claims.find((c) => c.id === id) || { match_name: id, property_type: 'Claim' };
+    const blocked = (form.validation_errors || []).length > 0 || (form.fields || []).some((f) => f.requires_confirmation);
+    return `<div class="card" style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+      <div style="width:44px;height:56px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;background:#fffdf6">📄</div>
+      <div style="flex:1">
+        <b>${esc(claim.property_type || form.agency)}</b>
+        <div class="muted">${esc(claim.match_name || id)}</div>
+        <span class="pill ${blocked ? 'warn' : ''}">${blocked ? 'Needs your check' : 'Ready'}</span>
+      </div>
+      <div class="actions" style="margin:0">
+        <button class="btn secondary" type="button" data-edit-form="${esc(id)}">View & edit</button>
+      </div>
+    </div>`;
+  }).join('') || '<p class="sub">No forms left.</p>';
+  refreshSubmitGate();
+}
+
+function refreshSubmitGate() {
+  const forms = Object.values(state.formsByClaim);
+  const ready = forms.length && forms.every((f) => !(f.validation_errors || []).length && !(f.fields || []).some((x) => x.requires_confirmation));
+  $('submitReadyBtn').disabled = !(ready && $('masterApprove').checked);
+}
+
+function openFormEditor(claimId) {
+  state.activeFormClaimId = claimId;
+  const form = state.formsByClaim[claimId];
+  const claim = state.claims.find((c) => c.id === claimId) || {};
+  $('formTitle').textContent = claim.property_type || 'Claim form';
+  $('formSub').textContent = `${claim.match_name || ''} · ${form.agency || ''} · Draft until approved`;
+  $('paper').innerHTML = (form.fields || []).map((f, i) => `
+    <div class="field-row">
+      <label for="ff${i}"><span>${esc(f.field)}</span>
+        <em style="font-style:normal;font-weight:700;color:${f.requires_confirmation ? 'var(--coral)' : 'var(--sea)'}">
+          ${f.requires_confirmation ? 'Conflict — confirm' : 'From: ' + esc(f.source)} · ${Math.round((f.confidence || 0) * 100)}%
+        </em>
+      </label>
+      <input id="ff${i}" data-i="${i}" class="${f.requires_confirmation ? 'flag' : ''}" value="${esc(f.value)}">
+      ${f.conflicting_value ? `<p class="muted">State record shows ${esc(f.conflicting_value)} (${esc(f.source_of_conflict || 'conflict')})</p>` : ''}
+    </div>`).join('');
+  show('form-detail');
+}
+
+async function saveFormEdits() {
+  try {
+    const claimId = state.activeFormClaimId;
+    const form = state.formsByClaim[claimId];
+    const fields = form.fields.map((f) => ({ ...f }));
+    $('paper').querySelectorAll('input[data-i]').forEach((input) => {
+      const i = Number(input.dataset.i);
+      const prev = fields[i].value;
+      fields[i].value = input.value;
+      if (fields[i].requires_confirmation && input.value.trim()) {
+        fields[i].requires_confirmation = false;
+        fields[i].edited_by_user = true;
+        fields[i].source = 'edited_by_user';
+        fields[i].conflicting_value = null;
+        fields[i].source_of_conflict = null;
+      } else if (input.value !== prev) {
+        fields[i].edited_by_user = true;
+        fields[i].source = 'edited_by_user';
+      }
+    });
+    const saved = await api('/api/forms/save', { claim_id: claimId, fields, agency: form.agency });
+    state.formsByClaim[claimId] = saved.form;
+    await loadTracker(true);
+    renderFormList();
+    show('forms');
+    toast(saved.ok ? 'Form ready' : 'Saved — still needs confirmation');
+  } catch (e) { fail(e); }
+}
+
+async function submitReadyForms() {
+  try {
+    state.stopped = false;
+    show('submit');
+    const log = $('submitLog');
+    log.innerHTML = '';
+    const steps = [
+      'Opening mock NY claim portal in sandbox',
+      'Typing approved field values only',
+      'Read-back verification against form hash',
+      '<em>Paused for final OK</em>',
+      'Submitting claim pack',
+      'Saving confirmation evidence',
+    ];
+    const claimIds = Object.keys(state.formsByClaim);
+    for (const claimId of claimIds) {
+      const form = state.formsByClaim[claimId];
+      if ((form.validation_errors || []).length) continue;
+      await api('/api/forms/approve', { claim_id: claimId, approved: true });
+    }
+    for (let i = 0; i < steps.length; i++) {
+      if (state.stopped) return;
+      await new Promise((r) => {
+        const t = setTimeout(r, 450);
+        state.submitTimers.push(t);
+      });
+      log.insertAdjacentHTML('beforeend', `<p>› ${steps[i]}</p>`);
+    }
+    if (state.stopped) return;
+    for (const claimId of claimIds) {
+      if (state.stopped) return;
+      await api('/api/claims/submit', { claim_id: claimId, submit_log: steps });
+    }
+    await loadTracker(true);
+    toast('Claims submitted — tracking evidence');
+    const first = claimIds[0];
+    if (first) await openClaim(first);
+    else show('tracker');
+  } catch (e) { fail(e); show('forms'); }
+}
+
+async function claimAction(action) {
+  try {
+    const claimId = state.activeClaimId;
+    if (action === 'open-form') {
+      if (!state.formsByClaim[claimId]) {
+        const bundle = await api(`/api/claims/${encodeURIComponent(claimId)}`, undefined, 'GET');
+        if (bundle.form) state.formsByClaim[claimId] = bundle.form;
+        else {
+          const prepared = await api('/api/forms/prepare', { claim_id: claimId });
+          state.formsByClaim[claimId] = prepared.form;
+        }
+      }
+      openFormEditor(claimId);
+      return;
+    }
+    const body = { claim_id: claimId, action: 'agency' };
+    if (action === 'agency') body.action = 'agency';
+    if (action === 'bank') body.action = 'bank';
+    if (action === 'stop') body.action = 'stop';
+    if (action === 'needs_docs') { body.action = 'agency'; body.needs_docs = true; }
+    if (action === 'reject') { body.action = 'agency'; body.reject = true; }
+    if (action === 'resume_docs') body.action = 'resume_docs';
+    await api('/api/claims/advance', body);
+    await loadTracker(true);
+    await openClaim(claimId);
+    toast('Claim updated');
+  } catch (e) { fail(e); }
+}
+
+async function routeFromHash() {
+  const raw = location.hash.replace(/^#/, '') || 'landing';
+  if (raw.startsWith('claim/')) {
+    try { await openClaim(raw.slice(6)); } catch (e) { fail(e); show('tracker'); }
+    return;
+  }
+  const allowed = ['landing','start','research','manual','profile','search','forms','form-detail','submit','tracker','claim','memory'];
+  if (allowed.includes(raw)) {
+    if (raw === 'tracker') { await loadTracker(); renderTracker(); }
+    if (raw === 'memory') { await loadTracker(true); renderGlobalMemory(); }
+    if (raw === 'landing') await loadTracker(true);
+    show(raw === 'form-detail' ? 'forms' : raw);
+  } else show('landing');
+}
+
+document.addEventListener('click', (e) => {
+  const nav = e.target.closest('[data-nav]');
+  if (nav) {
+    e.preventDefault();
+    const view = nav.getAttribute('data-nav');
+    (async () => {
+      try {
+        if (view === 'tracker') { await loadTracker(); renderTracker(); }
+        if (view === 'memory') { await loadTracker(true); renderGlobalMemory(); }
+        if (view === 'landing') await loadTracker(true);
+        show(view);
+      } catch (err) { fail(err); }
+    })();
+    return;
+  }
+  const hit = e.target.closest('[data-hit]');
+  if (hit) { e.preventDefault(); toggleHit(hit.getAttribute('data-hit')); return; }
+  const open = e.target.closest('[data-open-claim]');
+  if (open) {
+    e.preventDefault();
+    openClaim(open.getAttribute('data-open-claim')).catch(fail);
+    return;
+  }
+  const edit = e.target.closest('[data-edit-form]');
+  if (edit) { e.preventDefault(); openFormEditor(edit.getAttribute('data-edit-form')); return; }
+  const act = e.target.closest('[data-claim-action]');
+  if (act) { e.preventDefault(); claimAction(act.getAttribute('data-claim-action')); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const hit = e.target.closest('[data-hit]');
+    if (hit) { e.preventDefault(); toggleHit(hit.getAttribute('data-hit')); }
+    const open = e.target.closest('[data-open-claim]');
+    if (open) { e.preventDefault(); openClaim(open.getAttribute('data-open-claim')).catch(fail); }
+  }
+});
+
+$('researchBtn').onclick = runResearch;
+$('retryResearch').onclick = runResearch;
+$('manualBtn').onclick = buildManualProfile;
+$('confirmProfileBtn').onclick = confirmProfile;
+$('retrySearch').onclick = runSearch;
+$('prepareBtn').onclick = prepareSelected;
+$('masterApprove').onchange = refreshSubmitGate;
+$('submitReadyBtn').onclick = submitReadyForms;
+$('saveFormBtn').onclick = saveFormEdits;
+$('backForms').onclick = () => { renderFormList(); show('forms'); };
+$('removeFormBtn').onclick = () => {
+  delete state.formsByClaim[state.activeFormClaimId];
+  renderFormList();
+  show('forms');
+  toast('Form removed');
+};
+$('cancelFormsBtn').onclick = () => { state.formsByClaim = {}; show('start'); toast('Cancelled'); };
+$('stopSubmit').onclick = () => {
+  state.stopped = true;
+  state.submitTimers.forEach(clearTimeout);
+  toast('Stopped. Nothing further submitted.');
+  show('forms');
+};
+$('refreshTracker').onclick = async () => { await loadTracker(); renderTracker(); toast('Tracker refreshed'); };
+$('gridViewBtn').onclick = () => { state.listMode = false; renderTracker(); };
+$('listViewBtn').onclick = () => { state.listMode = true; renderTracker(); };
+$('themeBtn').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+};
+$('resetDemo').onclick = async () => {
+  try {
+    await api('/api/demo/reset', {});
+    await loadTracker();
+    renderTracker();
+    show('tracker');
+    toast('Seeded Example NYC Foods LLC demo loaded');
+  } catch (e) { fail(e); }
+};
+
+window.addEventListener('hashchange', () => { routeFromHash().catch(fail); });
+
+(async function init() {
+  try {
+    const tracker = await loadTracker(true);
+    if (!(tracker.claims || []).length) {
+      await api('/api/demo/reset', {});
+      await loadTracker(true);
+    }
+  } catch (_) {
+    try {
+      await api('/api/demo/reset', {});
+      await loadTracker(true);
+    } catch (err) {
+      applySummary({ possible_funds_cents: 59750, claims_total: 0, needs_review: 0, confirmed_demo_cents: 0 });
+    }
+  }
+  await routeFromHash();
+})();
 </script>
-</body></html>
+</body>
+</html>
