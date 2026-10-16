@@ -4,15 +4,19 @@ Run from the repository root:
     python3 -m src.server
 
 The UI talks to this boundary instead of owning search and event state.
-Company research is demo-safe by default; set COMPANY_RESEARCH_LIVE=1 only
-after the research package dependencies and provider keys are configured.
+/api/research returns stored research/company/data/<domain>/ output (profile.json,
+plus dossier.json under `dossier`) when it exists. Otherwise it returns a demo stub,
+unless COMPANY_RESEARCH_LIVE=1, which runs `uv run --project research/company
+company-research run <domain>` (needs `make setup` and provider keys; costs API credits).
 """
 
 from __future__ import annotations
 
 import json
 import os
-import sys
+import re
+import shutil
+import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -25,6 +29,10 @@ from .agent.orchestrator import MoneyFinderAgent
 ROOT = Path(__file__).resolve().parents[1]
 UI_ROOT = ROOT / "ui"
 UI_ENTRY = UI_ROOT / "domain.html"
+COMPANY_PROJECT = ROOT / "research" / "company"
+# Same env var research/company's config uses, so the server reads where the CLI writes.
+COMPANY_DATA_DIR = Path(os.environ.get("COMPANY_DATA_DIR", COMPANY_PROJECT / "data"))
+COMPANY_RESEARCH_TIMEOUT_S = int(os.environ.get("COMPANY_RESEARCH_TIMEOUT", "240"))
 EVENTS = repository()
 AGENT = MoneyFinderAgent()
 
@@ -53,16 +61,113 @@ def _demo_research(domain: str) -> dict:
     }
 
 
-def research_domain(domain: str) -> dict:
-    if not domain or "." not in domain:
+_DOMAIN_RE = re.compile(r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+")
+# "street..., City, ST 12345[-6789]" as written by the company-research collectors.
+_ADDRESS_RE = re.compile(
+    r"^(?P<street>.+?),\s*(?P<city>[^,]+?),\s*(?P<state>[A-Z]{2})\.?\s+(?P<zip>\d{5})(?:-\d{4})?"
+    r"(?:\s*,\s*(?:USA?|United States))?\s*$"
+)
+
+
+def _normalize_domain(raw: str) -> str:
+    text = (raw or "").strip().lower()
+    text = re.sub(r"^[a-z][a-z0-9+.-]*://", "", text).split("/", 1)[0].split("?", 1)[0].rstrip(".")
+    if text.startswith("www."):
+        text = text[4:]
+    if not _DOMAIN_RE.fullmatch(text):
         raise ValueError("A public business domain is required")
+    return text
+
+
+def _read_json(path: Path) -> dict | None:
+    try:
+        value = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _adapt_stored_profile(domain: str, profile: dict | None, dossier: dict | None) -> dict:
+    """Shape stored research/company output the way company_profile_to_search_profile reads it.
+
+    The collectors store hq_address as one line ("417 Sackett Street, Brooklyn, NY 11231") and a
+    single `dba`; the mapper and UI want street / city / state / zip and a `dbas` list.
+    """
+    profile = dict(profile or {"schema_version": 1, "domain": domain, "fields": {}, "collectors": {}})
+    profile.setdefault("domain", domain)
+    profile.setdefault("generated_at", (dossier or {}).get("generated_at"))
+    best = dict(profile.get("best") or {})
+    business = (dossier or {}).get("business") or {}
+    for key in ("legal_name", "dba", "hq_address", "entity_type"):
+        if not best.get(key) and business.get(key):
+            best[key] = business[key]
+    full_address = str(best.get("hq_address") or "")
+    match = _ADDRESS_RE.match(full_address.strip())
+    if match:
+        best["hq_address_full"] = full_address
+        best["hq_address"] = match["street"].strip()
+        for key in ("city", "state", "zip"):
+            if not best.get(key):
+                best[key] = match[key].strip()
+    if not best.get("dbas"):
+        best["dbas"] = [best["dba"]] if best.get("dba") else []
+    if not best.get("authorized_representative") and business.get("officer_name"):
+        best["authorized_representative"] = {
+            "name": business["officer_name"],
+            "role": business.get("officer_title") or "",
+        }
+    profile["best"] = best
+    profile.setdefault("fields", {})
+    if dossier is not None:
+        profile["dossier"] = dossier
+    return profile
+
+
+def _stored_research(domain: str) -> dict | None:
+    folder = COMPANY_DATA_DIR / domain
+    profile = _read_json(folder / "profile.json")
+    dossier = _read_json(folder / "dossier.json")
+    if profile is None and dossier is None:
+        return None
+    result = _adapt_stored_profile(domain, profile, dossier)
+    result["research_mode"] = "stored"
+    return result
+
+
+def _live_research_command(domain: str, out_dir: Path) -> list[str]:
+    uv = shutil.which("uv")
+    if not uv:
+        raise FileNotFoundError("uv is not installed; it is needed to run company research live")
+    return [uv, "run", "--project", str(COMPANY_PROJECT), "company-research", "run", domain, "--out", str(out_dir)]
+
+
+def _run_live_research(domain: str) -> None:
+    command = _live_research_command(domain, COMPANY_DATA_DIR / domain)
+    try:
+        done = subprocess.run(
+            command, cwd=ROOT, capture_output=True, text=True, timeout=COMPANY_RESEARCH_TIMEOUT_S, check=False
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(f"Company research timed out after {COMPANY_RESEARCH_TIMEOUT_S}s") from exc
+    if done.returncode != 0:
+        detail = (done.stderr or done.stdout or "").strip().splitlines()[-1:] or ["no output"]
+        raise RuntimeError(f"Company research failed: {detail[0][:300]}")
+
+
+def research_domain(domain: str) -> dict:
+    """Stored research/company output if present, else live research (COMPANY_RESEARCH_LIVE=1), else a demo stub."""
+    domain = _normalize_domain(domain)
+    stored = _stored_research(domain)
+    if stored is not None:
+        return stored
     if os.environ.get("COMPANY_RESEARCH_LIVE") != "1":
         return _demo_research(domain)
-    company_root = ROOT / "research" / "company" / "src"
-    sys.path.insert(0, str(company_root))
-    from company_research.pipeline import research  # type: ignore
-
-    return research(domain, out_dir=ROOT / "data" / "company-research" / domain)
+    _run_live_research(domain)
+    stored = _stored_research(domain)
+    if stored is None:
+        raise RuntimeError(f"Company research finished but wrote no profile for {domain}")
+    stored["research_mode"] = "live"
+    return stored
 
 
 class Handler(BaseHTTPRequestHandler):
