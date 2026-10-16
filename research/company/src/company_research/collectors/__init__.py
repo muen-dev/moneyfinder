@@ -51,7 +51,10 @@ def same_site(url: str, domain: str) -> bool:
 
 
 def mentions(text: str, names: list[str], domain: str) -> bool:
-    lowered = text.lower()
-    if domain in lowered:
+    """Whether text names the company: its domain, or one of its names as written, as whole words.
+
+    Case matters, so a generic name ("Main Capital") doesn't match a phrase ("the main capital of Ecuador").
+    """
+    if domain in text.lower():
         return True
-    return any(len(n) >= 3 and n.lower() in lowered for n in names)
+    return any(len(n) >= 3 and re.search(rf"(?<!\w){re.escape(n)}(?!\w)", text) for n in names)

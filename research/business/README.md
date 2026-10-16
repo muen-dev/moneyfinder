@@ -40,7 +40,8 @@ make business-serve     # then open http://localhost:8000
    `research/company/.env.local` with the scraper API keys.
 3. The business page opens. Click **Fetch mail**: by default the last year, minus
    Promotions/Social, up to 200 messages. You can change the Gmail search query and the limit.
-4. Browse messages and top sender domains on the page. The data is in `data/<id>/messages.jsonl`.
+4. The page groups known senders into categories (payroll, banking, government, insurance, ...) and lists top
+   sender domains and the messages. The data is in `data/<id>/messages.jsonl`.
 5. **Disconnect and delete data** revokes Google access and removes the token, fetched mail, company domain
    and research output.
 
@@ -102,6 +103,7 @@ src/business_research/
   ids.py            business ids (filesystem-safe slugs)
   store.py          fetched mail on disk (JSONL)
   company.py        company domain (data/<id>/business.json) + background research (data/<id>/company/)
+  inbox.py          fetched mail summarized: counts, top senders, known senders by category
   gmail/auth.py     OAuth web flow, per-business token store, refresh, revoke
   gmail/client.py   Gmail API: profile, paginated search, get message
   gmail/parse.py    MIME payload -> EmailMessage (plain text, HTML fallback, attachments)

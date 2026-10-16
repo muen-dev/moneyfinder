@@ -5,7 +5,6 @@ can read every connected inbox. Don't expose it beyond your machine.
 """
 
 import secrets
-from collections import Counter
 from urllib.parse import urlsplit
 
 from company_research.domain import InvalidDomain
@@ -13,11 +12,31 @@ from company_research.profile import FIELDS
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 from googleapiclient.errors import HttpError
 
-from .. import company, config, store
+from .. import company, config, inbox, store
 from ..gmail import auth
 from ..gmail.client import DEFAULT_QUERY, GmailClient
 
 MAX_LIMIT = 2000
+
+# Profile fields shown up front on the business page, in order. The evidence table below has every field.
+GLANCE = (
+    "legal_name", "dba", "industry", "naics", "hq_address", "nyc_borough", "county", "entity_type",
+    "state_of_formation", "founded_year", "years_in_business", "employee_count", "ny_dos_id",
+    "ny_dos_filing_date", "phone", "linkedin_url", "linkedin_followers", "bbb_rating", "bbb_accredited",
+)
+SIGNALS = (
+    "incentive_signals", "ownership_certifications", "nyc_licenses", "hiring_signals", "expansion_signals",
+    "rd_tech_signals", "awards", "news",
+)
+COLLECTOR_NAMES = {
+    "website": "Company website",
+    "bbb": "Better Business Bureau",
+    "linkedin": "LinkedIn",
+    "nys_dos": "NY Department of State",
+    "nyc_open_data": "NYC Open Data",
+    "news": "News and web",
+    "llm": "AI summary",
+}
 
 # Mail content is untrusted HTML-adjacent text; nothing on these pages needs inline or third-party code.
 CSP = (
@@ -59,6 +78,9 @@ def create_app(port: int) -> Flask:
 
     # Scraped URLs are attacker-controlled: only http(s) ever becomes a link.
     app.jinja_env.filters["http_url"] = _http_url
+    app.jinja_env.filters["host"] = _host
+    app.jinja_env.filters["short_url"] = _short_url
+    app.jinja_env.filters["confidence"] = _confidence
 
     @app.context_processor
     def csrf_token():
@@ -74,6 +96,7 @@ def create_app(port: int) -> Flask:
                 "count": len(store.read_messages(conn.business_id)),
                 "fetched_at": store.fetched_at(conn.business_id),
                 "domain": company.get_domain(conn.business_id),
+                "research": company.status(conn.business_id),
             }
             for conn in auth.list_connections()
         ]
@@ -119,13 +142,12 @@ def create_app(port: int) -> Flask:
     def business(business_id: str):
         conn = _connection_or_404(business_id)
         messages = store.read_messages(business_id)
-        top_senders = Counter(m["sender_domain"] for m in messages).most_common(15)
         research = company.status(business_id)
         return render_template(
             "business.html",
             conn=conn,
             messages=messages,
-            top_senders=top_senders,
+            mail=inbox.summarize(messages),
             fetched_at=store.fetched_at(business_id),
             default_query=DEFAULT_QUERY,
             max_limit=MAX_LIMIT,
@@ -133,6 +155,9 @@ def create_app(port: int) -> Flask:
             research=research,
             profile=company.profile(business_id),
             fields=FIELDS,
+            glance=GLANCE,
+            signals=SIGNALS,
+            collector_names=COLLECTOR_NAMES,
             refresh=bool(research and research.get("status") in ("queued", "running")),
         )
 
@@ -209,6 +234,30 @@ def _http_url(url) -> str | None:
         return None
     parts = urlsplit(url)
     return url if parts.scheme in ("http", "https") and parts.netloc else None
+
+
+def _host(url) -> str:
+    """'https://www.bbb.org/us/...' -> 'bbb.org'; empty for anything that isn't an http(s) URL."""
+    if not _http_url(url):
+        return ""
+    host = urlsplit(url).hostname or ""
+    return host.removeprefix("www.")
+
+
+def _short_url(url) -> str:
+    """'https://www.linkedin.com/company/acme/' -> 'linkedin.com/company/acme'."""
+    if not _http_url(url):
+        return str(url)
+    parts = urlsplit(url)
+    return _host(url) + parts.path.rstrip("/")
+
+
+def _confidence(value) -> str:
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return "low"
+    return "high" if value >= 0.75 else "medium" if value >= 0.5 else "low"
 
 
 def _connection_or_404(business_id: str) -> auth.Connection:

@@ -73,6 +73,7 @@ def research(
     else:
         profile["collectors"]["llm"] = {"status": "skipped", "error": "no AWS credentials" if use_llm else "disabled", "duration_s": 0, "facts": 0}
 
+    profile["name"] = ctx.name  # display name: the site's brand name, else one guessed from the domain
     store.write_run(out_dir, profile, calls)
     return profile
 

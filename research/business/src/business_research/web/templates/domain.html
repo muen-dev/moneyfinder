@@ -1,19 +1,23 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 {% block title %}Company domain{% endblock %}
 {% block content %}
-<section class="card">
-  <h1>What's your company's domain?</h1>
-  <p>We look up public information about your business (your website, BBB, LinkedIn, New York State and
-    NYC records, news) to find tax credits and grants you may qualify for.</p>
+{{ ui.steps(2) }}
+<section class="card narrow">
+  <h1>What's your company's website?</h1>
+  <p class="lead">We check public sources (your website, the Better Business Bureau, LinkedIn, New York State and NYC
+    records, news) and build your profile in about 30 seconds.</p>
   {% if error %}<p class="flash error">{{ error }}</p>{% endif %}
-  <form method="post" action="{{ url_for('save_domain', business_id=conn.business_id) }}" class="fetch">
+  <form method="post" action="{{ url_for('save_domain', business_id=conn.business_id) }}" class="domain-form"
+        data-busy="Starting…">
     <input type="hidden" name="csrf" value="{{ csrf }}">
-    <label>Website domain
-      <input name="domain" value="{{ value }}" placeholder="joespizza.com" autocomplete="url" required autofocus>
-    </label>
-    <button class="primary">{{ "Save and re-run research" if current else "Start research" }}</button>
+    <label for="domain">Website domain</label>
+    <div class="input-row">
+      <input id="domain" name="domain" value="{{ value }}" placeholder="joespizza.com" autocomplete="url" required autofocus>
+      <button class="primary">{{ "Save and re-run research" if current else "Build my profile" }}</button>
+    </div>
   </form>
-  <p class="muted">Signed in as {{ conn.email }}.
+  <p class="muted small">Signed in as {{ conn.email }} ·
     {% if current %}<a href="{{ url_for('business', business_id=conn.business_id) }}">Keep {{ current }}</a>{% else %}
     <a href="{{ url_for('business', business_id=conn.business_id) }}">Skip for now</a>{% endif %}</p>
 </section>

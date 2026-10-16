@@ -29,6 +29,10 @@ CERTIFICATIONS = {
 # Sites whose pages are about many companies or are the company's own pages (covered elsewhere).
 SKIP_HOSTS = ("linkedin.com", "bbb.org", "facebook.com", "instagram.com", "x.com", "twitter.com", "youtube.com", "tiktok.com")
 
+# Without the domain, a result also has to place the company in New York: names are often shared
+# (a "Main Capital" private equity firm in Amsterdam is a different company).
+NY_PLACES = r"New York|NYC|NY|Brooklyn|Queens|Bronx|Manhattan|Staten Island|Long Island|Westchester"
+
 
 def collect(ctx: Context) -> CollectorResult:
     result = CollectorResult(NAME)
@@ -52,13 +56,20 @@ def collect(ctx: Context) -> CollectorResult:
             if not url.startswith("https://") or url in seen or host.endswith(ctx.domain) or host.endswith(SKIP_HOSTS):
                 continue
             text = f"{hit.get('title', '')} {hit.get('content', '')}"
-            if not mentions(text, ctx.names or [name], ctx.domain):
+            if not mentions(text, ctx.names or [name], ctx.domain) or not _placed(text, ctx):
                 continue
             seen.add(url)
             _classify(result, hit, url, via, text)
     if errors and not seen:
         raise ProviderError("; ".join(errors))
     return result
+
+
+def _placed(text: str, ctx: Context) -> bool:
+    if ctx.domain in text.lower():
+        return True
+    places = NY_PLACES + (f"|{re.escape(ctx.city)}" if ctx.city else "")
+    return re.search(rf"\b({places})\b", text) is not None
 
 
 def _classify(result: CollectorResult, hit: dict, url: str, via: str, text: str) -> None:

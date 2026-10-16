@@ -1,0 +1,121 @@
+# Programs no index page lists (federal, some NYC), and corrections to discovered ones.
+# An entry whose id matches a discovered program (see `legal-research show`) corrects it: set fields win,
+# lists are merged. New entries need name, url and jurisdiction.
+# kind: credit | exemption | abatement | refund | deduction | grant    status: active | expired | unknown
+
+# Federal small-business credits that stack with NY ones and are often missed
+
+[[program]]
+id = "fed_fica_tip"
+name = "Credit for employer Social Security and Medicare taxes paid on certain employee tips (FICA tip credit)"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/forms-pubs/about-form-8846"
+niches = ["restaurants_hospitality"]
+
+[[program]]
+id = "fed_wotc"
+name = "Work Opportunity Tax Credit"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/businesses/small-businesses-self-employed/work-opportunity-tax-credit"
+status = "expired"
+status_note = "Lapsed for employees who start work after 2025-12-31 (CRS R43729, May 2026). Past lapses were extended retroactively; recheck."
+niches = ["hiring_targeted_groups", "hiring_veterans"]
+
+[[program]]
+id = "fed_research"
+name = "Credit for increasing research activities (R&D credit)"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/forms-pubs/about-form-6765"
+niches = ["research_development"]
+
+[[program]]
+id = "fed_small_employer_health"
+name = "Small business health care tax credit"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/forms-pubs/about-form-8941"
+niches = ["employee_benefits"]
+
+[[program]]
+id = "fed_disabled_access"
+name = "Disabled access credit"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/forms-pubs/about-form-8826"
+niches = ["accessibility_safety"]
+
+[[program]]
+id = "fed_employer_childcare"
+name = "Employer-provided childcare facilities and services credit"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/forms-pubs/about-form-8882"
+niches = ["employee_benefits"]
+
+[[program]]
+id = "fed_retirement_startup"
+name = "Credit for small employer pension plan startup costs"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/forms-pubs/about-form-8881"
+niches = ["employee_benefits"]
+
+[[program]]
+id = "fed_paid_leave"
+name = "Credit for employer paid family and medical leave"
+jurisdiction = "federal"
+agency = "IRS"
+url = "https://www.irs.gov/forms-pubs/about-form-8994"
+niches = ["employee_benefits"]
+
+# NYC programs not on the index pages
+
+[[program]]
+id = "nyc_commercial_rent_tax"
+name = "Commercial Rent Tax and the small business tax credit against it"
+jurisdiction = "NYC"
+agency = "NYC DOF"
+url = "https://www.nyc.gov/site/finance/business/business-commercial-rent-tax-crt.page"
+niches = ["nyc_commercial_rent"]
+
+[[program]]
+id = "nyc_icap"
+name = "Industrial and Commercial Abatement Program (ICAP)"
+jurisdiction = "NYC"
+agency = "NYC DOF"
+kind = "abatement"
+url = "https://www.nyc.gov/site/finance/property/benefits-industrial-and-commercial-abatement-program-icap.page"
+niches = ["property_owners"]
+
+# Corrections to discovered NYS programs: claims-dataset names that differ from the page name
+
+[[program]]
+id = "nys_hire_a_veteran"
+claims_names = ["Hire A Vet Credit"]
+
+[[program]]
+id = "nys_recovery"
+claims_names = ["Recovery Hiring Tax Credit"]
+
+[[program]]
+id = "nys_brownfield"
+claims_names = ["Brownfield Redevelopment Tax Credit", "Remediated Brownfield Credit for Real Property Taxes"]
+
+[[program]]
+id = "nys_manu_real_property"
+claims_names = ["Real Property Tax Relief Credit for Manufacturing"]
+
+[[program]]
+id = "nys_taxicabs"
+claims_names = ["Credit for Companies Who Provide Transportation to Individuals with Disabilities"]
+
+[[program]]
+id = "nys_investment"
+niches = ["manufacturing"]
+
+[[program]]
+id = "nys_employment_incentive"
+niches = ["manufacturing"]

@@ -10,6 +10,7 @@
 .PHONY: help setup test \
 	business-serve business-list business-fetch business-disconnect business-test \
 	company-research company-show company-keys company-test \
+	legal-research legal-show legal-seeds legal-load-kb legal-test \
 	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats
 
 PORT ?= 8000
@@ -21,9 +22,10 @@ setup: ## Install every package's dependencies and the commit guard hook
 	git config core.hooksPath .githooks
 	cd research/business && uv sync
 	cd research/company && uv sync
+	cd research/legal && uv sync
 	cd kb && uv sync
 
-test: business-test company-test ## Run all tests
+test: business-test company-test legal-test ## Run all tests
 
 # research/business: Gmail connector
 
@@ -59,6 +61,24 @@ company-keys: ## Which scraper API keys are configured (never prints values)
 
 company-test: ## research/company tests
 	cd research/company && uv run pytest -q
+
+# research/legal: tax-credit program catalog (official links, page data, claim counts, niches)
+
+legal-research: ## Build research/legal/data/catalog.json [SEARCH=1 to also search for niche programs]
+	cd research/legal && uv run legal-research run $${SEARCH:+--search}
+
+legal-show: ## Print credits by niche, fewest claimants first [NICHE=<id>] [ID=<program id>]
+	cd research/legal && uv run legal-research show $${ID:+"$$ID"} $${NICHE:+--niche "$$NICHE"}
+
+legal-seeds: ## Export catalog links as kb seeds and crawl them into the kb
+	cd research/legal && uv run legal-research seeds
+	cd kb && uv run kb seed --file ../research/legal/data/kb-seeds.toml
+
+legal-load-kb: ## Write programs and forms into the kb's incentive and form tables [YEAR=2025]
+	cd research/legal && uv run legal-research load-kb $${YEAR:+--tax-year "$$YEAR"}
+
+legal-test: ## research/legal tests
+	cd research/legal && uv run pytest -q
 
 # kb: tax-incentive data lake + knowledge base
 

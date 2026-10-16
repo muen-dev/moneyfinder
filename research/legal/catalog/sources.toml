@@ -1,0 +1,52 @@
+# Where `legal-research run` finds programs. Only official government hosts are fetched.
+#
+# [[index]]    A page listing programs. Each link matching a `follow` regex (and no `skip` regex) becomes a
+#              program named after its link text. Program ids come from the URL: nys_<page stem>.
+# [[dataset]]  A data.ny.gov dataset with claimants and dollars per credit per tax year.
+
+# NYS corporate franchise tax credits (Article 9-A). One page per credit, linking to claim forms.
+[[index]]
+id = "nys_article9a"
+url = "https://www.tax.ny.gov/bus/ct/article9a_tax_credits.htm"
+jurisdiction = "NYS"
+agency = "NYS DTF"
+tax_types = ["Article 9-A"]
+follow = ['^https://www\.tax\.ny\.gov/(pit/credits|pit/sny|bus/ct)/[^/]+\.htm$']
+skip = ['/income_tax_credits\.htm$', '/article9a_tax_credits\.htm$']
+
+# The same credits for sole proprietors, partners and S-corp shareholders (Article 22).
+[[index]]
+id = "nys_article22"
+url = "https://www.tax.ny.gov/bus/article22-credits.htm"
+jurisdiction = "NYS"
+agency = "NYS DTF"
+tax_types = ["Article 22"]
+follow = ['^https://www\.tax\.ny\.gov/(pit/credits|pit/sny|bus/ct)/[^/]+\.htm$']
+skip = ['/income_tax_credits\.htm$', '/article9a_tax_credits\.htm$']
+
+# NYC Department of Finance business benefits: REAP, LMREAP, biotech credit, PILOT, property abatements.
+[[index]]
+id = "nyc_dof_business_benefits"
+url = "https://www.nyc.gov/site/finance/business/business-benefits.page"
+jurisdiction = "NYC"
+agency = "NYC DOF"
+follow = ['^https://www\.nyc\.gov/site/finance/(business|property)/[^/]+\.page$']
+skip = [
+    '/business-benefits\.page$', '/business-info\.page$', '/business-tax-resources\.page$',
+    '/business\.page$', '/doing-business-with-nyc\.page$', '/property\.page$',
+]
+
+# NYC Small Business Services: incentives that cut operating costs (energy, relocation, property tax).
+[[index]]
+id = "nyc_sbs_operating_costs"
+url = "https://nyc-business.nyc.gov/nycbusiness/business-services/incentives/reduce-operating-expenses"
+jurisdiction = "NYC"
+agency = "NYC SBS"
+follow = ['^https://nyc-business\.nyc\.gov/nycbusiness/description/[^/?]+$']
+
+# Claimants and dollars per NYS credit, Article 9-A and Article 22, with the certifying agency.
+[[dataset]]
+id = "nys_credit_utilization"
+host = "data.ny.gov"
+dataset = "4skq-w2i6"
+title = "New York State Economic Incentive Tax Credit Utilization: Beginning Tax Year 2016"

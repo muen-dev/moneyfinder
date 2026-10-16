@@ -51,7 +51,7 @@ run concurrently. Each one has timeouts and fails on its own. The profile lists 
 
 ```jsonc
 {
-  "schema_version": 1, "domain": "warbyparker.com", "generated_at": "...",
+  "schema_version": 1, "domain": "warbyparker.com", "name": "Warby Parker", "generated_at": "...",
   "inputs": {"domain": "...", "business_id": "...", "contact_email": "...", "email_domain_matches": true},
   "best": {"legal_name": "WARBY PARKER INC.", "nyc_borough": "Manhattan", "products_services": ["Eyeglasses", ...]},
   "fields": {                      // claims, highest confidence first; for single-valued fields the rest are conflicts
