@@ -1,0 +1,474 @@
+{
+  "meta": {
+    "schema_version": 2,
+    "persistence": "json",
+    "surreal_ready": true,
+    "surreal_live": false,
+    "demo_business": "Example NYC Foods LLC",
+    "label": "Deterministic synthetic demo — not government data"
+  },
+  "profiles": [
+    {
+      "id": "biz_example_nyc_foods",
+      "entity_type": "business",
+      "legal_name": "Example NYC Foods LLC",
+      "dbas": ["Example Foods", "Example NYC Market"],
+      "business_type": "LLC",
+      "addresses": [
+        {
+          "street": "123 Main Street",
+          "city": "Brooklyn",
+          "state": "NY",
+          "zip": "11201",
+          "current": true,
+          "source": "company_research"
+        },
+        {
+          "street": "88 Queens Blvd",
+          "city": "Queens",
+          "state": "NY",
+          "zip": "11101",
+          "current": false,
+          "source": "user_input"
+        }
+      ],
+      "authorized_representative": {
+        "name": "Maria Alvarez",
+        "role": "Managing Member",
+        "source": "user_input",
+        "requires_confirmation": false
+      },
+      "search_consent": true,
+      "research_source": "example.com",
+      "saved_at": "2026-10-16T12:00:00+00:00"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim_demo_vendor_check",
+      "claim_id": "claim_demo_vendor_check",
+      "business_id": "biz_example_nyc_foods",
+      "business_name": "Example NYC Foods LLC",
+      "match_name": "Example Foods",
+      "property_type": "Uncashed vendor check",
+      "city": "Brooklyn",
+      "zip": "11201",
+      "amount_cents": 41200,
+      "amount_type": "matched_estimate",
+      "confidence": 0.95,
+      "status": "CLAIM_RECEIVED",
+      "progress_pct": 50,
+      "confirmation_id": "NY-DEMO-CHECK",
+      "form_hash": "seeded-form-hash-vendor",
+      "demo_only": true,
+      "created_at": "2026-10-16T12:05:00+00:00",
+      "updated_at": "2026-10-16T12:10:00+00:00",
+      "submitted_at": "2026-10-16T12:09:00+00:00",
+      "last_checked_at": "2026-10-16T12:10:00+00:00",
+      "expected_by": "2026-11-16T12:00:00+00:00",
+      "next_action": "Agency is reviewing the claim",
+      "hit": {
+        "found_name": "Example Foods",
+        "property_type": "Uncashed vendor check",
+        "city": "Brooklyn",
+        "zip": "11201",
+        "amount_cents": 41200,
+        "source": "mock_ny_unclaimed",
+        "confidence": 0.95,
+        "reasons": ["Exact/partial name", "City match", "ZIP match"]
+      },
+      "profile": {
+        "id": "biz_example_nyc_foods",
+        "entity_type": "business",
+        "legal_name": "Example NYC Foods LLC",
+        "dbas": ["Example Foods", "Example NYC Market"],
+        "business_type": "LLC",
+        "addresses": [
+          {
+            "street": "123 Main Street",
+            "city": "Brooklyn",
+            "state": "NY",
+            "zip": "11201",
+            "current": true
+          }
+        ],
+        "authorized_representative": {
+          "name": "Maria Alvarez",
+          "role": "Managing Member"
+        },
+        "search_consent": true
+      }
+    },
+    {
+      "id": "claim_demo_utility",
+      "claim_id": "claim_demo_utility",
+      "business_id": "biz_example_nyc_foods",
+      "business_name": "Example NYC Foods LLC",
+      "match_name": "Example NYC Foods LLC",
+      "property_type": "Utility deposit refund",
+      "city": "Brooklyn",
+      "zip": "11201",
+      "amount_cents": 18500,
+      "amount_type": "matched_estimate",
+      "confidence": 0.99,
+      "status": "FORM_READY",
+      "progress_pct": 20,
+      "confirmation_id": null,
+      "form_hash": null,
+      "demo_only": true,
+      "created_at": "2026-10-16T12:06:00+00:00",
+      "updated_at": "2026-10-16T12:07:00+00:00",
+      "next_action": "Resolve conflicts before approval",
+      "hit": {
+        "found_name": "Example NYC Foods LLC",
+        "property_type": "Utility deposit refund",
+        "city": "Brooklyn",
+        "zip": "11201",
+        "amount_cents": 18500,
+        "source": "mock_ny_unclaimed",
+        "confidence": 0.99,
+        "reasons": ["Exact name match", "ZIP match"]
+      },
+      "profile": {
+        "id": "biz_example_nyc_foods",
+        "legal_name": "Example NYC Foods LLC",
+        "dbas": ["Example Foods"],
+        "addresses": [
+          {
+            "street": "123 Main Street",
+            "city": "Brooklyn",
+            "state": "NY",
+            "zip": "11201",
+            "current": true
+          }
+        ],
+        "authorized_representative": {
+          "name": "Maria Alvarez",
+          "role": "Managing Member"
+        },
+        "search_consent": true
+      }
+    }
+  ],
+  "forms": [
+    {
+      "id": "form_demo_vendor",
+      "claim_id": "claim_demo_vendor_check",
+      "agency": "NY Office of Unclaimed Funds (mock)",
+      "status": "USER_APPROVED",
+      "approved": true,
+      "form_hash": "seeded-form-hash-vendor",
+      "validation_errors": [],
+      "created_at": "2026-10-16T12:08:00+00:00",
+      "updated_at": "2026-10-16T12:09:00+00:00",
+      "fields": [
+        {
+          "field": "legal_name",
+          "value": "Example NYC Foods LLC",
+          "source": "user_input",
+          "confidence": 0.99,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "authorized_representative",
+          "value": "Maria Alvarez",
+          "source": "user_input",
+          "confidence": 0.98,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "role",
+          "value": "Managing Member",
+          "source": "user_input",
+          "confidence": 0.98,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "city",
+          "value": "Brooklyn",
+          "source": "user_input",
+          "confidence": 0.95,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "zip",
+          "value": "11201",
+          "source": "edited_by_user",
+          "confidence": 1.0,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": true
+        },
+        {
+          "field": "amount_requested",
+          "value": "$412.00",
+          "source": "search_result",
+          "confidence": 0.9,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "property_name",
+          "value": "Example Foods",
+          "source": "search_result",
+          "confidence": 0.92,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "pay_to",
+          "value": "Business demo account ••4821",
+          "source": "user_account",
+          "confidence": 0.9,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        }
+      ]
+    },
+    {
+      "id": "form_demo_utility",
+      "claim_id": "claim_demo_utility",
+      "agency": "NY Office of Unclaimed Funds (mock)",
+      "status": "FORM_READY",
+      "approved": false,
+      "form_hash": null,
+      "validation_errors": ["Field requires confirmation: zip"],
+      "created_at": "2026-10-16T12:07:00+00:00",
+      "updated_at": "2026-10-16T12:07:00+00:00",
+      "fields": [
+        {
+          "field": "legal_name",
+          "value": "Example NYC Foods LLC",
+          "source": "user_input",
+          "confidence": 0.99,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "authorized_representative",
+          "value": "Maria Alvarez",
+          "source": "user_input",
+          "confidence": 0.98,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "role",
+          "value": "Managing Member",
+          "source": "user_input",
+          "confidence": 0.98,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "city",
+          "value": "Brooklyn",
+          "source": "user_input",
+          "confidence": 0.95,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "zip",
+          "value": "11201",
+          "source": "user_input",
+          "confidence": 0.7,
+          "requires_confirmation": true,
+          "conflicting_value": "11202",
+          "source_of_conflict": "state_record",
+          "edited_by_user": false
+        },
+        {
+          "field": "amount_requested",
+          "value": "$185.00",
+          "source": "search_result",
+          "confidence": 0.9,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "property_name",
+          "value": "Example NYC Foods LLC",
+          "source": "search_result",
+          "confidence": 0.92,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        },
+        {
+          "field": "pay_to",
+          "value": "Business demo account ••4821",
+          "source": "user_account",
+          "confidence": 0.9,
+          "requires_confirmation": false,
+          "conflicting_value": null,
+          "source_of_conflict": null,
+          "edited_by_user": false
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_seed_1",
+      "claim_id": "claim_demo_vendor_check",
+      "from_status": null,
+      "to_status": "MATCH_FOUND",
+      "actor": "system",
+      "evidence_kind": null,
+      "source": "search",
+      "note": "Claim created from match",
+      "created_at": "2026-10-16T12:05:00+00:00"
+    },
+    {
+      "id": "evt_seed_2",
+      "claim_id": "claim_demo_vendor_check",
+      "from_status": "MATCH_FOUND",
+      "to_status": "FORM_READY",
+      "actor": "agent",
+      "evidence_kind": null,
+      "source": "form_prepare",
+      "note": "Form prepared with provenance",
+      "created_at": "2026-10-16T12:08:00+00:00"
+    },
+    {
+      "id": "evt_seed_3",
+      "claim_id": "claim_demo_vendor_check",
+      "from_status": "FORM_READY",
+      "to_status": "USER_APPROVED",
+      "actor": "user",
+      "evidence_kind": null,
+      "source": "user_approval",
+      "note": "Authorized representative approved immutable form snapshot",
+      "created_at": "2026-10-16T12:08:30+00:00"
+    },
+    {
+      "id": "evt_seed_4",
+      "claim_id": "claim_demo_vendor_check",
+      "from_status": "USER_APPROVED",
+      "to_status": "SUBMITTED",
+      "actor": "user",
+      "evidence_kind": "submission",
+      "source": "daytona_mock_portal",
+      "reference": "NY-DEMO-CHECK",
+      "note": "Sandbox browser submitted approved form values",
+      "created_at": "2026-10-16T12:09:00+00:00"
+    },
+    {
+      "id": "evt_seed_5",
+      "claim_id": "claim_demo_vendor_check",
+      "from_status": "SUBMITTED",
+      "to_status": "CLAIM_RECEIVED",
+      "actor": "mock_portal",
+      "evidence_kind": "agency_receipt",
+      "source": "mock_ny_portal",
+      "reference": "NY-DEMO-CHECK",
+      "note": "Mock agency receipt recorded",
+      "created_at": "2026-10-16T12:10:00+00:00"
+    },
+    {
+      "id": "evt_seed_6",
+      "claim_id": "claim_demo_utility",
+      "from_status": null,
+      "to_status": "MATCH_FOUND",
+      "actor": "system",
+      "source": "search",
+      "note": "Claim created from match",
+      "created_at": "2026-10-16T12:06:00+00:00"
+    },
+    {
+      "id": "evt_seed_7",
+      "claim_id": "claim_demo_utility",
+      "from_status": "MATCH_FOUND",
+      "to_status": "FORM_READY",
+      "actor": "agent",
+      "source": "form_prepare",
+      "note": "ZIP conflict requires confirmation",
+      "created_at": "2026-10-16T12:07:00+00:00"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evd_seed_1",
+      "claim_id": "claim_demo_vendor_check",
+      "kind": "submission",
+      "source": "daytona_mock_portal",
+      "reference": "NY-DEMO-CHECK",
+      "payload": {"synthetic": true},
+      "created_at": "2026-10-16T12:09:00+00:00"
+    },
+    {
+      "id": "evd_seed_2",
+      "claim_id": "claim_demo_vendor_check",
+      "kind": "agency_receipt",
+      "source": "mock_ny_portal",
+      "reference": "NY-DEMO-CHECK",
+      "payload": {"synthetic": true},
+      "created_at": "2026-10-16T12:10:00+00:00"
+    }
+  ],
+  "memory_trail": [
+    {
+      "id": "mem_seed_1",
+      "claim_id": null,
+      "kind": "profile_saved",
+      "summary": "Remembered business profile for Example NYC Foods LLC",
+      "reason": "User confirmed profile facts before search",
+      "actor": "user",
+      "source": "profile_review",
+      "created_at": "2026-10-16T12:00:00+00:00"
+    },
+    {
+      "id": "mem_seed_2",
+      "claim_id": "claim_demo_utility",
+      "kind": "form_prepared",
+      "summary": "Prepared claim form with field provenance",
+      "reason": "Conflicts require confirmation",
+      "validation_errors": ["Field requires confirmation: zip"],
+      "actor": "agent",
+      "source": "forms.provenance",
+      "created_at": "2026-10-16T12:07:00+00:00"
+    },
+    {
+      "id": "mem_seed_3",
+      "claim_id": "claim_demo_vendor_check",
+      "kind": "status_transition",
+      "summary": "SUBMITTED → CLAIM_RECEIVED",
+      "reason": "Transition allowed with evidence_kind=agency_receipt",
+      "evidence_kind": "agency_receipt",
+      "actor": "mock_portal",
+      "source": "mock_ny_portal",
+      "created_at": "2026-10-16T12:10:00+00:00"
+    }
+  ]
+}

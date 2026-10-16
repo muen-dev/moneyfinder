@@ -4,9 +4,13 @@
 
 ### 1. Business-first landing
 
-Ask whether the business has a public website. Route to domain research or manual identity entry. Do not show money totals before a reviewed business profile exists.
+Ask whether the business has a public website. Route to domain research or manual identity entry.
+
+Show a qualified **possible funds** counter and journey thermometer on the landing page. Never label estimates as recovered or paid money.
 
 Value prop: research the business first, then search for possible unclaimed funds. Disclaimer: synthetic demo; not legal advice.
+
+Primary experience: `ui/domain.html` (served by `src.server`). Tracker dashboard, claim detail, rejection/needs-docs states, money-flow rails, and agent-memory trail are required screens.
 
 ### 2. Business research progress
 

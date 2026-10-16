@@ -20,15 +20,17 @@ cp .env.example .env
 python3 tests/test_pipeline.py
 python3 evals/run_evals.py
 
-# run the domain-first UI + local API
+# run the product UI + local API (landing, tracker, money flow)
 python3 -m src.server
 # then open http://localhost:4173
 
-# legacy static demo UI
+# optional: legacy static prototype
 open ui/index.html
 # mock portal for Daytona
 open mock_portal/index.html
 ```
+
+The served UI is the complete B2B journey: research/onboarding → matches → conflict-gated forms → sandbox submit → dashboard tracker → agency vs bank evidence → agent-memory trail. Demo state is JSON-backed (`data/moneyfinder-events.json`) and Surreal-ready.
 
 ## Architecture
 
