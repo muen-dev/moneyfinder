@@ -18,7 +18,11 @@ make fill           # Anchor cloud browser fills a claim form from the SurrealDB
 **One-page run:** http://localhost:8000/live. Enter the demo email (`marisol@gowanuskettle.example`), and the page
 shows each step as it runs: Gmail linked, then the email agent (Claude on Bedrock) and the web research agents in
 parallel, the dossier stored in SurrealDB, the Anchor browser filling the form (live view embedded), and the
-matched forms with the data that goes on them. About 35 seconds to the filled form. The demo mailbox and the
+matched forms with the data that goes on them. About 35 seconds to the filled form. The Anchor browser fills the
+official NY IT-636 PDF (tax.ny.gov) and the filled PDF is shown at the end. **Ready to file**
+(http://localhost:8000/live/filed) shows four filled official forms for the demo business (IT-636, IT-212,
+IT-643, IRS 8846; regenerate with `uv run --no-project --with pypdf --with httpx python form-filling/demo_forms.py`).
+Architecture diagram: [docs/architecture.svg](docs/architecture.svg) / `.png`. The demo mailbox and the
 demo business's web research are stored synthetic data; everything else runs live.
 
 1. **Connect the business.** Sign in with Google (read-only Gmail) and enter the company domain, or skip sign-in and

@@ -1,10 +1,13 @@
 """/live: one page that runs the whole demo flow (see business_research.live_demo) and shows it as it happens."""
 
+import json
 from pathlib import Path
 
 from flask import abort, flash, jsonify, redirect, render_template, request, send_file, url_for
 
 from .. import live_demo
+
+FILED = live_demo.REPO_DIR / "demo" / "gowanus-kettle" / "filled"  # demo_forms.py output
 
 # The page polls its status (connect-src) and embeds Anchor's live view of the browser (frame-src).
 CSP = (
@@ -54,3 +57,15 @@ def register(app) -> None:
         if not job.get("pdf") or not path.is_file():
             abort(404)
         return send_file(path, mimetype="application/pdf")
+
+    @app.get("/live/filed")
+    def live_filed():
+        manifest = json.loads((FILED / "manifest.json").read_text())
+        return render_template("filed.html", m=manifest, total=sum(f["amount"] for f in manifest["forms"]))
+
+    @app.get("/live/filed/<code>.pdf")
+    def live_filed_pdf(code: str):
+        codes = {f["code"] for f in json.loads((FILED / "manifest.json").read_text())["forms"]}
+        if code not in codes:
+            abort(404)
+        return send_file(FILED / f"{code}.pdf", mimetype="application/pdf")
