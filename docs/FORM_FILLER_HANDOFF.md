@@ -51,7 +51,7 @@ RELATE business:`gowanuskettle-example` -> claimed -> incentive:nys_beer_prod
     CONTENT { tax_year: 2025, status: 'drafted', form: form:['CT-636', 2025] };
 ```
 
-`fn::business_dossier` returns these under `claimed`. `make dossier-push` rewrites a business's facts from its dossier file, so also save the user's answers through the app (or in `business.json`), not only in SurrealDB.
+`fn::business_dossier` returns these under `claimed`. `make dossier-push` rewrites only a business's non-user facts from its dossier file, so answers saved with `source_kind: 'user'` survive it, and the web app pushes each dossier it builds or rebuilds to SurrealDB in the background (off with `KB_AUTO_PUSH=0`).
 
 ## Safety (from `docs/DAYTONA_BROWSER_SAFETY.md`)
 

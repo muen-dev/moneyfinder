@@ -147,3 +147,16 @@ def test_round_trip_is_idempotent(kb):
 
 def test_unknown_slug(kb):
     assert kb.business_dossier("nobody-com")["business"] is None
+
+
+def test_push_keeps_user_facts(kb):
+    kb.push_dossier(DOSSIER, tax_year=2025)
+    kb.db.run(
+        "CREATE fact CONTENT {business: business:`joespizza-com`, key: 'ein', value: '12-3456789',"
+        " source: 'user', source_kind: 'user', confidence: 1.0};"
+    )
+    answer = {"key": "ein", "value": "12-3456789", "source": "user", "source_kind": "user", "confidence": 1.0}
+    for _ in range(2):  # the dossier now carries the same answer: no duplicate-key failure, no second row
+        kb.push_dossier({**DOSSIER, "facts": [*DOSSIER["facts"][:1], answer]}, tax_year=2025)
+    facts = to_jsonable(kb.business_dossier("joespizza-com"))["facts"]
+    assert sorted((f["key"], f["source_kind"]) for f in facts) == [("ein", "user"), ("legal_name", "registry")]

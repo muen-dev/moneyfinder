@@ -7,6 +7,7 @@ Everything lives under DATA_DIR/<id>/ (git-ignored, owner-only), so disconnectin
 """
 
 import json
+import logging
 import os
 import shutil
 import threading
@@ -22,6 +23,7 @@ from . import config, ids
 # Replaced in tests so no research (or network call) actually runs.
 research_fn = pipeline.research
 
+log = logging.getLogger(__name__)
 _lock = threading.Lock()
 _active: set[str] = set()  # business ids with research running in this process
 
@@ -109,9 +111,23 @@ def _run(business_id: str, domain: str, email: str) -> None:
             _active.discard(business_id)
     if _connected(business_id):
         _write(path, state)
+        if state["status"] == "done":
+            _build_dossier(business_id)
     else:
         # Disconnected while this ran: don't leave its output behind.
         shutil.rmtree(business_dir(business_id), ignore_errors=True)
+
+
+def _build_dossier(business_id: str) -> None:
+    """Build dossier.json as soon as research lands (and push it to SurrealDB), not on the next page view."""
+    from . import dossier, kb_sync  # dossier imports this module
+
+    try:
+        dossier.build_for_business(business_id, use_llm=False)
+    except Exception as e:  # the business page rebuilds it on demand
+        log.warning("dossier build after research failed for %s: %s", business_id, type(e).__name__)
+        return
+    kb_sync.push_in_background(dossier.dossier_path(business_dir(business_id)))
 
 
 def _connected(business_id: str) -> bool:

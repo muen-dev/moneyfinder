@@ -17,7 +17,7 @@ from googleapiclient.errors import HttpError
 from legal_research import store as legal_store
 from legal_research.match import match_programs
 
-from .. import company, config, dossier as dossiers, inbox, store
+from .. import company, config, dossier as dossiers, inbox, kb_sync, store
 from ..gmail import auth
 from ..gmail.client import DEFAULT_QUERY, GmailClient
 
@@ -295,9 +295,11 @@ def _domain_dossier(domain: str, refresh: bool = False) -> dict | None:
     if cached and cached.get("generated_at", "") >= profile_at:
         return cached
     try:
-        return dossiers.build_for_domain(domain, use_llm=False)
+        built = dossiers.build_for_domain(domain, use_llm=False)
     except Exception:
         return cached
+    kb_sync.push_in_background(dossiers.dossier_path(company_store.default_dir(normalize_stored(domain))))
+    return built
 
 
 def _business_dossier(business_id: str, research: dict | None, refresh: bool = False) -> dict | None:
@@ -309,9 +311,11 @@ def _business_dossier(business_id: str, research: dict | None, refresh: bool = F
     if cached and all(cached.get("generated_at", "") >= t for t in inputs):
         return cached
     try:
-        return dossiers.build_for_business(business_id, use_llm=False)
+        built = dossiers.build_for_business(business_id, use_llm=False)
     except Exception:
         return cached
+    kb_sync.push_in_background(dossiers.dossier_path(company.business_dir(business_id)))
+    return built
 
 
 def _dossier_context(dossier: dict | None, json_url: str) -> dict:

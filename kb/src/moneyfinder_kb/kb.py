@@ -232,7 +232,7 @@ class KB:
     # ─── Dossiers (research/ output; read by the form filler) ────────────────
 
     def push_dossier(self, dossier: dict[str, Any], tax_year: int | None = None) -> dict[str, Any]:
-        """Upsert business:<slug>, replace its facts, link its credits and forms. Idempotent, one transaction."""
+        """Upsert business:<slug>, replace its non-user facts, link its credits and forms. Idempotent, one transaction."""
         params = build_push(dossier, tax_year)
         self.db.run(PUSH_SQL, params)
         return push_summary(params)

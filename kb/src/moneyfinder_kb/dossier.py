@@ -3,7 +3,8 @@
 One push, one transaction, safe to repeat:
   business:<slug>         name, website, naics, ... + profile (business block, email signals, missing_info)
                           + dossier (the whole JSON, for anything the columns don't cover)
-  fact                    this business's rows are replaced by the dossier's facts
+  fact                    this business's non-user rows are replaced by the dossier's facts; user answers
+                          (source_kind 'user', e.g. saved by the form filler) are kept, duplicates skipped
   incentive               inserted only if missing (the legal catalog's richer rows win)
   source / form / uses_form   one form revision per credit form URL, inserted if missing
   eligible_for            one edge per credit for the tax year; stale dossier edges are removed
@@ -180,8 +181,14 @@ PUSH_SQL = """
 BEGIN TRANSACTION;
 UPSERT $b MERGE $business RETURN NONE;
 UPDATE $b SET profile = $profile, dossier = $dossier, dossier_at = $at RETURN NONE;
-DELETE fact WHERE business = $b RETURN NONE;
-IF array::len($facts) > 0 { INSERT IGNORE INTO fact $facts RETURN NONE; };
+DELETE fact WHERE business = $b AND source_kind != 'user' RETURN NONE;
+-- User answers survive the DELETE; skip any dossier fact already stored (INSERT IGNORE does not
+-- reliably skip unique-index clashes on every engine version).
+FOR $f IN $facts {
+    IF array::len((SELECT VALUE id FROM fact WHERE business = $b AND key = $f.key AND value = $f.value AND source = $f.source)) = 0 {
+        CREATE fact CONTENT $f RETURN NONE;
+    };
+};
 IF array::len($incentives) > 0 { INSERT IGNORE INTO incentive $incentives RETURN NONE; };
 IF array::len($sources) > 0 { INSERT IGNORE INTO source $sources RETURN NONE; };
 IF array::len($forms) > 0 { INSERT IGNORE INTO form $forms RETURN NONE; };
