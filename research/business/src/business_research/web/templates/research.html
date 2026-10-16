@@ -1,64 +1,123 @@
-{#- Company research card on the business page. Every value here is scraped from the web: it's
-    autoescaped, and only http(s) URLs (via the http_url filter) ever become links. -#}
-{% macro link(url, text) -%}
-  {%- set safe = url|http_url -%}
-  {%- if safe %}<a href="{{ safe }}" rel="noopener noreferrer nofollow" target="_blank">{{ text or safe }}</a>{% else %}{{ text or url }}{% endif -%}
-{%- endmacro %}
-{% macro show(value) -%}
-  {%- if value is mapping -%}
-    {{ link(value.get("url"), value.get("title") or value.get("code") or "") }}
-    {%- for key, item in value.items() if key not in ("url", "title") and item %} <span class="muted">{{ item }}</span>{% endfor %}
-  {%- elif value is sameas true %}yes{% elif value is sameas false %}no
-  {%- elif value is string and value|http_url %}{{ link(value, value) }}
-  {%- else %}{{ value }}{% endif -%}
-{%- endmacro %}
+{#- Company profile on the business page. Every value here is scraped from the web: it's autoescaped,
+    and only http(s) URLs (via the http_url filter) ever become links. -#}
+{% from "_macros.html" import link, sources, show, confidence %}
+{% set title = (profile.name if profile and profile.name) or domain or conn.email %}
+{% set status_labels = {"queued": "Queued", "running": "Researching", "done": "Profile ready", "failed": "Research failed"} %}
 
-<section class="card research">
-  <h2>Company research</h2>
-  {% if not domain %}
-    <p>No company domain yet. <a class="primary" href="{{ url_for('domain_form', business_id=conn.business_id) }}">Add your company's domain</a></p>
-  {% else %}
-    <p>Domain <strong>{{ domain }}</strong>
-      {% if research %}· <span class="status {{ research.status }}">{{ research.status }}</span>
-        {% if research.status in ("queued", "running") %}<span class="muted">(this page refreshes every few seconds)</span>{% endif %}
-        {% if research.finished_at %}<span class="muted">· finished {{ research.finished_at }}</span>{% endif %}
-      {% endif %}</p>
-    {% if research and research.status == "failed" %}<p class="flash error">Research failed: {{ research.error }}</p>{% endif %}
+{% if not domain %}
+<section class="card narrow center">
+  <h1>One more step</h1>
+  <p class="lead">Add your company's website so we can build its profile.</p>
+  <a class="primary" href="{{ url_for('domain_form', business_id=conn.business_id) }}">Add your company's domain</a>
+</section>
+{% else %}
+<section class="company">
+  <div class="company-head">
+    <span class="avatar lg" aria-hidden="true">{{ title[:1]|upper }}</span>
+    <div class="company-id">
+      <h1>{{ title }}</h1>
+      <p class="muted">{{ link("https://" ~ domain, domain) }}
+        {%- set industry = profile.get("best", {}).get("industry") if profile else None %}
+        {%- if industry %} · {{ industry }}{% endif %}</p>
+    </div>
     <div class="actions">
+      {% if research %}<span class="status {{ research.status }}">{{ status_labels.get(research.status, research.status) }}</span>{% endif %}
+      {% if conn %}
       <form method="post" action="{{ url_for('rerun_research', business_id=conn.business_id) }}" data-busy="Starting…">
         <input type="hidden" name="csrf" value="{{ csrf }}">
-        <button {% if refresh %}disabled{% endif %}>Re-run research</button>
+        <button {% if refresh %}disabled{% endif %}>Re-run</button>
       </form>
       <a class="button" href="{{ url_for('domain_form', business_id=conn.business_id) }}">Change domain</a>
+      {% else %}
+      <span class="status done">Stored profile</span>
+      {% endif %}
     </div>
+  </div>
+
+  {% if refresh %}
+  <div class="card progress">
+    <div class="bar" role="progressbar" aria-label="Researching"><span></span></div>
+    <p>Researching <strong>{{ domain }}</strong> across public sources. This usually takes 20 to 40 seconds.</p>
+    <ul class="checking">
+      {% for key, label in collector_names.items() if key != "llm" %}<li><span class="spinner" aria-hidden="true"></span>{{ label }}</li>{% endfor %}
+    </ul>
+  </div>
   {% endif %}
+  {% if research and research.status == "failed" %}<p class="flash error">Research failed: {{ research.error }}</p>{% endif %}
 
   {% if profile %}
-    <p class="muted">Profile of {{ profile.domain }} generated {{ profile.generated_at }}. Sources:
-      {% for name, info in profile.collectors.items() %}
-        <span class="status {{ info.status }}" title="{{ info.error or '' }}">{{ name }} {{ info.status }}</span>
-      {% endfor %}</p>
-    <div class="table-wrap">
-      <table class="profile">
-        <thead><tr><th>Fact</th><th>Value</th><th>Confidence</th><th>Sources</th></tr></thead>
-        <tbody>
-        {% for name, claims in profile.fields.items() if name in fields %}
-          {% set label, multi = fields[name] %}
-          {% for claim in (claims if multi else claims[:4]) %}
-            <tr class="{{ 'alt' if not multi and not loop.first else '' }}">
-              <th>{% if loop.first %}{{ label }}{% elif not multi %}<span class="muted">also reported</span>{% endif %}</th>
-              <td>{{ show(claim.value) }}</td>
-              <td>{{ "%.2f"|format(claim.confidence) }}</td>
-              <td>
-                {% for source in claim.sources[:4] %}
-                  <span class="source" title="{{ source.via }} · {{ source.fetched_at }}{% if source.note %} · {{ source.note }}{% endif %}">{{ link(source.url, source.via) }}</span>
-                {% endfor %}
-              </td>
-            </tr>
+    {% set about = profile.fields.get("summary") or profile.fields.get("description") %}
+    {% if about %}<p class="lead about">{{ show(about[0].value) }}</p>{% endif %}
+    {% if profile.fields.get("products_services") %}
+      <ul class="chips products">{% for claim in profile.fields["products_services"][:10] %}<li>{{ claim.value }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {% include "credits.html" %}
+
+    <div class="card">
+      <h2>At a glance</h2>
+      <div class="glance">
+        {% for name in glance if profile.fields.get(name) %}
+          {% set claims = profile.fields[name] %}
+          <div class="fact">
+            <div class="label">{{ fields[name][0] }}</div>
+            <div class="value">{{ show(claims[0].value) }}</div>
+            <div class="meta">{{ confidence(claims[0]) }}{{ sources(claims[0], 1) }}
+              {%- if claims|length > 1 %}<span class="muted small">+{{ claims|length - 1 }} other</span>{% endif %}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Signals for incentives</h2>
+      {% set ns = namespace(found=false) %}
+      <ul class="signals">
+        {% for name in signals if profile.fields.get(name) %}
+          {% set ns.found = true %}
+          {% for claim in profile.fields[name][:4] %}
+            <li><span class="tag">{{ fields[name][0] }}</span><span class="signal-text">{{ show(claim.value) }}</span>{{ sources(claim, 1) }}</li>
           {% endfor %}
         {% endfor %}
-        </tbody>
-      </table>
+      </ul>
+      {% if not ns.found %}<p class="muted">No public hiring, expansion, R&amp;D or certification signals found. The inbox below often shows more.</p>{% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Sources checked</h2>
+      <ul class="sources-row">
+        {% for key, info in profile.collectors.items() %}
+          {% set found = info.status == "ok" and info.facts %}
+          <li class="src {{ 'found' if found else 'empty' if info.status == 'ok' else info.status }}" title="{{ info.error or '' }}">
+            <span class="dot" aria-hidden="true"></span>{{ collector_names.get(key, key) }}
+            <span class="muted">{% if found %}{{ info.facts }} fact{{ "s" if info.facts != 1 }}{% elif info.status == "ok" %}no match{% elif info.status == "skipped" %}skipped{% else %}unavailable{% endif %}</span>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <details class="evidence">
+        <summary>All facts and sources <span class="count">{{ profile.fields.values()|map("length")|sum }}</span></summary>
+        <div class="table-wrap">
+          <table class="profile">
+            <thead><tr><th>Fact</th><th>Value</th><th>Confidence</th><th>Sources</th></tr></thead>
+            <tbody>
+            {% for name, claims in profile.fields.items() if name in fields %}
+              {% set label, multi = fields[name] %}
+              {% for claim in (claims if multi else claims[:4]) %}
+                <tr class="{{ 'alt' if not multi and not loop.first else '' }}">
+                  <th>{% if loop.first %}{{ label }}{% elif not multi %}<span class="muted">also reported</span>{% endif %}</th>
+                  <td>{{ show(claim.value) }}</td>
+                  <td>{{ confidence(claim) }}</td>
+                  <td>{{ sources(claim, 4) }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <p class="muted small">Generated {{ profile.generated_at[:16]|replace("T", " ") }} UTC. Where sources disagree, every value is kept with its own sources.</p>
     </div>
   {% endif %}
 </section>
+{% endif %}

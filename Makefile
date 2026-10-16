@@ -3,14 +3,22 @@
 #   make business-fetch ID=owner-joespizza-com Q='from:gusto.com OR subject:invoice' N=500
 #   make kb-search Q='credit for hiring veterans'
 #   make company-research DOMAIN=joespizza.com
+#   make legal-match DOMAIN=gowanuskettle.example
+#   make demo                      # then open http://localhost:8000
+#   make dossier DOMAIN=themaincapital.com && make dossier-push ID=themaincapital.com
+#   make dossier-get SLUG=themaincapital-com
+#   make demo-seed                 # synthetic demo business -> /companies/gowanuskettle.example
+#   make fill                      # Anchor browser fills the mock portal from that dossier (no submit)
 #
 # Arguments are read by the shell ("$$Q"), so values with spaces or quotes pass through intact.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test \
+.PHONY: help setup test demo api pipeline-test evals \
 	business-serve business-list business-fetch business-disconnect business-test \
 	company-research company-show company-keys company-test \
-	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats
+	legal-research legal-show legal-match legal-seeds legal-load-kb legal-test \
+	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats kb-ping kb-test \
+	dossier dossier-push dossier-get demo-seed fill
 
 PORT ?= 8000
 
@@ -21,9 +29,47 @@ setup: ## Install every package's dependencies and the commit guard hook
 	git config core.hooksPath .githooks
 	cd research/business && uv sync
 	cd research/company && uv sync
+	cd research/legal && uv sync
 	cd kb && uv sync
 
-test: business-test company-test ## Run all tests
+test: business-test company-test legal-test kb-test pipeline-test ## Run all tests
+
+# MVP demo
+
+demo: business-serve ## The web app: company profiles, matched credits, unclaimed-funds demo at /unclaimed/ [PORT=8000]
+
+# PORT defaults to 4173 here (not the 8000 above) unless given on the command line or in the environment.
+api: ## Domain-first API + UI (src/server.py) [PORT=4173]
+	PORT=$(if $(filter command line environment,$(origin PORT)),$(PORT),4173) python3 -m src.server
+
+pipeline-test: ## Unclaimed-funds pipeline checks (src/, synthetic data)
+	python3 tests/test_pipeline.py
+
+evals: ## Unclaimed-funds evals on synthetic profiles
+	python3 evals/run_evals.py
+
+# Dossiers: one form-ready JSON per business (research/), loaded into SurrealDB for the form filler
+
+dossier: ## Build dossier.json: DOMAIN=<domain> and/or BUSINESS=<business id> [NO_LLM=1]
+	@test -n "$$DOMAIN$$BUSINESS" || { echo "usage: make dossier DOMAIN=themaincapital.com [BUSINESS=<id>] [NO_LLM=1]"; exit 1; }
+	cd research/business && uv run business-research dossier $${DOMAIN:+"$$DOMAIN"} $${BUSINESS:+--business-id "$$BUSINESS"} $${NO_LLM:+--no-llm}
+
+dossier-push: ## Load dossier.json into SurrealDB: ID=<slug|domain|path to dossier.json> or ALL=1 [YEAR=2025]
+	@test -n "$$ID$$ALL" || { echo "usage: make dossier-push ID=themaincapital.com   (or ALL=1 for every research/*/data/**/dossier.json)"; exit 1; }
+	uv run --project kb kb dossier-push $${ALL:+--all} $${ID:+"$$ID"} $${YEAR:+--tax-year "$$YEAR"}
+
+DEMO ?= demo/gowanus-kettle
+
+demo-seed: ## Load the synthetic demo business (demo/gowanus-kettle): data dirs, dossier (Bedrock email facts), SurrealDB push [NO_LLM=1] [NO_PUSH=1]
+	cd research/business && uv run business-research demo-seed "$(CURDIR)/$(DEMO)" $${NO_LLM:+--no-llm}
+	@if [ -z "$$NO_PUSH" ]; then uv run --project kb kb dossier-push "$$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["domain"])' "$(DEMO)/business.json")"; fi
+
+dossier-get: ## Print fn::business_dossier from SurrealDB: SLUG=<slug, e.g. themaincapital-com>
+	@test -n "$$SLUG" || { echo "usage: make dossier-get SLUG=themaincapital-com"; exit 1; }
+	cd kb && uv run kb dossier-get "$$SLUG"
+
+fill: ## Agentic browser (Anchor): fill the mock portal from a SurrealDB dossier, stop before submit [SLUG=gowanuskettle-example] [HOLD=10] [NO_OPEN=1]
+	uv run --project kb --with playwright python form-filling/fill.py --slug "$${SLUG:-gowanuskettle-example}" --hold "$${HOLD:-10}" $${NO_OPEN:+--no-open}
 
 # research/business: Gmail connector
 
@@ -60,6 +106,28 @@ company-keys: ## Which scraper API keys are configured (never prints values)
 company-test: ## research/company tests
 	cd research/company && uv run pytest -q
 
+# research/legal: tax-credit program catalog (official links, page data, claim counts, niches)
+
+legal-research: ## Build research/legal/data/catalog.json [SEARCH=1 to also search for niche programs]
+	cd research/legal && uv run legal-research run $${SEARCH:+--search}
+
+legal-show: ## Print credits by niche, fewest claimants first [NICHE=<id>] [ID=<program id>]
+	cd research/legal && uv run legal-research show $${ID:+"$$ID"} $${NICHE:+--niche "$$NICHE"}
+
+legal-match: ## Credits a stored company profile may qualify for: DOMAIN=<domain> [JSON=1]
+	@test -n "$$DOMAIN" || { echo "usage: make legal-match DOMAIN=gowanuskettle.example [JSON=1]   (profiles: research/company/data/)"; exit 1; }
+	cd research/legal && uv run legal-research match "$$DOMAIN" $${JSON:+--json}
+
+legal-seeds: ## Export catalog links as kb seeds and crawl them into the kb
+	cd research/legal && uv run legal-research seeds
+	cd kb && uv run kb seed --file ../research/legal/data/kb-seeds.toml
+
+legal-load-kb: ## Write programs and forms into the kb's incentive and form tables [YEAR=2025]
+	cd research/legal && uv run legal-research load-kb $${YEAR:+--tax-year "$$YEAR"}
+
+legal-test: ## research/legal tests
+	cd research/legal && uv run pytest -q
+
 # kb: tax-incentive data lake + knowledge base
 
 kb-up: ## Start local SurrealDB in Docker (port 8000)
@@ -68,7 +136,7 @@ kb-up: ## Start local SurrealDB in Docker (port 8000)
 kb-down: ## Stop local SurrealDB
 	cd kb && docker compose down
 
-kb-init: ## Apply the database schema (safe to re-run)
+kb-init: ## Apply the database schema to SurrealDB (safe to re-run)
 	cd kb && uv run kb init
 
 kb-seed: ## Crawl seeds/sources.toml [PAGES=200 per seed]
@@ -94,3 +162,9 @@ kb-missed: ## Likely incentives not yet claimed: BUSINESS=<slug> YEAR=<tax year>
 
 kb-stats: ## Row counts
 	cd kb && uv run kb stats
+
+kb-ping: ## Check the SurrealDB connection (root .env: SurrealDB Cloud; kb/.env overrides)
+	cd kb && uv run kb ping
+
+kb-test: ## kb tests (in-process SurrealDB, no server needed)
+	cd kb && uv run pytest -q

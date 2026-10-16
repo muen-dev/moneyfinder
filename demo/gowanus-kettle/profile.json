@@ -1,0 +1,551 @@
+{
+  "schema_version": 1,
+  "demo": true,
+  "demo_note": "Synthetic demo business. Every value is made up; the domain uses the reserved .example TLD.",
+  "domain": "gowanuskettle.example",
+  "name": "Gowanus Kettle Brewing Co.",
+  "inputs": {
+    "domain": "gowanuskettle.example",
+    "business_id": "demo-gowanuskettle",
+    "source": "demo:synthetic"
+  },
+  "generated_at": "2026-10-01T12:00:00+00:00",
+  "best": {
+    "legal_name": "Gowanus Kettle Brewing Co. LLC",
+    "dba": "Gowanus Kettle",
+    "description": "Independent Brooklyn microbrewery and taproom on the Gowanus Canal brewing lagers, saisons and hazy IPAs, sold on draft in its taproom bar and in 16 oz cans to New York accounts.",
+    "products_services": [
+      "Craft beer brewed on a 15-barrel brewhouse",
+      "Taproom bar with draft pours and tipped bartenders",
+      "16 oz cans distributed to New York bars and bottle accounts"
+    ],
+    "industry": "Breweries",
+    "naics": {
+      "code": "312120",
+      "title": "Breweries"
+    },
+    "hq_address": "417 Sackett Street, Brooklyn, NY 11231",
+    "nyc_borough": "Brooklyn",
+    "county": "Kings",
+    "employee_count": 14,
+    "founded_year": 2019,
+    "entity_type": "Domestic Limited Liability Company",
+    "state_of_formation": "New York",
+    "ny_dos_id": "9990142",
+    "ny_dos_filing_date": "2019-03-11",
+    "phone": "(718) 555-0142",
+    "hiring_signals": [
+      "Hired two U.S. military veterans in 2025 (cellar operator and packaging technician)"
+    ],
+    "incentive_signals": [
+      "Bought and installed a new automated canning line in 2025 (capital equipment)",
+      "Offers employee health insurance through a NY State of Health small-business marketplace plan",
+      "Started a SIMPLE IRA retirement plan for staff in 2025",
+      "38 kW rooftop solar array interconnected with Con Edison in 2025",
+      "Level 2 EV charging station for its electric delivery van",
+      "Bought an AED defibrillator for the taproom"
+    ],
+    "summary": "Fourteen-person Brooklyn brewery (NAICS 312120) that brewed about 3,100 barrels in New York in 2025, hired two veterans, added a canning line and rooftop solar."
+  },
+  "fields": {
+    "legal_name": [
+      {
+        "value": "Gowanus Kettle Brewing Co. LLC",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "dba": [
+      {
+        "value": "Gowanus Kettle",
+        "confidence": 0.85,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (website stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "website"
+        ]
+      }
+    ],
+    "description": [
+      {
+        "value": "Independent Brooklyn microbrewery and taproom on the Gowanus Canal brewing lagers, saisons and hazy IPAs, sold on draft in its taproom bar and in 16 oz cans to New York accounts.",
+        "confidence": 0.85,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (website stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "website"
+        ]
+      }
+    ],
+    "products_services": [
+      {
+        "value": "Craft beer brewed on a 15-barrel brewhouse",
+        "confidence": 0.85,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (website stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "website"
+        ]
+      },
+      {
+        "value": "Taproom bar with draft pours and tipped bartenders",
+        "confidence": 0.85,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (website stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "website"
+        ]
+      },
+      {
+        "value": "16 oz cans distributed to New York bars and bottle accounts",
+        "confidence": 0.8,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (website stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "website"
+        ]
+      }
+    ],
+    "industry": [
+      {
+        "value": "Breweries",
+        "confidence": 0.85,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (firmographics stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "firmographics"
+        ]
+      }
+    ],
+    "naics": [
+      {
+        "value": {
+          "code": "312120",
+          "title": "Breweries"
+        },
+        "confidence": 0.9,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (firmographics stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "firmographics"
+        ]
+      }
+    ],
+    "hq_address": [
+      {
+        "value": "417 Sackett Street, Brooklyn, NY 11231",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "nyc_borough": [
+      {
+        "value": "Brooklyn",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nyc_open_data stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nyc_open_data"
+        ]
+      }
+    ],
+    "county": [
+      {
+        "value": "Kings",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "employee_count": [
+      {
+        "value": 14,
+        "confidence": 0.7,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (firmographics stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00",
+            "note": "14 W-2 employees on 2025 payroll"
+          }
+        ],
+        "collectors": [
+          "firmographics"
+        ]
+      }
+    ],
+    "founded_year": [
+      {
+        "value": 2019,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "entity_type": [
+      {
+        "value": "Domestic Limited Liability Company",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "state_of_formation": [
+      {
+        "value": "New York",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "ny_dos_id": [
+      {
+        "value": "9990142",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00",
+            "note": "synthetic DOS id"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "ny_dos_filing_date": [
+      {
+        "value": "2019-03-11",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (nys_dos stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_dos"
+        ]
+      }
+    ],
+    "phone": [
+      {
+        "value": "(718) 555-0142",
+        "confidence": 0.8,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (website stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "website"
+        ]
+      }
+    ],
+    "hiring_signals": [
+      {
+        "value": "Hired two U.S. military veterans in 2025 (cellar operator and packaging technician)",
+        "confidence": 0.8,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (website stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "website"
+        ]
+      }
+    ],
+    "incentive_signals": [
+      {
+        "value": "Bought and installed a new automated canning line in 2025 (capital equipment)",
+        "confidence": 0.75,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (news stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "news"
+        ]
+      },
+      {
+        "value": "Offers employee health insurance through a NY State of Health small-business marketplace plan",
+        "confidence": 0.7,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (llm stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "llm"
+        ]
+      },
+      {
+        "value": "Started a SIMPLE IRA retirement plan for staff in 2025",
+        "confidence": 0.65,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (llm stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "llm"
+        ]
+      },
+      {
+        "value": "38 kW rooftop solar array interconnected with Con Edison in 2025",
+        "confidence": 0.7,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (llm stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "llm"
+        ]
+      },
+      {
+        "value": "Level 2 EV charging station for its electric delivery van",
+        "confidence": 0.65,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (llm stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "llm"
+        ]
+      },
+      {
+        "value": "Bought an AED defibrillator for the taproom",
+        "confidence": 0.6,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (llm stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "llm"
+        ]
+      }
+    ],
+    "summary": [
+      {
+        "value": "Fourteen-person Brooklyn brewery (NAICS 312120) that brewed about 3,100 barrels in New York in 2025, hired two veterans, added a canning line and rooftop solar.",
+        "confidence": 0.6,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (llm stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "llm"
+        ]
+      }
+    ],
+    "unclaimed_found_name": [
+      {
+        "value": "GOWANUS KETTLE BREWING CO LLC",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (NYS Comptroller unclaimed funds stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_unclaimed"
+        ]
+      }
+    ],
+    "unclaimed_holder": [
+      {
+        "value": "Consolidated Edison Co. of New York (utility deposit refund)",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (NYS Comptroller unclaimed funds stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_unclaimed"
+        ]
+      }
+    ],
+    "unclaimed_amount": [
+      {
+        "value": "1284.36",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (NYS Comptroller unclaimed funds stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_unclaimed"
+        ]
+      }
+    ]
+  },
+  "collectors": {
+    "nys_dos": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    },
+    "nyc_open_data": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    },
+    "firmographics": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    },
+    "website": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    },
+    "news": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    },
+    "llm": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    },
+    "nys_unclaimed": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    }
+  }
+}

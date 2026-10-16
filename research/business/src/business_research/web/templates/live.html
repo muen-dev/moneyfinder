@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Live run{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='live.js') }}" defer></script>{% endblock %}
+{% block content %}
+<h1>Live run</h1>
+{% if not job_id %}
+<form method="post" action="{{ url_for('live_start') }}">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label>Business email <input type="email" name="email" value="{{ demo_email }}" required size="36"></label>
+  <button type="submit">Connect Gmail and start</button>
+</form>
+<p>Demo business: Gowanus Kettle Brewing Co. (synthetic data).</p>
+{% else %}
+<div id="live" data-status="{{ url_for('live_status', job_id=job_id) }}">
+  <p>{{ demo_email }}</p>
+  <ol id="steps"></ol>
+  <section id="final" hidden>
+    <h2>Filled form: NY IT-636, Alcoholic Beverage Production Credit (not submitted)</h2>
+    <p><a id="pdf-link" target="_blank">Open the filled PDF</a> · <a href="{{ url_for('live_filed') }}">All forms ready to file</a></p>
+    <iframe id="pdf-frame" title="Filled IT-636" width="100%" height="900"></iframe>
+  </section>
+  <section id="browser" hidden>
+    <h2>Agentic browser</h2>
+    <p><a id="live-link" target="_blank" rel="noopener noreferrer">Open the live view in a new tab</a></p>
+    <iframe id="live-frame" title="Anchor live view" width="100%" height="560"></iframe>
+  </section>
+  <section id="results" hidden>
+    <h2>Forms</h2>
+    <ul id="forms"></ul>
+    <h2>Data on the forms</h2>
+    <table id="data"><thead><tr><th>Field</th><th>Value</th><th>Source</th></tr></thead><tbody></tbody></table>
+    <h2>Fields the agent filled</h2>
+    <table id="filled"><thead><tr><th>Field</th><th>Value</th><th>Source</th></tr></thead><tbody></tbody></table>
+    <p id="needs"></p>
+    <img id="shot" alt="Screenshot of the filled form" width="720" hidden>
+  </section>
+  <h2>Activity</h2>
+  <pre id="log"></pre>
+</div>
+{% endif %}
+{% endblock %}

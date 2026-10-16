@@ -52,3 +52,9 @@ node_modules/
 
 # OS
 .DS_Store
+
+# Form filler screenshots and receipts
+form-filling/out/
+
+# claude worktree
+.claude/worktrees

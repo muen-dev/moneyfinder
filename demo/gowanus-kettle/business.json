@@ -1,0 +1,13 @@
+{
+  "demo": true,
+  "domain": "gowanuskettle.example",
+  "name": "Gowanus Kettle Brewing Co.",
+  "legal_name": "Gowanus Kettle Brewing Co. LLC",
+  "contact_email": "marisol@gowanuskettle.example",
+  "phone": "(718) 555-0142",
+  "officer_name": "Marisol Vance",
+  "officer_title": "Managing Member",
+  "tax_year": 2025,
+  "updated_at": "2026-10-01T12:00:00+00:00",
+  "business_id": "demo-gowanuskettle"
+}

@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="640" viewBox="0 0 1600 640" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <title>MoneyFinder architecture</title>
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#1c1c1c"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5a5a5a"/>
+    </marker>
+    <style>
+      .flow { fill: none; stroke: #ededed; stroke-opacity: .55; stroke-width: 1.5; stroke-dasharray: 3 11;
+              animation: flow 1.2s linear infinite; }
+      @keyframes flow { to { stroke-dashoffset: -14; } }
+    </style>
+  </defs>
+
+  <rect width="1600" height="640" fill="#0a0a0a"/>
+  <rect width="1600" height="640" fill="url(#dots)"/>
+
+  <!-- title -->
+  <text x="40" y="62" fill="#ededed" font-size="28" font-weight="600" letter-spacing="-0.5">MoneyFinder</text>
+  <text x="40" y="94" fill="#8f8f8f" font-size="16">Finds the niche New York tax credits a small business qualifies for, and fills the forms.</text>
+
+  <!-- step labels -->
+  <g fill="#5f5f5f" font-size="12" font-weight="600" letter-spacing="1.5">
+    <text x="40" y="168">01  CONNECT</text>
+    <text x="304" y="168">02  RESEARCH</text>
+    <text x="568" y="168">03  STORE</text>
+    <text x="832" y="168">04  MATCH</text>
+    <text x="1096" y="168">05  FILL</text>
+    <text x="1360" y="168">06  APPROVE</text>
+  </g>
+
+  <!-- connectors -->
+  <g fill="none" stroke="#3a3a3a" stroke-width="1.5" marker-end="url(#arrow)">
+    <path id="c1a" d="M240 330 C 272 330, 272 240, 303 240"/>
+    <path id="c1b" d="M240 330 C 272 330, 272 420, 303 420"/>
+    <path id="c2a" d="M504 240 C 536 240, 536 330, 567 330"/>
+    <path id="c2b" d="M504 420 C 536 420, 536 330, 567 330"/>
+    <path id="c3" d="M768 330 H 831"/>
+    <path id="c4" d="M1032 330 H 1095"/>
+    <path id="c5" d="M1296 330 H 1359"/>
+  </g>
+  <g>
+    <use href="#c1a" class="flow"/><use href="#c1b" class="flow"/><use href="#c2a" class="flow"/>
+    <use href="#c2b" class="flow"/><use href="#c3" class="flow"/><use href="#c4" class="flow"/><use href="#c5" class="flow"/>
+  </g>
+  <!-- tracing links to Arize -->
+  <g fill="none" stroke="#333" stroke-width="1.2" stroke-dasharray="4 5">
+    <path d="M404 462 V 520"/>
+    <path d="M668 412 V 520"/>
+    <path d="M1196 412 V 520"/>
+  </g>
+
+  <!-- nodes -->
+  <g font-size="12.5">
+    <g>
+      <rect x="40" y="288" width="200" height="84" rx="12" fill="#111" stroke="#2a2a2a"/>
+      <circle cx="58" cy="312" r="4" fill="#a1a1a1"/>
+      <text x="72" y="317" fill="#ededed" font-size="15" font-weight="600">Business email</text>
+      <text x="58" y="342" fill="#8f8f8f">Gmail, read-only</text>
+      <text x="58" y="360" fill="#8f8f8f">sign in with Google</text>
+    </g>
+    <g>
+      <rect x="304" y="198" width="200" height="84" rx="12" fill="#111" stroke="#2a2a2a"/>
+      <circle cx="322" cy="222" r="4" fill="#60a5fa"/>
+      <text x="336" y="227" fill="#ededed" font-size="15" font-weight="600">Email agent</text>
+      <text x="322" y="252" fill="#8f8f8f">Claude on AWS Bedrock</text>
+      <text x="322" y="270" fill="#8f8f8f">EIN, barrels, license no.</text>
+    </g>
+    <g>
+      <rect x="304" y="378" width="200" height="84" rx="12" fill="#111" stroke="#2a2a2a"/>
+      <circle cx="322" cy="402" r="4" fill="#60a5fa"/>
+      <text x="336" y="407" fill="#ededed" font-size="15" font-weight="600">Web research agents</text>
+      <text x="322" y="432" fill="#8f8f8f">Firecrawl, NY DOS registry,</text>
+      <text x="322" y="450" fill="#8f8f8f">NYC Open Data, news</text>
+    </g>
+    <g>
+      <rect x="568" y="288" width="200" height="84" rx="12" fill="#111" stroke="#2a2a2a"/>
+      <circle cx="586" cy="312" r="4" fill="#c084fc"/>
+      <text x="600" y="317" fill="#ededed" font-size="15" font-weight="600">Business dossier</text>
+      <text x="586" y="342" fill="#8f8f8f">SurrealDB Cloud</text>
+      <text x="586" y="360" fill="#8f8f8f">every fact + its source</text>
+    </g>
+    <g>
+      <rect x="832" y="288" width="200" height="84" rx="12" fill="#111" stroke="#2a2a2a"/>
+      <circle cx="850" cy="312" r="4" fill="#a1a1a1"/>
+      <text x="864" y="317" fill="#ededed" font-size="15" font-weight="600">Credit matcher</text>
+      <text x="850" y="342" fill="#8f8f8f">ranks niche NY credits</text>
+      <text x="850" y="360" fill="#8f8f8f">tax.ny.gov + irs.gov forms</text>
+    </g>
+    <g>
+      <rect x="1096" y="288" width="200" height="84" rx="12" fill="#111" stroke="#2a2a2a"/>
+      <circle cx="1114" cy="312" r="4" fill="#fbbf24"/>
+      <text x="1128" y="317" fill="#ededed" font-size="15" font-weight="600">Agentic browser</text>
+      <text x="1114" y="342" fill="#8f8f8f">Anchor fills NY IT-636</text>
+      <text x="1114" y="360" fill="#8f8f8f">official PDF, live</text>
+    </g>
+    <g>
+      <rect x="1360" y="288" width="200" height="84" rx="12" fill="#111" stroke="#2a2a2a"/>
+      <circle cx="1378" cy="312" r="4" fill="#4ade80"/>
+      <text x="1392" y="317" fill="#ededed" font-size="15" font-weight="600">Owner approves</text>
+      <text x="1378" y="342" fill="#8f8f8f">every field read back</text>
+      <text x="1378" y="360" fill="#8f8f8f">never auto-submitted</text>
+    </g>
+  </g>
+
+  <!-- status pills -->
+  <g font-size="12" font-weight="500" text-anchor="middle">
+    <rect x="95" y="388" width="90" height="24" rx="6" fill="#1a1a1a" stroke="#2e2e2e"/>
+    <text x="140" y="404" fill="#a1a1a1">Connected</text>
+    <rect x="354" y="318" width="100" height="24" rx="6" fill="#0b1a33" stroke="#13305c"/>
+    <text x="404" y="334" fill="#60a5fa">In parallel</text>
+    <rect x="633" y="388" width="70" height="24" rx="6" fill="#1d1033" stroke="#3a1f66"/>
+    <text x="668" y="404" fill="#c084fc">Stored</text>
+    <rect x="896" y="388" width="72" height="24" rx="6" fill="#1a1a1a" stroke="#2e2e2e"/>
+    <text x="932" y="404" fill="#a1a1a1">Ranked</text>
+    <rect x="1148" y="388" width="96" height="24" rx="6" fill="#2a1a05" stroke="#4d3209"/>
+    <text x="1196" y="404" fill="#fbbf24">Filled live</text>
+    <rect x="1404" y="388" width="112" height="24" rx="6" fill="#0b2414" stroke="#164a2a"/>
+    <text x="1460" y="404" fill="#4ade80">Ready to file</text>
+  </g>
+
+  <!-- Arize -->
+  <rect x="304" y="520" width="1256" height="44" rx="10" fill="#0f0f0f" stroke="#262626"/>
+  <circle cx="324" cy="542" r="4" fill="#f97316"/>
+  <text x="338" y="547" fill="#a1a1a1" font-size="13.5"><tspan fill="#ededed" font-weight="600">Arize</tspan>   traces and evals on every agent run</text>
+
+  <text x="40" y="614" fill="#4a4a4a" font-size="12">Daytona HackSprint with Arize AI · NYC · October 2026</text>
+  <text x="1560" y="614" fill="#4a4a4a" font-size="12" text-anchor="end">Demo business: Gowanus Kettle Brewing Co. (synthetic)</text>
+</svg>

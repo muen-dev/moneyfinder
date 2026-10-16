@@ -135,13 +135,34 @@ DEFINE FIELD OVERWRITE employees ON business TYPE option<int>;
 DEFINE FIELD OVERWRITE annual_revenue ON business TYPE option<decimal>;
 DEFINE FIELD OVERWRITE profile ON business TYPE object FLEXIBLE DEFAULT {} COMMENT 'Whatever the research agents learn: BBB rating, Apollo description, ...';
 DEFINE FIELD OVERWRITE sources ON business TYPE array<record<source>> DEFAULT [];
+DEFINE FIELD OVERWRITE domain ON business TYPE option<string>;
+DEFINE FIELD OVERWRITE legal_name ON business TYPE option<string>
+    COMMENT 'Registered name (NY DOS). Optional here; schemas/surreal/schema.surql declares it as a required string.';
+DEFINE FIELD OVERWRITE dossier ON business TYPE option<object> FLEXIBLE
+    COMMENT 'Latest moneyfinder.dossier/v1 JSON from research/, as pushed by `kb dossier-push`';
+DEFINE FIELD OVERWRITE dossier_at ON business TYPE option<datetime>;
 DEFINE FIELD OVERWRITE updated_at ON business TYPE datetime VALUE time::now();
+
+-- Same shape as schemas/surreal/schema.surql (db main) plus source_kind. One row per observed value,
+-- so conflicting values from different sources are all kept; `kb dossier-push` replaces a business's rows.
+DEFINE TABLE OVERWRITE fact SCHEMAFULL
+    COMMENT 'One observed fact about a business (key = dossier business field, e.g. ein, legal_name), with provenance.';
+DEFINE FIELD OVERWRITE business ON fact TYPE record<business>;
+DEFINE FIELD OVERWRITE key ON fact TYPE string;
+DEFINE FIELD OVERWRITE value ON fact TYPE string COMMENT 'Non-string values are stored as JSON text';
+DEFINE FIELD OVERWRITE source ON fact TYPE string COMMENT 'URL, registry name, or email message id';
+DEFINE FIELD OVERWRITE source_kind ON fact TYPE option<string> COMMENT 'web | registry | enrichment | email | llm | user';
+DEFINE FIELD OVERWRITE confidence ON fact TYPE float DEFAULT 1.0 ASSERT $value >= 0 AND $value <= 1;
+DEFINE FIELD OVERWRITE captured_at ON fact TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS fact_business ON fact FIELDS business;
+DEFINE INDEX IF NOT EXISTS fact_unique ON fact FIELDS business, key, value, source UNIQUE;
 
 DEFINE TABLE OVERWRITE eligible_for TYPE RELATION IN business OUT incentive SCHEMAFULL
     COMMENT 'Latest assessment of one business against one incentive for one tax year.';
 DEFINE FIELD OVERWRITE tax_year ON eligible_for TYPE int;
 DEFINE FIELD OVERWRITE status ON eligible_for TYPE "likely" | "possible" | "needs_info" | "ineligible";
 DEFINE FIELD OVERWRITE confidence ON eligible_for TYPE option<float> ASSERT $value = NONE OR ($value >= 0 AND $value <= 1);
+DEFINE FIELD OVERWRITE rank ON eligible_for TYPE option<int>;  -- matcher order, 1 = best
 DEFINE FIELD OVERWRITE reasons ON eligible_for TYPE array<string> DEFAULT [];
 DEFINE FIELD OVERWRITE missing_info ON eligible_for TYPE array<string> DEFAULT [];
 DEFINE FIELD OVERWRITE evidence ON eligible_for TYPE array<record<chunk>> DEFAULT [];
@@ -201,4 +222,37 @@ DEFINE FUNCTION OVERWRITE fn::missed_opportunities($business: record<business>, 
     FROM eligible_for
     WHERE in = $business AND tax_year = $tax_year AND status IN ["likely", "possible"] AND out NOTINSIDE $claimed
     ORDER BY confidence DESC;
+};
+
+-- Everything a form filler needs for one business. RETURN fn::business_dossier('themaincapital-com');
+--   business      the dossier's best-value block (same keys as dossier.json; NONE if the slug is unknown)
+--   record        the kb's typed columns (entity_type normalized to c_corp | llc | ..., employees as int)
+--   facts         every observed value with source, source_kind, confidence, captured_at
+--   credits       eligible_for edges with incentive name and forms (code, title, pdf url)
+--   missing_info  form fields no source provided: ask the user, never guess Full dossier JSON: SELECT VALUE dossier FROM ONLY business:`<slug>`.
+DEFINE FUNCTION OVERWRITE fn::business_dossier($slug: string) {
+    LET $b = type::record("business", $slug);
+    RETURN {
+        slug: $slug,
+        business: $b.dossier.business ?? $b.profile,
+        record: $b.{ id, name, legal_name, domain, website, naics, entity_type, county, nyc_borough, employees, annual_revenue, dossier_at, updated_at },
+        missing_info: $b.dossier.missing_info ?? $b.profile.missing_info ?? [],
+        email_signals: $b.profile.email_signals ?? [],
+        facts: (SELECT key, value, source, source_kind, confidence, captured_at FROM fact WHERE business = $b ORDER BY key, confidence DESC),
+        credits: (SELECT
+                record::id(out) AS id,
+                out.name AS name,
+                out.kind AS kind,
+                out.jurisdiction AS jurisdiction,
+                out.agency AS agency,
+                tax_year,
+                status,
+                rank,
+                confidence,
+                reasons,
+                missing_info,
+                out->uses_form.{ role, code: out.code, tax_year: out.tax_year, title: out.title, url: out.pdf.url, instructions: out.instructions.url } AS forms
+            FROM eligible_for WHERE in = $b ORDER BY status, rank, confidence DESC),
+        claimed: (SELECT record::id(out) AS id, tax_year, status, amount FROM claimed WHERE in = $b)
+    };
 };

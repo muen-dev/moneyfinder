@@ -1,0 +1,287 @@
+# Niches: who a credit is really for. Most credits only make sense for one kind of business or one hiring
+# situation, and those are the ones small businesses miss.
+#
+# A program joins a niche when its name (or another name it goes by) matches one of `name_patterns`
+# (case-insensitive regex), or when programs.toml lists the niche for it.
+# `naics` (code prefixes) and `profile_keywords` are for matching a research/company profile to niches.
+# A niche that groups several topics adds a `[niche.program_keywords]` table (program id = keywords): for those
+# programs only their own keywords count, so "solar" does not match the bioheat credit. NAICS matches still count.
+# `search` is the query `legal-research run --search` sends to find programs the index pages miss.
+
+# Industries
+
+[[niche]]
+id = "restaurants_hospitality"
+label = "Restaurants, bars and tipped staff"
+description = "Food and drink businesses, and any business whose staff receive tips."
+naics = ["722"]
+name_patterns = ['\brestaurant', '\btipped\b', '\btips\b']
+profile_keywords = ["restaurant", "bar", "cafe", "pizzeria", "bakery", "catering", "diner", "coffee", "salon", "barber"]
+search = "New York restaurant tax credit employer"
+
+[[niche]]
+id = "beverage_alcohol"
+label = "Breweries, wineries, distilleries and cideries"
+description = "Producers of beer, wine, cider, mead and spirits in New York."
+naics = ["31212", "31213", "31214"]
+name_patterns = ['alcoholic beverage', '\bbeer\b', '\bbrew', '\bwine', 'distill']
+profile_keywords = ["brewery", "brewing", "winery", "distillery", "cidery", "craft beer", "spirits"]
+
+[[niche]]
+id = "film_tv"
+label = "Film, TV and commercial production"
+description = "Productions shot or post-produced in New York, including TV commercials."
+naics = ["51211", "51219"]
+name_patterns = ['\bfilm\b', 'commercial production']
+profile_keywords = ["film", "production company", "post-production", "commercials", "video production", "studio"]
+
+[[niche]]
+id = "live_theater"
+label = "Musicals, plays and touring productions"
+description = "Theatrical productions running in NYC or touring through New York State."
+naics = ["7111"]
+name_patterns = ['theatrical', '\bmusical\b']
+profile_keywords = ["theater", "theatre", "musical", "broadway", "touring production"]
+
+[[niche]]
+id = "digital_gaming"
+label = "Video game studios"
+description = "Studios developing digital games in New York."
+naics = ["513210", "541511"]
+name_patterns = ['digital gaming', 'video game']
+profile_keywords = ["video game", "game studio", "gaming", "interactive entertainment"]
+
+[[niche]]
+id = "news_media"
+label = "Newspapers and broadcasters"
+description = "Local newspapers and broadcast outlets employing journalists in New York."
+naics = ["51311", "5161"]
+name_patterns = ['newspaper', 'broadcast']
+profile_keywords = ["newspaper", "news outlet", "radio station", "tv station", "journalism"]
+
+[[niche]]
+id = "agriculture"
+label = "Farms and farm employers"
+description = "Farms: payroll, overtime, school taxes, food pantry donations and old barns."
+naics = ["111", "112"]
+name_patterns = ['\bfarm', '\bbarns?\b', 'agricultur']
+profile_keywords = ["farm", "orchard", "dairy", "agriculture", "vineyard", "greenhouse", "ranch"]
+
+[[niche]]
+id = "manufacturing"
+label = "Manufacturers"
+description = "Production facilities: equipment, buildings and real property taxes."
+naics = ["31", "32", "33"]
+name_patterns = ['manufactur']
+profile_keywords = ["manufactur", "factory", "fabrication", "production facility", "machine shop"]
+
+[[niche]]
+id = "semiconductors"
+label = "Semiconductor makers and suppliers"
+description = "Chip research, fabrication and the workforce training around it."
+naics = ["3344", "333242"]
+name_patterns = ['semiconductor']
+profile_keywords = ["semiconductor", "chip", "wafer", "microelectronics"]
+
+[[niche]]
+id = "life_sciences"
+label = "Biotech and life sciences"
+description = "New biotech and life sciences companies, especially small ones doing research in NY or NYC."
+naics = ["3254", "541714"]
+name_patterns = ['life sciences', 'biotech']
+profile_keywords = ["biotech", "life sciences", "pharmaceutical", "therapeutics", "medical device", "diagnostics"]
+
+[[niche]]
+id = "research_development"
+label = "Research and development, including software"
+description = "Businesses that build new products or software; small startups can apply the federal credit to payroll tax."
+naics = ["5417", "5112", "5132", "5415"]
+name_patterns = ['research and development', '\bresearch\b']
+profile_keywords = ["R&D", "research", "software", "engineering", "prototype", "patent", "platform"]
+
+[[niche]]
+id = "security_services"
+label = "Security guard companies"
+description = "Firms that put security officers through state-approved advanced training."
+naics = ["561612"]
+name_patterns = ['security officer']
+profile_keywords = ["security guard", "security services", "security officers"]
+
+[[niche]]
+id = "small_retail"
+label = "Small shops and stores"
+description = "Small retailers with a physical store, e.g. spending on theft prevention."
+naics = ["44", "45"]
+name_patterns = ['commercial security']
+profile_keywords = ["retail", "store", "shop", "boutique", "bodega", "grocery", "deli", "pharmacy"]
+search = "New York small retail business tax credit store"
+
+[[niche]]
+id = "transportation_access"
+label = "Taxis, livery and accessible transportation"
+description = "Operators adding wheelchair-accessible vehicles or transporting people with disabilities."
+naics = ["4853", "4854", "4859"]
+name_patterns = ['taxicab', '\blivery\b', 'transportation to individuals with disabilities']
+profile_keywords = ["taxi", "livery", "car service", "paratransit", "transportation"]
+
+[[niche]]
+id = "financial_services"
+label = "Banks, brokers and mortgage businesses"
+description = "Financial services firms and mortgage lenders and servicers."
+naics = ["52"]
+name_patterns = ['financial services', 'mortgage']
+profile_keywords = ["bank", "broker", "mortgage", "lender", "financial services", "credit union"]
+
+# Property and places
+
+[[niche]]
+id = "contaminated_sites"
+label = "Brownfield and contaminated-site cleanup"
+description = "Owners and developers cleaning up contaminated land under a state program."
+naics = ["5629", "2362", "5311"]
+name_patterns = ['brownfield', 'remediat']
+profile_keywords = ["brownfield", "remediation", "contaminated", "redevelopment"]
+
+[[niche]]
+id = "historic_buildings"
+label = "Historic buildings and barns"
+description = "Owners rehabilitating certified historic buildings or historic barns."
+name_patterns = ['historic']
+profile_keywords = ["historic", "landmark", "rehabilitation", "restoration"]
+
+[[niche]]
+id = "affordable_housing"
+label = "Affordable housing developers"
+description = "Developers and investors in low-income housing projects."
+naics = ["2361", "5311"]
+name_patterns = ['low-income housing', 'affordable housing']
+profile_keywords = ["affordable housing", "housing developer", "low-income housing"]
+
+[[niche]]
+id = "land_conservation"
+label = "Landowners with conservation easements"
+description = "Owners who donated a conservation easement on their land."
+name_patterns = ['conservation easement']
+profile_keywords = ["land trust", "conservation", "acres", "farmland"]
+
+[[niche]]
+id = "property_owners"
+label = "Businesses that own their building"
+description = "Property tax abatements, exemptions and credits for business property owners."
+name_patterns = ['abatement', 'exemption', 'real property', '\bPILOT\b', 'payment in lieu', '\bICAP\b', 'school tax']
+profile_keywords = ["owns its building", "property owner", "building owner", "real estate"]
+
+[[niche]]
+id = "clean_energy"
+label = "Clean energy, EV charging and efficient buildings"
+description = "EV chargers, alternative fuels, bioheat, solar, green roofs and energy cost discounts."
+naics = ["454310", "457210", "2211"]
+name_patterns = ['alternative fuels', 'electric vehicle', 'clean heating fuel', 'heating oil', '\bsolar\b', 'clean energy', 'green roof', 'green building', 'energy cost']
+profile_keywords = ["solar", "EV charging", "electric vehicle", "biodiesel", "heating oil", "green roof", "energy efficiency"]
+
+[niche.program_keywords]
+nys_alt_fuels_elec_vehicles = ["EV charging", "EV charger", "charging station", "electric vehicle", "alternative fuel"]
+nys_clean_heating_fuel = ["biodiesel", "bioheat", "heating oil", "heating fuel"]
+nyc_solar_roof = ["solar"]
+nyc_clean_energy_systems_exemption = ["solar", "energy storage", "battery storage", "wind turbine", "fuel cell", "geothermal"]
+nyc_green_roof = ["green roof"]
+nyc_energy_cost_savings_program = ["energy cost", "relocat"]
+
+[[niche]]
+id = "nyc_relocation"
+label = "Moving jobs into or within NYC"
+description = "Businesses relocating to eligible NYC areas (outside Manhattan's core, Lower Manhattan, industrial zones)."
+name_patterns = ['relocation', '\bREAP\b', 'race for space', 'industrial business zone']
+profile_keywords = ["relocat", "moving", "new office", "new location", "lease"]
+
+[[niche]]
+id = "nyc_commercial_rent"
+label = "Commercial tenants in Manhattan"
+description = "Tenants paying NYC commercial rent tax below 96th Street, and the small-business credit against it."
+name_patterns = ['commercial rent']
+profile_keywords = ["Manhattan", "lease", "rent", "storefront"]
+
+# Hiring and people
+
+[[niche]]
+id = "hiring_veterans"
+label = "Hiring veterans"
+description = "Employers hiring veterans, especially disabled or long-unemployed veterans."
+name_patterns = ['veteran', '\bhire a vet\b']
+profile_keywords = ["veteran", "military"]
+
+[[niche]]
+id = "hiring_disabilities"
+label = "Hiring people with disabilities"
+description = "Employers hiring people with disabilities who are in vocational rehabilitation."
+name_patterns = ['(employment of|workers with) (persons with )?disabilit']
+profile_keywords = ["disabilities", "vocational rehabilitation", "inclusive hiring"]
+
+[[niche]]
+id = "hiring_youth"
+label = "Hiring at-risk youth"
+description = "Employers hiring disadvantaged young people (16 to 24) in New York."
+name_patterns = ['\byouth\b']
+profile_keywords = ["youth", "summer jobs", "students", "interns", "entry-level"]
+
+[[niche]]
+id = "hiring_recovery"
+label = "Hiring people in recovery"
+description = "Employers certified as recovery-supportive who hire people recovering from substance use disorder."
+name_patterns = ['\brecovery\b']
+profile_keywords = ["recovery", "reentry", "second chance", "recovery-friendly"]
+
+[[niche]]
+id = "hiring_targeted_groups"
+label = "Hiring from targeted groups"
+description = "Hires from groups with high unemployment: SNAP recipients, ex-offenders, long-term unemployed and others."
+name_patterns = ['work opportunity']
+profile_keywords = ["hiring", "entry-level", "workforce", "second chance"]
+
+[[niche]]
+id = "training_apprenticeship"
+label = "Apprentices and employee training"
+description = "Registered apprenticeships and approved skills training for employees."
+name_patterns = ['apprentice', '\btraining\b']
+profile_keywords = ["apprentice", "training program", "workforce development", "upskilling", "internship"]
+
+[[niche]]
+id = "employee_benefits"
+label = "Small-employer benefits"
+description = "Child care, health insurance, retirement plans and paid leave offered by small employers."
+name_patterns = ['child ?care', 'health (care|insurance)', 'retirement plan', 'pension', 'paid (family )?(and medical )?leave', 'long-term care']
+profile_keywords = ["benefits", "health insurance", "401(k)", "retirement plan", "child care", "paid leave"]
+
+[niche.program_keywords]
+fed_small_employer_health = ["health insurance", "health plan", "health benefits"]
+fed_retirement_startup = ["retirement plan", "401(k)", "SIMPLE IRA", "SEP IRA", "pension plan"]
+fed_paid_leave = ["paid leave", "paid family leave", "medical leave"]
+fed_employer_childcare = ["child care", "childcare", "daycare"]
+nys_employer_provided_childcare = ["child care", "childcare", "daycare"]
+nys_longterm_care_insurance = ["long-term care"]
+
+[[niche]]
+id = "accessibility_safety"
+label = "Accessibility and safety equipment"
+description = "Small businesses making premises accessible, or buying defibrillators for the workplace."
+name_patterns = ['defibrillator', 'disabled access']
+profile_keywords = ["ADA", "accessibility", "wheelchair", "AED", "defibrillator"]
+
+[niche.program_keywords]
+fed_disabled_access = ["ADA", "accessibility", "wheelchair"]
+nys_defibrillator = ["AED", "defibrillator"]
+
+# Approval-first programs
+
+[[niche]]
+id = "growth_esd"
+label = "Growing employers with an ESD certificate"
+description = "Job-creating or job-keeping projects that apply to Empire State Development before claiming."
+name_patterns = ['excelsior', 'start-up ny', 'jobs retention', 'economic transformation']
+profile_keywords = ["expansion", "new jobs", "new facility", "investment", "headquarters"]
+
+[[niche]]
+id = "legacy_zones"
+label = "Legacy zone programs (closed to new businesses)"
+description = "Empire Zone, QEZE and QETC credits: only businesses certified years ago can still claim them."
+name_patterns = ['\bEZ\b', '\bQEZE\b', '\bQETC\b', 'empire zone', '\bEZ/ZEA\b']

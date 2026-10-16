@@ -11,13 +11,13 @@ from concurrent.futures import TimeoutError as FuturesTimeout
 from pathlib import Path
 
 from . import config, domain as domains, store, synthesize
-from .collectors import Context, bbb, linkedin, news, nyc_open_data, nys_dos, website
+from .collectors import Context, bbb, firmographics, linkedin, news, nyc_open_data, nys_dos, website
 from .enrich import borough_from_address, naics_guess
-from .profile import CollectorResult, Fact, build
+from .profile import CollectorResult, Fact, Source, build
 from .providers import MissingKey, Providers, Recorder, now
 
 FIRST = (website,)
-THEN = (bbb, linkedin, nys_dos, nyc_open_data, news)
+THEN = (bbb, linkedin, nys_dos, nyc_open_data, news, firmographics)
 COLLECTORS = {c.NAME: c for c in FIRST + THEN}
 
 _COUNTY_BOROUGH = {"new york": "Manhattan", "kings": "Brooklyn", "queens": "Queens", "bronx": "Bronx", "richmond": "Staten Island"}
@@ -32,11 +32,17 @@ def research(
     use_llm: bool = True,
     only: list[str] | None = None,
     providers: Providers | None = None,
+    merge: bool = False,
     log: Callable[[str], None] = lambda message: None,
 ) -> dict:
-    """Research a company domain and write profile.json plus raw responses. Returns the profile."""
+    """Research a company domain and write profile.json plus raw responses. Returns the profile.
+
+    merge=True keeps the stored profile's facts from collectors that aren't re-run (e.g. add
+    firmographics to an existing profile without paying for the other collectors again).
+    """
     normalized = domains.normalize(domain)
     out_dir = out_dir or store.default_dir(normalized)
+    previous = store.read_profile(out_dir) if merge else None
     own_providers = providers is None
     providers = providers or Providers(Recorder())
     ctx = Context(domain=normalized, providers=providers)
@@ -53,9 +59,19 @@ def research(
         email_host = contact_email.rsplit("@", 1)[1].lower()
         inputs["email_domain_matches"] = email_host == normalized or email_host.endswith(f".{normalized}")
     derived = derive(results)
+    if previous:
+        rerun = {r.name for r in results}
+        derived += facts_from_profile(previous, skip=rerun)
+        inputs = previous.get("inputs") or inputs
+        use_llm = False  # keep the stored LLM facts; they summarize the other collectors
     profile = build(normalized, inputs, results, now(), derived)
     calls = providers.recorder.dump()
 
+    if previous:
+        profile["collectors"] = {**previous.get("collectors", {}), **profile["collectors"]}
+        profile["name"] = previous.get("name")  # ctx.name would only be a guess: the website didn't run
+        store.write_run(out_dir, profile, calls, append=True)
+        return profile
     if use_llm and synthesize.available():
         started = time.monotonic()
         llm = CollectorResult("llm")
@@ -73,8 +89,26 @@ def research(
     else:
         profile["collectors"]["llm"] = {"status": "skipped", "error": "no AWS credentials" if use_llm else "disabled", "duration_s": 0, "facts": 0}
 
+    profile["name"] = ctx.name  # display name: the site's brand name, else one guessed from the domain
     store.write_run(out_dir, profile, calls)
     return profile
+
+
+def facts_from_profile(profile: dict, skip: set[str]) -> list[Fact]:
+    """A stored profile's claims as facts again (one per source), minus those from collectors in skip."""
+    facts = []
+    for name, claims in (profile.get("fields") or {}).items():
+        for claim in claims:
+            collectors = claim.get("collectors") or ["stored"]
+            if set(collectors) <= skip:
+                continue
+            for i, src in enumerate(claim.get("sources") or []):
+                source = Source(src.get("url", ""), src.get("via", ""), src.get("fetched_at", ""))
+                # Only the first source carries the merged confidence, so re-merging doesn't inflate it.
+                confidence = claim.get("confidence", 0.0) if i == 0 else 0.0
+                collector = collectors[min(i, len(collectors) - 1)]
+                facts.append(Fact(name, claim.get("value"), source, confidence, collector, src.get("note", "")))
+    return facts
 
 
 def derive(results: list[CollectorResult]) -> list[Fact]:

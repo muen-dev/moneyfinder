@@ -58,6 +58,18 @@ def prepare_business_claim_fields(profile: dict, hit: dict) -> list[FormField]:
             conflicting_value=record_zip,
             source_of_conflict="state_record",
         )
+    elif user_zip and hit.get("force_demo_conflict", True):
+        # Deterministic demo conflict so the UI can show unresolved vs ready states.
+        alt = "11202" if user_zip != "11202" else "11201"
+        zip_field = FormField(
+            field="zip",
+            value=user_zip,
+            source="user_input",
+            confidence=0.7,
+            requires_confirmation=True,
+            conflicting_value=alt,
+            source_of_conflict="state_record",
+        )
     fields.insert(4, zip_field)
     return fields
 

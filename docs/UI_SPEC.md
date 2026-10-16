@@ -2,11 +2,25 @@
 
 ## Screens
 
-### 1. Landing
+### 1. Business-first landing
 
-Value prop: find unclaimed funds owed to NYC businesses. Disclaimer: synthetic demo; not legal advice.
+Ask whether the business has a public website. Route to domain research or manual identity entry.
 
-### 2. Business onboarding
+Show a qualified **possible funds** counter and journey thermometer on the landing page. Never label estimates as recovered or paid money.
+
+Value prop: research the business first, then search for possible unclaimed funds. Disclaimer: synthetic demo; not legal advice.
+
+Primary experience: `ui/domain.html` (served by `src.server`). Tracker dashboard, claim detail, rejection/needs-docs states, money-flow rails, and agent-memory trail are required screens.
+
+### 2. Business research progress
+
+Show website, NYS DOS, NYC Open Data, BBB/public snippets, and news collectors with loading, success, error, retry, and consent states.
+
+### 3. Business profile review
+
+Show each discovered fact with source URL, timestamp, confidence, and conflicts. Require representative confirmation before search.
+
+### 4. Business onboarding fallback
 
 Fields:
 
@@ -21,14 +35,14 @@ Fields:
 
 CTA: **Search for unclaimed funds**
 
-### 3. Search progress
+### 5. Search progress
 
 List each variant + source:
 
 - State unclaimed funds database
 - Show tick animation per source
 
-### 4. Matches
+### 6. Matches
 
 Cards:
 
@@ -40,7 +54,7 @@ Cards:
 - Amount (if synthetic demo exposes it; note NY public list may omit amounts)
 - Checkbox to include in claim pack
 
-### 5. Form review
+### 7. Form review
 
 Per form:
 
@@ -51,11 +65,11 @@ Per form:
 - Master authorization checkbox
 - Send disabled until all conflicts cleared + checkbox
 
-### 6. Submit log
+### 8. Submit log
 
 Monospace log of Daytona/browser steps. Stop button.
 
-### 7. Timeline / account
+### 9. Timeline / account
 
 - Status chips
 - Timestamps (UTC stored, local displayed)
@@ -64,13 +78,13 @@ Monospace log of Daytona/browser steps. Stop button.
 - Evidence links
 - Uncertainty copy when `PROCESSING`
 
-### 8. Payment
+### 10. Payment
 
 - `PAYMENT_ISSUED`: agency evidence
 - `PAYMENT_CONFIRMED`: synthetic bank row labeled **Demo deposit**
 - Never label synthetic as real wire
 
-### 9. Trace / Arize
+### 11. Trace / Arize
 
 Bars for fields correct, deadlines, match quality. Placeholder for live Arize numbers.
 

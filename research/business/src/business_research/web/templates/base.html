@@ -3,15 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Business inbox{% endblock %} · moneyfinder</title>
+  <title>{% block title %}Find the incentives your business qualifies for{% endblock %} · moneyfinder</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body>
   <header class="top">
-    <a href="{{ url_for('index') }}" class="brand">moneyfinder</a>
-    <span class="muted">business inbox · local dev</span>
+    <a href="{{ url_for('index') }}" class="brand"><span class="mark" aria-hidden="true">$</span>moneyfinder</a>
+    <span class="tagline">Tax credits and grants for New York businesses</span>
+    <nav class="nav" aria-label="Demos">
+      <a href="{{ url_for('live_start_page') }}">Live run</a>
+      <a href="{{ url_for('live_filed') }}">Ready to file</a>
+      <a href="{{ url_for('index') }}">Tax credits</a>
+      <a href="{{ url_for('unclaimed_demo') }}">Unclaimed funds</a>
+    </nav>
   </header>
   <main>
     {% with flashes = get_flashed_messages(with_categories=true) %}
@@ -19,5 +26,8 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
+  <footer class="foot">
+    <span>Read-only Gmail access</span><span>Data stays on this machine</span><span>Disconnect deletes everything</span>
+  </footer>
 </body>
 </html>

@@ -1,0 +1,46 @@
+{
+  "business": "Gowanus Kettle Brewing Co. LLC",
+  "tax_year": 2025,
+  "forms": [
+    {
+      "code": "IT-636",
+      "agency": "NYS Department of Taxation and Finance",
+      "title": "Alcoholic Beverage Production Credit",
+      "amount": 13471,
+      "basis": "3,104 barrels (96,224 gallons) of beer brewed in NY in 2025 x $0.14",
+      "url": "https://www.tax.ny.gov/pdf/current_forms/it/it636_fill_in.pdf",
+      "file": "IT-636.pdf",
+      "fields": 19
+    },
+    {
+      "code": "IT-212",
+      "agency": "NYS Department of Taxation and Finance",
+      "title": "Investment Credit",
+      "amount": 7460,
+      "basis": "Canning line, $186,500, placed in service July 28, 2025 x 4%",
+      "url": "https://www.tax.ny.gov/pdf/current_forms/it/it212_fill_in.pdf",
+      "file": "IT-212.pdf",
+      "fields": 11
+    },
+    {
+      "code": "IT-643",
+      "agency": "NYS Department of Taxation and Finance",
+      "title": "Hire a Veteran Credit",
+      "amount": 15075,
+      "basis": "Two qualified veterans hired in 2025, 15% of first-year wages",
+      "url": "https://www.tax.ny.gov/pdf/current_forms/it/it643_fill_in.pdf",
+      "file": "IT-643.pdf",
+      "fields": 24
+    },
+    {
+      "code": "8846",
+      "agency": "Internal Revenue Service",
+      "title": "Credit for Employer Social Security and Medicare Taxes Paid on Certain Employee Tips",
+      "amount": 9731,
+      "basis": "Taproom tips $148,600; $127,200 creditable x 7.65%",
+      "url": "https://www.irs.gov/pub/irs-pdf/f8846.pdf",
+      "file": "8846.pdf",
+      "fields": 7
+    }
+  ]
+}

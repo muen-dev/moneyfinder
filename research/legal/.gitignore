@@ -1,1 +1,9 @@
+# API keys (copy .env.example to .env.local)
+.env.local
 .env.*
+!.env.example
+# Fetched pages, claim data and generated catalog (public data, but regenerated on every run)
+data/
+.venv/
+__pycache__/
+.pytest_cache/

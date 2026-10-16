@@ -6,7 +6,7 @@ bbb.org's robots.txt allows /us/*/*/profile/* pages (without query strings), whi
 import re
 
 from ..domain import InvalidDomain, normalize
-from ..enrich import name_similarity, year
+from ..enrich import name_key, name_similarity, year
 from ..profile import CollectorResult, clean_text
 from ..providers import MissingKey, ProviderError, now
 from . import Context, fact, mentions
@@ -94,12 +94,18 @@ def best_profile(hits: list[dict], ctx: Context) -> tuple[str | None, dict]:
         if not match:
             continue
         title = hit.get("title", "").split("|")[0]
-        score = max(name_similarity(title, n) for n in (ctx.names or [ctx.name]))
+        # The listing must carry every word of the name: "Capital Group" is not "Main Capital".
+        score = max((name_similarity(title, n) for n in (ctx.names or [ctx.name]) if _covers(title, n)), default=0.0)
         if mentions(hit.get("content", ""), [], ctx.domain):
             score += 1.0
         if score > best_score:
             best, best_score, best_hit = match.group(0), score, hit
-    return (best, best_hit) if best_score >= 0.3 else (None, {})
+    return (best, best_hit) if best_score > 0 else (None, {})
+
+
+def _covers(title: str, name: str) -> bool:
+    words = set(name_key(name).split())
+    return bool(words) and words <= set(name_key(title).split())
 
 
 def _read_profile(ctx: Context, url: str) -> tuple[dict, str]:

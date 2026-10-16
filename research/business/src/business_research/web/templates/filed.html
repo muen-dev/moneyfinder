@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Ready to file{% endblock %}
+{% block content %}
+<h1>Ready to file: {{ m.business }}, tax year {{ m.tax_year }}</h1>
+<p>{{ m.forms|length }} official forms filled from the business's dossier, worth <strong>${{ "{:,}".format(total) }}</strong>
+in credits. Nothing is submitted until the owner reviews and signs. Demo business with synthetic data; SSNs are masked.</p>
+<table>
+  <thead><tr><th>Form</th><th>Credit</th><th>Agency</th><th>Based on</th><th>Amount</th></tr></thead>
+  <tbody>
+  {% for f in m.forms %}
+    <tr><td><a href="#form-{{ f.code }}">{{ f.code }}</a></td><td>{{ f.title }}</td><td>{{ f.agency }}</td>
+        <td>{{ f.basis }}</td><td>${{ "{:,}".format(f.amount) }}</td></tr>
+  {% endfor %}
+    <tr><td></td><td><strong>Total</strong></td><td></td><td></td><td><strong>${{ "{:,}".format(total) }}</strong></td></tr>
+  </tbody>
+</table>
+{% for f in m.forms %}
+<section id="form-{{ f.code }}">
+  <h2>{{ f.code }}: {{ f.title }}</h2>
+  <p><a href="{{ url_for('live_filed_pdf', code=f.code) }}" target="_blank">Open the filled PDF</a>
+     · blank form from <a href="{{ f.url }}" target="_blank" rel="noopener noreferrer">{{ f.agency }}</a></p>
+  <iframe src="{{ url_for('live_filed_pdf', code=f.code) }}#view=FitH" title="Filled {{ f.code }}" width="100%" height="1000"></iframe>
+</section>
+{% endfor %}
+{% endblock %}

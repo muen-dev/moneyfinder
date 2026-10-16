@@ -95,6 +95,18 @@ class Providers:
             raise ProviderError(f"firecrawl scrape failed: {str(data.get('error'))[:200]}")
         return data["data"]
 
+    def alexandria(self, provider: str, capability: str, options: dict) -> dict:
+        """Run one catalogued Firecrawl Alexandria capability; returns its `data` (raises on a per-capability error)."""
+        body = {"alexandria": {"provider": provider, "capability": capability, "options": options}}
+        data = self._post("firecrawl", f"{FIRECRAWL}/scrape", body)
+        results = (data.get("data") or {}).get("alexandria") or []
+        if not data.get("success", True) or not results:
+            raise ProviderError(f"alexandria {provider}/{capability} failed: {_excerpt(data)}")
+        result = results[0] if isinstance(results[0], dict) else {}
+        if result.get("error"):
+            raise ProviderError(f"alexandria {provider}/{capability}: {str(result['error'])[:200]}")
+        return result.get("data") or {}
+
     # Tavily
 
     def tavily_search(

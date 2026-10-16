@@ -40,11 +40,23 @@ make business-serve     # then open http://localhost:8000
    `research/company/.env.local` with the scraper API keys.
 3. The business page opens. Click **Fetch mail**: by default the last year, minus
    Promotions/Social, up to 200 messages. You can change the Gmail search query and the limit.
-4. Browse messages and top sender domains on the page. The data is in `data/<id>/messages.jsonl`.
+4. The page groups known senders into categories (payroll, banking, government, insurance, ...) and lists top
+   sender domains and the messages. The data is in `data/<id>/messages.jsonl`.
 5. **Disconnect and delete data** revokes Google access and removes the token, fetched mail, company domain
    and research output.
 
 Each business's id comes from its Google address: `owner@joespizza.com` becomes `owner-joespizza-com`.
+
+## Matched credits and stored profiles
+
+- The business page lists **Credits you may qualify for**: `legal_research.match.match_programs` run on the
+  company profile against `research/legal/data/catalog.json` (niche credits first, fewest claimants first, then
+  credits most employers can claim), each with why it matched, claim counts, and links to the program page and
+  official form PDFs.
+- `/companies/<domain>` shows a profile stored by `make company-research DOMAIN=...` (in `research/company/data/`)
+  with the same credits, no Google sign-in needed. The home page lists them under **Company profiles**.
+- `/unclaimed/` and `/mock-portal/` serve the static unclaimed-funds demo from the repo root (`ui/`, `mock_portal/`)
+  with their own CSP (inline script and Google Fonts); every other page keeps the strict one.
 
 ## Without the browser
 
@@ -102,6 +114,7 @@ src/business_research/
   ids.py            business ids (filesystem-safe slugs)
   store.py          fetched mail on disk (JSONL)
   company.py        company domain (data/<id>/business.json) + background research (data/<id>/company/)
+  inbox.py          fetched mail summarized: counts, top senders, known senders by category
   gmail/auth.py     OAuth web flow, per-business token store, refresh, revoke
   gmail/client.py   Gmail API: profile, paginated search, get message
   gmail/parse.py    MIME payload -> EmailMessage (plain text, HTML fallback, attachments)

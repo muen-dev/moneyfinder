@@ -1,0 +1,51 @@
+{#- Credits matched from the profile (research/legal match_programs). Catalog text and links come from
+    official agency pages; still autoescaped, and only http(s) URLs become links. -#}
+{% from "_macros.html" import link %}
+{% macro credit(c) -%}
+<li class="credit">
+  <div class="credit-head">
+    <span class="tag">{{ c.jurisdiction }}</span>
+    <strong class="credit-name">{{ link(c.url, c.name) }}</strong>
+    {% if c.status == "expired" %}<span class="status failed">expired</span>{% elif c.status == "active" %}<span class="status done">claimed recently</span>{% endif %}
+  </div>
+  <p class="claimants small">
+    {%- if c.claimants is not none -%}
+      <strong>{{ "{:,}".format(c.claimants) }}</strong> NY taxpayer{{ "s" if c.claimants != 1 }} claimed it in {{ c.claims_year }}
+      {%- if c.claimed_amount %} · ${{ "{:,}".format(c.claimed_amount) }} total{% endif %}
+      {%- if c.claimants < 50 %} <span class="tag rare">rarely claimed</span>{% endif %}
+    {%- else -%}<span class="muted">No public claim counts</span>{%- endif -%}
+  </p>
+  {% if c.amount %}<p class="small credit-amount">{{ c.amount|truncate(240) }}</p>{% endif %}
+  <ul class="why small">{% for line in c.why[:3] %}<li>{{ line }}</li>{% endfor %}</ul>
+  {% if c.status_note %}<p class="muted small">{{ c.status_note }}</p>{% endif %}
+  {% if c.requires_preapproval %}<p class="muted small">Needs a certificate or pre-approval from the certifying agency before you claim it.</p>{% endif %}
+  <div class="credit-links">
+    {% for f in c.forms %}
+      {% set pdf = f.url|http_url %}
+      {% if pdf %}<a class="button small-btn" href="{{ pdf }}" rel="noopener noreferrer nofollow" target="_blank">{{ f.label }} PDF</a>{% endif %}
+      {% if f.instructions %}<span class="small">{{ link(f.instructions, "instructions") }}</span>{% endif %}
+    {% endfor %}
+    <span class="small">{{ link(c.url, "Program page") }}</span>
+  </div>
+</li>
+{%- endmacro %}
+
+{% set niche = credits|selectattr("tier", "equalto", "niche")|list %}
+{% set broad = credits|selectattr("tier", "equalto", "broad")|list %}
+<div class="card credits">
+  <h2>Credits you may qualify for <span class="count">{{ niche|length }}</span></h2>
+  <p class="muted small">Matched from this profile's industry, NAICS code and signals against New York State, NYC and federal programs.
+    Credits for this kind of business come first, strongest match first (NAICS or industry, then description, then signals),
+    fewest claimants first among equals. These are leads to check, not tax advice.</p>
+  {% if niche %}
+    <ul class="credit-list">{% for c in niche %}{{ credit(c) }}{% endfor %}</ul>
+  {% else %}
+    <p class="muted">No industry-specific credits matched this profile.</p>
+  {% endif %}
+  {% if broad %}
+    <details class="broad">
+      <summary>Credits most employers can claim <span class="count">{{ broad|length }}</span></summary>
+      <ul class="credit-list">{% for c in broad %}{{ credit(c) }}{% endfor %}</ul>
+    </details>
+  {% endif %}
+</div>

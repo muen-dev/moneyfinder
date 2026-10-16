@@ -1,9 +1,12 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 {% block content %}
-<section class="card">
-  <h1>Connect a business inbox</h1>
-  <p>The business owner signs in with Google and grants <strong>read-only</strong> Gmail access.
-    Nothing is sent, labeled or deleted, and they can disconnect at any time.</p>
+<section class="hero">
+  <p class="eyebrow">For New York small businesses</p>
+  <h1>Find the tax credits and grants your business is leaving on the table.</h1>
+  <p class="lead">Sign in with your business Google account and tell us your website. moneyfinder builds a profile
+    of your business from public records and your inbox, with a source for every fact, so it can be matched to
+    New York State and NYC incentives.</p>
   {% if setup_missing %}
     <div class="flash error">
       <p>No OAuth client at <code>{{ client_secrets }}</code>.</p>
@@ -11,31 +14,66 @@
         then save its JSON there. Steps are in <code>research/business/README.md</code>.</p>
     </div>
   {% else %}
-    <a class="primary" href="{{ url_for('login') }}">Sign in with Google</a>
+    <a class="gsi" href="{{ url_for('login') }}">{{ ui.google_logo() }}<span>Sign in with Google</span></a>
+    <p class="fine">Read-only Gmail access. Nothing is sent, labeled or deleted, and you can disconnect at any time.</p>
   {% endif %}
 </section>
 
+<ol class="how">
+  <li>
+    <span class="num">1</span>
+    <h3>Connect Gmail</h3>
+    <p>Read-only. Payroll, banks, vendors and agency mail show how the business really runs.</p>
+  </li>
+  <li>
+    <span class="num">2</span>
+    <h3>Add your domain</h3>
+    <p>Prefilled from your work email. We take it from there.</p>
+  </li>
+  <li>
+    <span class="num">3</span>
+    <h3>Get a sourced profile</h3>
+    <p>Your website, BBB, LinkedIn, NY Department of State, NYC Open Data and news, cross-checked in about 30 seconds.</p>
+  </li>
+</ol>
+
+{% if companies %}
 <section>
-  <h2>Connected <span class="muted">{{ businesses|length }}</span></h2>
-  {% if not businesses %}
-    <p class="muted">None yet.</p>
-  {% else %}
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Account</th><th>Company</th><th>Connected</th><th>Messages</th><th>Last fetch</th></tr></thead>
-        <tbody>
-        {% for b in businesses %}
-          <tr>
-            <td><a href="{{ url_for('business', business_id=b.conn.business_id) }}">{{ b.conn.email }}</a></td>
-            <td>{{ b.domain or "not set" }}</td>
-            <td>{{ b.conn.connected_at }}</td>
-            <td>{{ b.count }}</td>
-            <td>{{ b.fetched_at or "never" }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% endif %}
+  <h2>Company profiles <span class="count">{{ companies|length }}</span></h2>
+  <p class="muted small">Researched from public data with <code>make company-research DOMAIN=…</code>. No Gmail needed: open one to see the credits it may qualify for.</p>
+  <div class="biz-list">
+    {% for c in companies %}
+      <a class="biz" href="{{ url_for('company_profile', domain=c.domain) }}">
+        <span class="avatar" aria-hidden="true">{{ (c.name or c.domain)[:1]|upper }}</span>
+        <span class="biz-name">
+          <strong>{{ c.name or c.domain }}</strong>{% if c.demo %} <span class="tag rare">Demo business (synthetic data)</span>{% endif %}
+          <span class="muted">{{ c.domain }}{% if c.industry %} · {{ c.industry }}{% endif %}</span>
+        </span>
+        <span class="biz-meta"><span class="status done">Profile ready</span></span>
+      </a>
+    {% endfor %}
+  </div>
 </section>
+{% endif %}
+
+{% if businesses %}
+<section>
+  <h2>Connected businesses <span class="count">{{ businesses|length }}</span></h2>
+  <div class="biz-list">
+    {% for b in businesses %}
+      <a class="biz" href="{{ url_for('business', business_id=b.conn.business_id) }}">
+        <span class="avatar" aria-hidden="true">{{ (b.domain or b.conn.email)[:1]|upper }}</span>
+        <span class="biz-name">
+          <strong>{{ b.domain or "Company domain not set" }}</strong>
+          <span class="muted">{{ b.conn.email }}</span>
+        </span>
+        <span class="biz-meta">
+          {% if b.research %}<span class="status {{ b.research.status }}">{{ b.research.status }}</span>{% endif %}
+          <span class="muted">{{ b.count }} messages</span>
+        </span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 {% endblock %}

@@ -22,15 +22,28 @@ Agent API / toolbox
 
 | Layer | Path |
 |-------|------|
-| UI | `ui/index.html` |
+| UI | `ui/domain.html` (served by `src.server`) |
 | Mock portal | `mock_portal/index.html` |
+| Local API | `src/server.py` |
+| Persistence | `src/persistence.py` → `data/moneyfinder-events.json` (Surreal-ready shapes) |
+| Demo seed | `fixtures/demo-seed.json` (`POST /api/demo/reset`) |
 | Agent tools | `src/agent/tools.py` |
 | Bedrock config | `src/agent/runtime.py` |
 | Search | `src/search/` |
 | Forms | `src/forms/` |
 | Status machine | `src/pipeline/status.py` |
 | Providers | `src/providers/` |
-| Surreal schema | `schemas/surreal/schema.surql` |
+| Surreal schema | `schemas/surreal/schema.surql` (target mapping; claim demo is JSON-backed today) |
 | Evals | `evals/` |
 
 Anchor is **not** on the NY search path. Banking connectors only confirm deposits after `PAYMENT_ISSUED`.
+
+Run the domain-first vertical slice with:
+
+```bash
+python3 -m src.server
+# http://localhost:4173
+```
+
+Set `NY_UNCLAIMED_DATA_FILE` to use imported NY data. Without it, the API
+labels every result `demo_only`.

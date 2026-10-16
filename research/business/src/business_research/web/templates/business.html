@@ -1,52 +1,87 @@
 {% extends "base.html" %}
-{% block title %}{{ conn.email }}{% endblock %}
-{% block head %}{% if refresh %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+{% import "_macros.html" as ui %}
+{% block title %}{{ (profile.name if profile and profile.name) or domain or conn.email }}{% endblock %}
+{% block head %}{% if refresh %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
 {% block content %}
-<section class="card">
-  <h1>{{ conn.email }}</h1>
-  <p class="muted">id <code>{{ conn.business_id }}</code> · connected {{ conn.connected_at }}
-    {% if fetched_at %} · last fetch {{ fetched_at }}{% endif %}</p>
+{{ ui.steps(3 if domain else 2) }}
+
+{% include "dossier.html" %}
+{% include "research.html" %}
+
+<section class="card inbox">
+  <h2>Inbox sample</h2>
+  <p class="muted small">{{ conn.email }} · read-only{% if fetched_at %} · fetched {{ fetched_at[:16]|replace("T", " ") }} UTC{% endif %}</p>
+
+  {% if mail.messages %}
+    <div class="stats">
+      <div><strong>{{ mail.messages }}</strong><span>messages</span></div>
+      <div><strong>{{ mail.senders }}</strong><span>sender domains</span></div>
+      <div><strong>{{ mail.attachments }}</strong><span>attachments</span></div>
+      <div><strong>{{ mail.first }}</strong><span>to {{ mail.last }}</span></div>
+    </div>
+
+    <h3>What the inbox says about the business</h3>
+    {% if mail.categories %}
+      <div class="cats">
+        {% for c in mail.categories %}
+          <div class="cat">
+            <div class="cat-head"><strong>{{ c.name }}</strong><span class="count">{{ c.count }}</span></div>
+            <p class="muted small">{{ c.hint }}</p>
+            <ul class="chips">{% for d, n in c.senders[:6] %}<li>{{ d }} <span class="muted">{{ n }}</span></li>{% endfor %}</ul>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No payroll, banking, government or vendor senders recognized in this sample. A work inbox or a larger fetch shows more.</p>
+    {% endif %}
+
+    <h3>Top senders</h3>
+    <ul class="chips">
+      {% for d, n in mail.top_senders %}<li>{{ d or "(none)" }} <span class="muted">{{ n }}</span></li>{% endfor %}
+    </ul>
+  {% else %}
+    <p>Pull a sample of recent mail to see who the business works with: payroll, banks, agencies, vendors.
+      Promotions and social mail are skipped.</p>
+  {% endif %}
 
   <form method="post" action="{{ url_for('fetch', business_id=conn.business_id) }}" class="fetch"
-        data-busy="Fetching… can take a minute">
+        data-busy="Fetching… this can take a minute">
     <input type="hidden" name="csrf" value="{{ csrf }}">
-    <label>Gmail search <input name="query" value="{{ default_query }}"></label>
-    <label>Max messages <input name="limit" type="number" min="1" max="{{ max_limit }}" value="200"></label>
-    <button class="primary">Fetch mail</button>
+    <button class="primary">{{ "Fetch again" if mail.messages else "Fetch inbox sample" }}</button>
+    <details class="options">
+      <summary>Search options</summary>
+      <div class="option-row">
+        <label>Gmail search <input name="query" value="{{ default_query }}"></label>
+        <label>Max messages <input name="limit" type="number" min="1" max="{{ max_limit }}" value="100"></label>
+      </div>
+    </details>
   </form>
 
+  {% if messages %}
+  <details class="messages">
+    <summary>Messages <span class="count">{{ messages|length }}</span></summary>
+    {% for m in messages %}
+      <details class="msg">
+        <summary>
+          <span class="date">{{ m.date[:10] }}</span>
+          <span class="from">{{ m.sender }}</span>
+          <span class="subject">{{ m.subject or "(no subject)" }}</span>
+          <span class="muted">{% if m.attachments %}{{ m.attachments|length }} file{{ "s" if m.attachments|length > 1 }}{% endif %}</span>
+        </summary>
+        {% if m.attachments %}<p class="muted small">Attachments: {{ m.attachments|join(", ") }}</p>{% endif %}
+        <pre>{{ m.body or m.snippet }}</pre>
+      </details>
+    {% endfor %}
+  </details>
+  {% endif %}
+</section>
+
+<section class="danger-zone">
   <form method="post" action="{{ url_for('disconnect', business_id=conn.business_id) }}"
         data-confirm="Revoke Gmail access for {{ conn.email }} and delete its fetched mail, company domain and research?">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <button class="danger">Disconnect and delete data</button>
   </form>
-</section>
-
-{% include "research.html" %}
-
-{% if top_senders %}
-<section>
-  <h2>Top sender domains</h2>
-  <ul class="chips">
-    {% for domain, n in top_senders %}<li>{{ domain or "(none)" }} <span class="muted">{{ n }}</span></li>{% endfor %}
-  </ul>
-</section>
-{% endif %}
-
-<section>
-  <h2>Messages <span class="muted">{{ messages|length }}</span></h2>
-  {% if not messages %}<p class="muted">Nothing fetched yet.</p>{% endif %}
-  {% for m in messages %}
-    <details class="msg">
-      <summary>
-        <span class="date">{{ m.date[:10] }}</span>
-        <span class="from">{{ m.sender }}</span>
-        <span class="subject">{{ m.subject or "(no subject)" }}</span>
-        <span class="muted">{% if m.attachments %}{{ m.attachments|length }} file{{ "s" if m.attachments|length > 1 }}{% endif %}</span>
-      </summary>
-      {% if m.attachments %}<p class="muted">Attachments: {{ m.attachments|join(", ") }}</p>{% endif %}
-      <pre>{{ m.body or m.snippet }}</pre>
-    </details>
-  {% endfor %}
+  <p class="muted small">Revokes Google access and deletes the token, fetched mail, company domain and research from this machine.</p>
 </section>
 {% endblock %}
