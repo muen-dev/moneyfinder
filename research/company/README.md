@@ -12,6 +12,11 @@ cp research/company/.env.example research/company/.env.local   # then fill in th
 make company-keys                  # shows which keys are set; never prints values
 ```
 
+The package first reads `research/company/.env.local` and then falls back to the
+repository-root `.env`. Existing shell environment variables always win. This
+lets the team keep one ignored local credential file without copying provider
+secrets into multiple packages.
+
 | Env var | Used for |
 |---|---|
 | `FIRECRAWL_API_KEY` | company website (map + scrape with JSON extraction), BBB profile page |
