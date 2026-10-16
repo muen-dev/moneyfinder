@@ -3,7 +3,7 @@
 #   make business-fetch ID=owner-joespizza-com Q='from:gusto.com OR subject:invoice' N=500
 #   make kb-search Q='credit for hiring veterans'
 #   make company-research DOMAIN=joespizza.com
-#   make legal-match DOMAIN=warbyparker.com
+#   make legal-match DOMAIN=gowanuskettle.example
 #   make demo                      # then open http://localhost:8000
 #   make dossier DOMAIN=themaincapital.com && make dossier-push ID=themaincapital.com
 #   make dossier-get SLUG=themaincapital-com
@@ -115,7 +115,7 @@ legal-show: ## Print credits by niche, fewest claimants first [NICHE=<id>] [ID=<
 	cd research/legal && uv run legal-research show $${ID:+"$$ID"} $${NICHE:+--niche "$$NICHE"}
 
 legal-match: ## Credits a stored company profile may qualify for: DOMAIN=<domain> [JSON=1]
-	@test -n "$$DOMAIN" || { echo "usage: make legal-match DOMAIN=warbyparker.com [JSON=1]   (profiles: research/company/data/)"; exit 1; }
+	@test -n "$$DOMAIN" || { echo "usage: make legal-match DOMAIN=gowanuskettle.example [JSON=1]   (profiles: research/company/data/)"; exit 1; }
 	cd research/legal && uv run legal-research match "$$DOMAIN" $${JSON:+--json}
 
 legal-seeds: ## Export catalog links as kb seeds and crawl them into the kb

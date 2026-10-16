@@ -1,25 +1,30 @@
 # MoneyFinder
 
 > Your business is leaving tax credits on the table. MoneyFinder learns how you operate from your data, finds the
-> niche NY credits you qualify for, and points you to the official forms.
+> niche NY credits you qualify for, and fills the forms for you.
+
+Built for small and medium-sized businesses (New York first) that don't have a tax team watching for credits, not for
+large companies that already pay tax professionals to do this.
 
 ## MVP demo
 
 ```bash
 make setup          # once: uv sync for research/business, company, legal and kb
+make demo-seed      # once: the synthetic demo business, Gowanus Kettle Brewing Co. (14 employees, Brooklyn)
 make demo           # web app on http://localhost:8000 (PORT=... to change; Google sign-in expects 8000)
+make fill           # Anchor cloud browser fills a claim form from the SurrealDB dossier (live view opens)
 ```
 
 1. **Connect the business.** Sign in with Google (read-only Gmail) and enter the company domain, or skip sign-in and
-   open a stored profile under **Company profiles** on the home page (`themaincapital.com`, `warbyparker.com`;
-   add more with `make company-research DOMAIN=...`).
+   open a stored profile under **Company profiles** on the home page (`gowanuskettle.example`, the synthetic demo
+   business; `themaincapital.com`; add more with `make company-research DOMAIN=...`).
 2. **Company profile.** Public-data research (website, BBB, LinkedIn, NY Department of State, NYC Open Data, news,
    an LLM summary), every fact with its sources and confidence. See `research/company/`.
 3. **Matched NY credits.** "Credits you may qualify for" matches the profile's NAICS code, industry, products and
    hiring/R&D/expansion signals to the niches in `research/legal/catalog/niches.toml`. Niche credits come first,
    fewest claimants first (data.ny.gov claim counts), then credits most employers can claim. Each shows why it
    matched and links to the program page and the official form PDFs (tax.ny.gov, irs.gov).
-   CLI: `make legal-match DOMAIN=warbyparker.com`.
+   CLI: `make legal-match DOMAIN=gowanuskettle.example`.
 4. **Unclaimed funds.** **Unclaimed funds** in the header opens the B2B NY unclaimed-funds flow (`ui/index.html`,
    synthetic data) at `/unclaimed/`; its mock claim portal is at `/mock-portal/`.
 
@@ -32,14 +37,16 @@ make demo           # web app on http://localhost:8000 (PORT=... to change; Goog
    make dossier-push ID=themaincapital.com          # or ALL=1; idempotent
    make dossier-get SLUG=themaincapital-com         # RETURN fn::business_dossier('themaincapital-com')
    ```
-   The form filler reads this; see [docs/FORM_FILLER_HANDOFF.md](docs/FORM_FILLER_HANDOFF.md).
+   The web app pushes each dossier it builds automatically (`KB_AUTO_PUSH=0` turns this off). The form filler
+   reads it; see [docs/FORM_FILLER_HANDOFF.md](docs/FORM_FILLER_HANDOFF.md).
+6. **Agentic form filling.** `make fill` opens an Anchor Browser cloud session (the live view opens so you can
+   watch), loads the business's dossier from SurrealDB, fills the mock claim portal field by field, reads every
+   value back, and stops before submit for the user's OK. Fields with no source value are marked "Needs your
+   input", never guessed. About 10 seconds; see `form-filling/`.
 
-Agentic browser filling of the official PDFs (review, approve, fill, verify) is in progress by a teammate and is
-not wired into the app yet.
-
-Sponsor tools: Anthropic Claude on AWS Bedrock (reasoning, profile summary), Daytona (sandboxed browser agents
-for the mock portal), Anchor Browser (form filling, in progress), Arize (tracing and evals), SurrealDB (`kb/`
-knowledge base of programs and forms).
+Sponsor tools: Anthropic Claude on AWS Bedrock (reasoning, email facts, profile summary), Anchor Browser (agentic
+form filling), Daytona (sandboxed browser agents for the mock portal), Arize (tracing and evals), SurrealDB (`kb/`
+dossiers, programs and forms).
 
 Tests: `make test` (research packages + unclaimed-funds pipeline), `make evals`.
 
