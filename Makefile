@@ -8,16 +8,17 @@
 #   make dossier DOMAIN=themaincapital.com && make dossier-push ID=themaincapital.com
 #   make dossier-get SLUG=themaincapital-com
 #   make demo-seed                 # synthetic demo business -> /companies/gowanuskettle.example
+#   make fill                      # Anchor browser fills the mock portal from that dossier (no submit)
 #
 # Arguments are read by the shell ("$$Q"), so values with spaces or quotes pass through intact.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test demo pipeline-test evals \
+.PHONY: help setup test demo api pipeline-test evals \
 	business-serve business-list business-fetch business-disconnect business-test \
 	company-research company-show company-keys company-test \
 	legal-research legal-show legal-match legal-seeds legal-load-kb legal-test \
 	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats kb-ping kb-test \
-	dossier dossier-push dossier-get demo-seed
+	dossier dossier-push dossier-get demo-seed fill
 
 PORT ?= 8000
 
@@ -36,6 +37,10 @@ test: business-test company-test legal-test kb-test pipeline-test ## Run all tes
 # MVP demo
 
 demo: business-serve ## The web app: company profiles, matched credits, unclaimed-funds demo at /unclaimed/ [PORT=8000]
+
+# PORT defaults to 4173 here (not the 8000 above) unless given on the command line or in the environment.
+api: ## Domain-first API + UI (src/server.py) [PORT=4173]
+	PORT=$(if $(filter command line environment,$(origin PORT)),$(PORT),4173) python3 -m src.server
 
 pipeline-test: ## Unclaimed-funds pipeline checks (src/, synthetic data)
 	python3 tests/test_pipeline.py
@@ -62,6 +67,9 @@ demo-seed: ## Load the synthetic demo business (demo/gowanus-kettle): data dirs,
 dossier-get: ## Print fn::business_dossier from SurrealDB: SLUG=<slug, e.g. themaincapital-com>
 	@test -n "$$SLUG" || { echo "usage: make dossier-get SLUG=themaincapital-com"; exit 1; }
 	cd kb && uv run kb dossier-get "$$SLUG"
+
+fill: ## Agentic browser (Anchor): fill the mock portal from a SurrealDB dossier, stop before submit [SLUG=gowanuskettle-example] [HOLD=10] [NO_OPEN=1]
+	uv run --project kb --with playwright python form-filling/fill.py --slug "$${SLUG:-gowanuskettle-example}" --hold "$${HOLD:-10}" $${NO_OPEN:+--no-open}
 
 # research/business: Gmail connector
 
