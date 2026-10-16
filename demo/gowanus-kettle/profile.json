@@ -454,6 +454,54 @@
           "llm"
         ]
       }
+    ],
+    "unclaimed_found_name": [
+      {
+        "value": "GOWANUS KETTLE BREWING CO LLC",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (NYS Comptroller unclaimed funds stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_unclaimed"
+        ]
+      }
+    ],
+    "unclaimed_holder": [
+      {
+        "value": "Consolidated Edison Co. of New York (utility deposit refund)",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (NYS Comptroller unclaimed funds stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_unclaimed"
+        ]
+      }
+    ],
+    "unclaimed_amount": [
+      {
+        "value": "1284.36",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "url": "demo:synthetic",
+            "via": "demo:synthetic (NYS Comptroller unclaimed funds stand-in)",
+            "fetched_at": "2026-10-01T12:00:00+00:00"
+          }
+        ],
+        "collectors": [
+          "nys_unclaimed"
+        ]
+      }
     ]
   },
   "collectors": {
@@ -488,6 +536,12 @@
       "facts": 0
     },
     "llm": {
+      "status": "ok",
+      "error": null,
+      "duration_s": 0.0,
+      "facts": 0
+    },
+    "nys_unclaimed": {
       "status": "ok",
       "error": null,
       "duration_s": 0.0,

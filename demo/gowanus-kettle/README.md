@@ -35,3 +35,6 @@ make demo-seed          # copy into the git-ignored data dirs, build the dossier
 make dossier-get SLUG=gowanuskettle-example
 make demo               # then open http://localhost:8000/companies/gowanuskettle.example
 ```
+
+The profile also carries a synthetic NY unclaimed-funds record (Con Edison utility deposit refund, $1,284.36) so the
+mock claim portal fills completely.

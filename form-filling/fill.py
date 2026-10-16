@@ -116,6 +116,14 @@ def parse_address(addr: str) -> dict[str, str]:
     return out
 
 
+def fact_value(dossier: dict[str, Any], key: str) -> tuple[Any, str, str]:
+    """(value, key, source kind) of the first fact with this key, for values outside the business block."""
+    for f in dossier.get("facts") or []:
+        if f.get("key") == key and f.get("value") not in (None, ""):
+            return f.get("value"), key, f.get("source_kind") or ""
+    return None, key, ""
+
+
 def plan_fields(dossier: dict[str, Any]) -> tuple[dict[str, dict[str, str]], list[dict[str, str]]]:
     """Approved values per portal field (value + source) and the fields that need the user."""
     b = dossier.get("business") or {}
@@ -129,9 +137,9 @@ def plan_fields(dossier: dict[str, Any]) -> tuple[dict[str, dict[str, str]], lis
         "city": (addr.get("city"), "hq_address", addr_src),
         "zip": (addr.get("zip"), "hq_address", addr_src),
         "pay_to": (b.get("legal_name"), "legal_name", source_of(dossier, "legal_name", b.get("legal_name"))),
-        # No unclaimed-property hit for this business in the repo's synthetic data: never guess these.
-        "property_name": (None, "unclaimed hit", ""),
-        "amount_requested": (None, "unclaimed hit", ""),
+        # From the business's unclaimed-funds record (research fact); blank when there is none, never guessed.
+        "property_name": (*fact_value(dossier, "unclaimed_found_name"),),
+        "amount_requested": (*fact_value(dossier, "unclaimed_amount"),),
     }
     approved, needs_user = {}, []
     for name in PORTAL_FIELDS:
@@ -139,7 +147,8 @@ def plan_fields(dossier: dict[str, Any]) -> tuple[dict[str, dict[str, str]], lis
         if value in (None, ""):
             needs_user.append({"field": name, "reason": f"no source value ({key})"})
         else:
-            approved[name] = {"value": str(value), "from": f"business.{key}", "source": src}
+            approved[name] = {"value": str(value), "from": f"{'facts' if key.startswith('unclaimed_') else 'business'}.{key}",
+                              "source": src}
     return approved, needs_user
 
 

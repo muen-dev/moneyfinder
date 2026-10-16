@@ -34,7 +34,8 @@ ALIASES = {"employee_count": "employees"}
 KIND_RANK = {"user": 0, "registry": 1, "enrichment": 2, "web": 3, "email": 4, "llm": 5}
 COLLECTOR_KIND = {
     "website": "web", "bbb": "web", "linkedin": "web", "news": "web",
-    "nys_dos": "registry", "nyc_open_data": "registry", "firmographics": "enrichment", "llm": "llm",
+    "nys_dos": "registry", "nyc_open_data": "registry", "nys_unclaimed": "registry", "firmographics": "enrichment",
+    "llm": "llm",
 }
 # Fields common NY/federal credit applications ask for.
 FORM_FIELDS = (

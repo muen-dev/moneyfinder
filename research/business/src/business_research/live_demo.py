@@ -36,11 +36,13 @@ COLLECTORS = {
     "bbb": "Better Business Bureau",
     "linkedin": "LinkedIn",
     "llm": "Profile summary (Claude on Bedrock)",
+    "nys_unclaimed": "NY unclaimed funds search (State Comptroller)",
 }
 FORM_DATA = [
     ("legal_name", "Legal name"), ("ein", "EIN"), ("hq_address", "Address"), ("entity_type", "Entity type"),
     ("naics", "NAICS"), ("employees", "Employees"), ("officer_name", "Officer"), ("officer_title", "Title"),
-    ("tax_year", "Tax year"),
+    ("tax_year", "Tax year"), ("unclaimed_found_name", "Name on unclaimed funds record"),
+    ("unclaimed_holder", "Unclaimed funds held by"), ("unclaimed_amount", "Unclaimed amount"),
 ]
 FILL_HOLD_S = 20
 
@@ -211,10 +213,13 @@ def _forms(result: dict) -> tuple[list[dict], list[dict]]:
     business, facts = result.get("business") or {}, result.get("facts") or []
     data = []
     for key, label in FORM_DATA:
-        value = business.get(key)
+        best = business.get(key)
+        fact = next((f for f in facts if f.get("key") == key and _same(f.get("value"), best)), None) if best else \
+            next((f for f in facts if f.get("key") == key and f.get("value") not in (None, "")), None)
+        value = best if best not in (None, "", []) else (fact or {}).get("value")
         if isinstance(value, list):
             value = value[0] if value else None
-        source = next((f.get("source_kind") for f in facts if f.get("key") == key and f.get("value") == business.get(key)), "")
+        source = (fact or {}).get("source_kind", "")
         data.append({"label": label, "value": mask_ein(value) if key == "ein" and value else (value or "ask the user"),
                      "source": source})
     open_credits = [c for c in result.get("credits") or [] if c.get("forms") and c.get("status") != "expired"]
@@ -224,6 +229,12 @@ def _forms(result: dict) -> tuple[list[dict], list[dict]]:
                         for f in c.get("forms") or []]}
              for c in chosen]
     return forms, data
+
+
+def _same(fact_value, best) -> bool:
+    if isinstance(best, list):
+        return fact_value in best or (isinstance(fact_value, dict) and fact_value.get("code") in best)
+    return fact_value == best
 
 
 def _fact_line(fact: dict, subjects: dict) -> str:
