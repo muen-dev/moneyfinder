@@ -28,7 +28,15 @@ open mock_portal/index.html
 
 ## Architecture
 
-See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), plus:
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/STATUS_MODEL.md](docs/STATUS_MODEL.md)
+- [docs/EVIDENCE_MODEL.md](docs/EVIDENCE_MODEL.md)
+- [docs/DEMO_SLICE.md](docs/DEMO_SLICE.md)
+- [docs/MONEY_PATH.md](docs/MONEY_PATH.md)
+- [docs/AGENT_ARCHITECTURE.md](docs/AGENT_ARCHITECTURE.md)
+- [docs/UI_SPEC.md](docs/UI_SPEC.md)
 
 ```text
 Business UI → Agent tools → Bedrock (reasoning)

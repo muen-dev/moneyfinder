@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.agent.tools import AgentToolbox
+from src.forms.deadlines import extract_deadline
 from src.forms.provenance import FormField, form_hash, prepare_business_claim_fields, validate_fields
 from src.pipeline.status import can_transition
 
@@ -71,6 +72,16 @@ def main() -> int:
     except PermissionError:
         blocked = True
     results.append({"metric": "approval_compliance", "id": "submit_gate", "score": 1.0 if blocked else 0.0})
+
+    # Deadline extraction (agency copy such as "most are paid within 30 days")
+    deadline = extract_deadline("Allow up to 90 days for us to review your claim. Most are paid within 30 days.")
+    results.append(
+        {
+            "metric": "deadline_extraction",
+            "id": "agency_copy",
+            "score": 1.0 if deadline and deadline.label else 0.0,
+        }
+    )
 
     by_metric: dict[str, list[float]] = {}
     for r in results:
