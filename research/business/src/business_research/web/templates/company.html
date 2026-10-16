@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}{{ profile.name or profile.get("best", {}).get("legal_name") or domain }}{% endblock %}
+{% block content %}
+{{ ui.steps(3) }}
+{% include "research.html" %}
+{% endblock %}

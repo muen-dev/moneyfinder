@@ -47,6 +47,17 @@ make business-serve     # then open http://localhost:8000
 
 Each business's id comes from its Google address: `owner@joespizza.com` becomes `owner-joespizza-com`.
 
+## Matched credits and stored profiles
+
+- The business page lists **Credits you may qualify for**: `legal_research.match.match_programs` run on the
+  company profile against `research/legal/data/catalog.json` (niche credits first, fewest claimants first, then
+  credits most employers can claim), each with why it matched, claim counts, and links to the program page and
+  official form PDFs.
+- `/companies/<domain>` shows a profile stored by `make company-research DOMAIN=...` (in `research/company/data/`)
+  with the same credits, no Google sign-in needed. The home page lists them under **Company profiles**.
+- `/unclaimed/` and `/mock-portal/` serve the static unclaimed-funds demo from the repo root (`ui/`, `mock_portal/`)
+  with their own CSP (inline script and Google Fonts); every other page keeps the strict one.
+
 ## Without the browser
 
 ```sh

@@ -3,14 +3,16 @@
 #   make business-fetch ID=owner-joespizza-com Q='from:gusto.com OR subject:invoice' N=500
 #   make kb-search Q='credit for hiring veterans'
 #   make company-research DOMAIN=joespizza.com
+#   make legal-match DOMAIN=warbyparker.com
+#   make demo                      # then open http://localhost:8000
 #
 # Arguments are read by the shell ("$$Q"), so values with spaces or quotes pass through intact.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup test \
+.PHONY: help setup test demo pipeline-test evals \
 	business-serve business-list business-fetch business-disconnect business-test \
 	company-research company-show company-keys company-test \
-	legal-research legal-show legal-seeds legal-load-kb legal-test \
+	legal-research legal-show legal-match legal-seeds legal-load-kb legal-test \
 	kb-up kb-down kb-init kb-seed kb-crawl kb-ingest kb-search kb-embed kb-missed kb-stats
 
 PORT ?= 8000
@@ -25,7 +27,17 @@ setup: ## Install every package's dependencies and the commit guard hook
 	cd research/legal && uv sync
 	cd kb && uv sync
 
-test: business-test company-test legal-test ## Run all tests
+test: business-test company-test legal-test pipeline-test ## Run all tests
+
+# MVP demo
+
+demo: business-serve ## The web app: company profiles, matched credits, unclaimed-funds demo at /unclaimed/ [PORT=8000]
+
+pipeline-test: ## Unclaimed-funds pipeline checks (src/, synthetic data)
+	python3 tests/test_pipeline.py
+
+evals: ## Unclaimed-funds evals on synthetic profiles
+	python3 evals/run_evals.py
 
 # research/business: Gmail connector
 
@@ -69,6 +81,10 @@ legal-research: ## Build research/legal/data/catalog.json [SEARCH=1 to also sear
 
 legal-show: ## Print credits by niche, fewest claimants first [NICHE=<id>] [ID=<program id>]
 	cd research/legal && uv run legal-research show $${ID:+"$$ID"} $${NICHE:+--niche "$$NICHE"}
+
+legal-match: ## Credits a stored company profile may qualify for: DOMAIN=<domain> [JSON=1]
+	@test -n "$$DOMAIN" || { echo "usage: make legal-match DOMAIN=warbyparker.com [JSON=1]   (profiles: research/company/data/)"; exit 1; }
+	cd research/legal && uv run legal-research match "$$DOMAIN" $${JSON:+--json}
 
 legal-seeds: ## Export catalog links as kb seeds and crawl them into the kb
 	cd research/legal && uv run legal-research seeds

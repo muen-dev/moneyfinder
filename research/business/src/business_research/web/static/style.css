@@ -259,3 +259,22 @@ table.profile tr.alt td { color: var(--muted); }
   .company-id h1 { font-size: 24px; }
   .tagline { display: none; }
 }
+
+/* Nav */
+.nav { margin-left: auto; display: flex; gap: 16px; font-size: 14px; font-weight: 600; }
+.nav a { text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+
+/* Matched credits */
+.credit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.credit { border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; }
+.credit-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.credit-name { flex: 1 1 300px; min-width: 0; }
+.credit p { margin: 6px 0; }
+.credit .why { margin: 6px 0; padding-left: 18px; color: var(--muted); }
+.credit .why li { overflow-wrap: anywhere; }
+.credit-links { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 8px; }
+.small-btn { padding: 5px 11px; font-size: 13px; }
+.tag.rare { background: var(--warn-bg); color: var(--warn); }
+.broad { margin-top: 14px; }
+.broad summary { cursor: pointer; font-weight: 600; margin-bottom: 10px; }

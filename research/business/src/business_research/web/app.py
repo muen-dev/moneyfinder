@@ -5,12 +5,17 @@ can read every connected inbox. Don't expose it beyond your machine.
 """
 
 import secrets
+from pathlib import Path
 from urllib.parse import urlsplit
 
-from company_research.domain import InvalidDomain
+from company_research import config as company_config
+from company_research import store as company_store
+from company_research.domain import InvalidDomain, normalize
 from company_research.profile import FIELDS
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, send_from_directory, session, url_for
 from googleapiclient.errors import HttpError
+from legal_research import store as legal_store
+from legal_research.match import match_programs
 
 from .. import company, config, inbox, store
 from ..gmail import auth
@@ -45,6 +50,16 @@ CSP = (
 )
 
 
+# Jeremiah's static unclaimed-funds demo (repo-root ui/ and mock_portal/): self-contained pages with inline
+# script and style plus Google Fonts, so they get their own, looser CSP. They read no business data.
+REPO_DIR = config.PROJECT_DIR.parents[1]
+STATIC_DEMOS = {"/unclaimed/": REPO_DIR / "ui", "/mock-portal/": REPO_DIR / "mock_portal"}
+DEMO_CSP = (
+    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src https://fonts.gstatic.com; img-src 'self' data:; form-action 'self'; base-uri 'none'; frame-ancestors 'self'"
+)
+
+
 def create_app(port: int) -> Flask:
     app = Flask(__name__)
     app.secret_key = secrets.token_hex(32)  # sessions only need to outlive the OAuth round trip
@@ -70,7 +85,7 @@ def create_app(port: int) -> Flask:
 
     @app.after_request
     def security_headers(response):
-        response.headers["Content-Security-Policy"] = CSP
+        response.headers["Content-Security-Policy"] = DEMO_CSP if request.path in STATIC_DEMOS else CSP
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cache-Control"] = "no-store"
@@ -103,6 +118,7 @@ def create_app(port: int) -> Flask:
         return render_template(
             "index.html",
             businesses=businesses,
+            companies=_stored_companies(),
             setup_missing=not config.CLIENT_SECRETS_FILE.exists(),
             client_secrets=config.CLIENT_SECRETS_FILE,
             redirect_uri=redirect_uri,
@@ -143,6 +159,7 @@ def create_app(port: int) -> Flask:
         conn = _connection_or_404(business_id)
         messages = store.read_messages(business_id)
         research = company.status(business_id)
+        profile = company.profile(business_id)
         return render_template(
             "business.html",
             conn=conn,
@@ -153,13 +170,37 @@ def create_app(port: int) -> Flask:
             max_limit=MAX_LIMIT,
             domain=company.get_domain(business_id),
             research=research,
-            profile=company.profile(business_id),
+            profile=profile,
             fields=FIELDS,
             glance=GLANCE,
             signals=SIGNALS,
             collector_names=COLLECTOR_NAMES,
             refresh=bool(research and research.get("status") in ("queued", "running")),
+            credits=_credits(profile),
         )
+
+    @app.get("/companies/<domain>")
+    def company_profile(domain: str):
+        """A stored research/company profile (make company-research DOMAIN=...) with matched credits; no Gmail needed."""
+        try:
+            domain = normalize(domain)
+        except InvalidDomain:
+            abort(404)
+        profile = _stored_profile(domain)
+        if profile is None:
+            abort(404)
+        return render_template(
+            "company.html", conn=None, domain=domain, profile=profile, research=None, refresh=False,
+            fields=FIELDS, glance=GLANCE, signals=SIGNALS, collector_names=COLLECTOR_NAMES, credits=_credits(profile),
+        )
+
+    @app.get("/unclaimed/")
+    def unclaimed_demo():
+        return send_from_directory(STATIC_DEMOS["/unclaimed/"], "index.html")
+
+    @app.get("/mock-portal/")
+    def mock_portal():
+        return send_from_directory(STATIC_DEMOS["/mock-portal/"], "index.html")
 
     @app.get("/businesses/<business_id>/domain")
     def domain_form(business_id: str):
@@ -220,6 +261,47 @@ def create_app(port: int) -> Flask:
         return redirect(url_for("index"))
 
     return app
+
+
+def _credits(profile: dict | None) -> list[dict]:
+    """Catalog programs this profile may qualify for (research/legal); empty without a profile or catalog."""
+    if not profile:
+        return []
+    catalog = _catalog()
+    return match_programs(profile, catalog) if catalog else []
+
+
+_catalog_cache: dict = {}
+
+
+def _catalog() -> dict | None:
+    path = legal_store.catalog_path(None)
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return None
+    if _catalog_cache.get("mtime") != mtime:
+        _catalog_cache.update(mtime=mtime, catalog=legal_store.read_catalog())
+    return _catalog_cache["catalog"]
+
+
+def _stored_companies() -> list[dict]:
+    """Profiles under research/company/data/<domain>/ (from `make company-research`)."""
+    out = []
+    for path in sorted(Path(company_config.DATA_DIR).glob("*/profile.json")):
+        profile = _stored_profile(path.parent.name)
+        if profile:
+            best = profile.get("best") or {}
+            out.append({"domain": profile.get("domain") or path.parent.name, "name": profile.get("name") or best.get("legal_name"),
+                        "industry": best.get("industry")})
+    return out
+
+
+def _stored_profile(domain: str) -> dict | None:
+    try:
+        return company_store.read_profile(company_store.default_dir(domain))
+    except (OSError, ValueError):
+        return None
 
 
 def _start_research(business_id: str, domain: str, email: str) -> None:

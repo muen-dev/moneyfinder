@@ -22,11 +22,15 @@
     </div>
     <div class="actions">
       {% if research %}<span class="status {{ research.status }}">{{ status_labels.get(research.status, research.status) }}</span>{% endif %}
+      {% if conn %}
       <form method="post" action="{{ url_for('rerun_research', business_id=conn.business_id) }}" data-busy="Starting…">
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <button {% if refresh %}disabled{% endif %}>Re-run</button>
       </form>
       <a class="button" href="{{ url_for('domain_form', business_id=conn.business_id) }}">Change domain</a>
+      {% else %}
+      <span class="status done">Stored profile</span>
+      {% endif %}
     </div>
   </div>
 
@@ -47,6 +51,8 @@
     {% if profile.fields.get("products_services") %}
       <ul class="chips products">{% for claim in profile.fields["products_services"][:10] %}<li>{{ claim.value }}</li>{% endfor %}</ul>
     {% endif %}
+
+    {% include "credits.html" %}
 
     <div class="card">
       <h2>At a glance</h2>

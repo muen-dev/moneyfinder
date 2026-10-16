@@ -1,5 +1,39 @@
 # MoneyFinder
 
+> Your business is leaving tax credits on the table. MoneyFinder learns how you operate from your data, finds the
+> niche NY credits you qualify for, and points you to the official forms.
+
+## MVP demo
+
+```bash
+make setup          # once: uv sync for research/business, company, legal and kb
+make demo           # web app on http://localhost:8000 (PORT=... to change; Google sign-in expects 8000)
+```
+
+1. **Connect the business.** Sign in with Google (read-only Gmail) and enter the company domain, or skip sign-in and
+   open a stored profile under **Company profiles** on the home page (`themaincapital.com`, `warbyparker.com`;
+   add more with `make company-research DOMAIN=...`).
+2. **Company profile.** Public-data research (website, BBB, LinkedIn, NY Department of State, NYC Open Data, news,
+   an LLM summary), every fact with its sources and confidence. See `research/company/`.
+3. **Matched NY credits.** "Credits you may qualify for" matches the profile's NAICS code, industry, products and
+   hiring/R&D/expansion signals to the niches in `research/legal/catalog/niches.toml`. Niche credits come first,
+   fewest claimants first (data.ny.gov claim counts), then credits most employers can claim. Each shows why it
+   matched and links to the program page and the official form PDFs (tax.ny.gov, irs.gov).
+   CLI: `make legal-match DOMAIN=warbyparker.com`.
+4. **Unclaimed funds.** **Unclaimed funds** in the header opens the B2B NY unclaimed-funds flow (`ui/index.html`,
+   synthetic data) at `/unclaimed/`; its mock claim portal is at `/mock-portal/`.
+
+Agentic browser filling of the official PDFs (review, approve, fill, verify) is in progress by a teammate and is
+not wired into the app yet.
+
+Sponsor tools: Anthropic Claude on AWS Bedrock (reasoning, profile summary), Daytona (sandboxed browser agents
+for the mock portal), Anchor Browser (form filling, in progress), Arize (tracing and evals), SurrealDB (`kb/`
+knowledge base of programs and forms).
+
+Tests: `make test` (research packages + unclaimed-funds pipeline), `make evals`.
+
+## Unclaimed funds agent
+
 B2B agent that helps NYC businesses find **New York State unclaimed funds**, prepare accurate claim forms, require authorized approval, submit through a sandbox/mock portal, and track **evidence** for agency approval vs bank deposit.
 
 > Demo uses **synthetic** data. Not legal or tax advice. Claiming NY unclaimed funds is free via the state.

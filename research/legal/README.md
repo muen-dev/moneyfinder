@@ -10,6 +10,7 @@ Recovery Hiring credit.
 make legal-research                       # writes research/legal/data/catalog.json (~1 min, no keys needed)
 make legal-show NICHE=hiring_veterans     # credits by niche, fewest claimants first
 make legal-show ID=nys_hire_a_veteran     # one program in full
+make legal-match DOMAIN=warbyparker.com   # credits a research/company profile may qualify for, with form PDFs
 make legal-seeds                          # crawl every program page and form into the kb
 make legal-load-kb                        # programs -> kb incentive rows, forms -> kb form rows (needs SurrealDB)
 make legal-test                           # no network
@@ -41,7 +42,8 @@ hosts. Hosts that return 403 to direct requests (nysenate.gov, amlegal) go throu
 
 ## Next
 
-- Match a `research/company` profile to niches (NAICS prefixes and `profile_keywords` are already in niches.toml).
+- Profile matching (`match.py`, `legal-research match <domain>`) is keyword and NAICS-prefix based; it doesn't read
+  eligibility rules (employee counts, location, pre-approval) yet, so treat matches as leads.
 - Load niche rules as kb `criterion` rows once `kb.add_criterion` can upsert (it creates a new row on every call today).
 - More claim data: data.ny.gov `6axi-iwd2` (Article 9-A by credit since 2001) and `84qh-f5nv` (by industry).
 - Status needs a person or an LLM to read `hints.status`: e.g. Commercial Security credit applications to DCJS are due

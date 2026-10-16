@@ -37,6 +37,25 @@
   </li>
 </ol>
 
+{% if companies %}
+<section>
+  <h2>Company profiles <span class="count">{{ companies|length }}</span></h2>
+  <p class="muted small">Researched from public data with <code>make company-research DOMAIN=…</code>. No Gmail needed: open one to see the credits it may qualify for.</p>
+  <div class="biz-list">
+    {% for c in companies %}
+      <a class="biz" href="{{ url_for('company_profile', domain=c.domain) }}">
+        <span class="avatar" aria-hidden="true">{{ (c.name or c.domain)[:1]|upper }}</span>
+        <span class="biz-name">
+          <strong>{{ c.name or c.domain }}</strong>
+          <span class="muted">{{ c.domain }}{% if c.industry %} · {{ c.industry }}{% endif %}</span>
+        </span>
+        <span class="biz-meta"><span class="status done">Profile ready</span></span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {% if businesses %}
 <section>
   <h2>Connected businesses <span class="count">{{ businesses|length }}</span></h2>

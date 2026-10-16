@@ -111,6 +111,34 @@ def cmd_load_kb(args: argparse.Namespace) -> None:
         export.load_kb(result, kb, args.tax_year, log=print)
 
 
+def cmd_match(args: argparse.Namespace) -> None:
+    from . import match
+
+    target = Path(args.profile)
+    if not target.exists():  # a domain: research/company/data/<domain>/profile.json
+        target = config.PROJECT_DIR.parent / "company" / "data" / args.profile / "profile.json"
+    if target.is_dir():
+        target = target / "profile.json"
+    if not target.exists():
+        raise FileNotFoundError(f"no profile at {target}; run: make company-research DOMAIN={args.profile}")
+    matches = match.match_programs(json.loads(target.read_text()), _load(args))
+    if args.json:
+        print(json.dumps(matches, indent=2, ensure_ascii=False))
+        return
+    for tier, title in (("niche", "Credits for this kind of business"), ("broad", "Credits most employers can claim")):
+        rows = [m for m in matches if m["tier"] == tier]
+        if rows:
+            print(f"{title} ({len(rows)})")
+        for m in rows:
+            claimants = "?" if m["claimants"] is None else m["claimants"]
+            forms = " ".join(f["code"] for f in m["forms"]) or "-"
+            print(f"  {m['id']:<38} {m['jurisdiction']:<7} {m['status']:<7} claimants {claimants:<6} forms {forms}")
+            for line in m["why"][:2]:
+                print(f"      {line[:110]}")
+        if rows:
+            print()
+
+
 def cmd_keys(args: argparse.Namespace) -> None:
     for name, present in config.keys_present().items():
         print(f"{name}\t{'set' if present else 'missing'}")
@@ -147,6 +175,11 @@ def main(argv: list[str] | None = None) -> int:
     load = commands.add_parser("load-kb", help="write programs and forms into the kb's incentive and form tables")
     load.add_argument("--tax-year", type=int, default=config.FORM_TAX_YEAR, help="tax year of the current forms")
     load.set_defaults(func=cmd_load_kb)
+
+    matcher = commands.add_parser("match", help="credits a research/company profile may qualify for")
+    matcher.add_argument("profile", help="company domain (research/company/data/<domain>) or a profile.json path")
+    matcher.add_argument("--json", action="store_true")
+    matcher.set_defaults(func=cmd_match)
 
     commands.add_parser("keys", help="show which API keys are configured (never prints values)").set_defaults(func=cmd_keys)
 
