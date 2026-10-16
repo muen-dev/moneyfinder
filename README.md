@@ -79,7 +79,17 @@ Copy [.env.example](.env.example). Required for full demo:
 - SurrealDB (`SURREAL_WS_URL`, `SURREAL_NAMESPACE=moneyfinder`, `SURREAL_DATABASE=main`, **database JWT**)
 - Daytona API key
 - Arize API key + **ARIZE_SPACE_ID** from the Arize dashboard
+- `ARIZE_PROJECT_NAME=moneyfinder` (chosen name; created on first export)
 - ElevenLabs optional (voice data entry only)
+
+Verify Arize credentials via OTLP (not GraphQL):
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 scripts/arize_smoke_test.py
+```
+
+Then check Arize AX → Space → project `moneyfinder` for the smoke span.
 
 ## Status vocabulary (do not invent new meanings)
 
