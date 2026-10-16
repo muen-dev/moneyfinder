@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MoneyFinder — Business Research</title>
+  <style>
+    :root{--ink:#0b2545;--muted:#60748b;--bg:#eef3f8;--card:#fff;--line:#d5e0ec;--gold:#ffc53d;--green:#14a98a;--greenbg:#ddf5ee;--red:#e8553f;--redbg:#fde6e1}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
+    header{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center}.wrap{max-width:760px;margin:auto;padding:0 20px}
+    header .wrap{width:100%;display:flex;justify-content:space-between;align-items:center}.brand{font-weight:800;font-size:21px}
+    main{padding:28px 0 60px}.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:16px}
+    .hero{background:var(--ink);color:white}.hero p{color:#c5d4e4;max-width:54ch}.hero h1{font-size:clamp(32px,6vw,54px);line-height:1.03;margin:0;max-width:12ch}
+    h2,h3{line-height:1.1;margin:0 0 8px}.sub,.muted{color:var(--muted)}.hero .muted{color:#c5d4e4}
+    label{display:block;font-weight:650;font-size:14px;margin:14px 0 5px}input,select{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
+    button{border:0;border-radius:12px;padding:12px 16px;background:var(--gold);color:var(--ink);font-weight:750;cursor:pointer}button.secondary{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .pill{display:inline-block;padding:3px 9px;border-radius:99px;background:var(--greenbg);color:var(--green);font-size:12px;font-weight:700}.pill.warn{background:var(--redbg);color:var(--red)}.pill.demo{background:#e9edf2;color:var(--muted)}
+    .fact{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.fact:last-child{border:0}.fact small{color:var(--muted)}
+    .step{display:flex;gap:10px;align-items:center;margin:9px 0}.dot{width:24px;height:24px;border:2px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:12px}.dot.done{background:var(--green);border-color:var(--green);color:white}
+    .result{cursor:pointer}.result.selected{outline:3px solid var(--green)}.amount{font-size:24px;font-weight:800;color:var(--green);float:right}.timeline{border-left:3px solid var(--line);padding-left:16px}.timeline div{margin:13px 0}
+    .error{background:var(--redbg);color:var(--red);padding:10px 12px;border-radius:10px}.hide{display:none!important}
+    @media(max-width:560px){.fact{grid-template-columns:1fr}.row>*{flex-basis:100%}}
+  </style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">MoneyFinder</div><span class="pill demo">Synthetic demo unless imported data is configured</span></div></header>
+<main class="wrap">
+  <section id="start">
+    <div class="hero"><h1>Start with your business, not a money guess.</h1><p>We research your company first, let you verify the facts, then search for possible New York unclaimed funds.</p><button onclick="show('research')">Research my business</button></div>
+    <div class="card"><h2>What we need first</h2><p class="sub">A website helps us find legal names, DBAs, addresses, and public records. You review everything before we search.</p><button class="secondary" onclick="show('manual')">I do not have a website</button></div>
+  </section>
+
+  <section id="research" class="hide">
+    <div class="card"><h2>Find your business profile</h2><p class="sub">Enter the public website. We do not need Gmail access to search unclaimed funds.</p>
+      <label for="domain">Business website</label><input id="domain" placeholder="joespizza.com">
+      <label><input id="researchConsent" type="checkbox" checked style="width:auto;margin-right:8px"> I authorize public business research for this demo.</label>
+      <div class="actions"><button onclick="research()">Research business</button><button class="secondary" onclick="show('start')">Back</button></div>
+    </div>
+    <div id="researchProgress" class="card hide"><h3>Research progress</h3><div id="progress"></div></div>
+  </section>
+
+  <section id="manual" class="hide">
+    <div class="card"><h2>Enter business details</h2><p class="sub">Use this fallback when there is no public website.</p>
+      <label>Legal business name</label><input id="manualName" value="Example NYC Foods LLC">
+      <label>DBAs (comma separated)</label><input id="manualDbas" value="Example Foods, Example NYC Market">
+      <label>City and ZIP</label><div class="row"><input id="manualCity" value="Brooklyn"><input id="manualZip" value="11201"></div>
+      <label>Authorized representative</label><div class="row"><input id="manualRep" value="Maria Alvarez"><input id="manualRole" value="Managing Member"></div>
+      <label><input id="manualConsent" type="checkbox" checked style="width:auto;margin-right:8px"> I authorize the search.</label>
+      <div class="actions"><button onclick="manualProfile()">Review profile</button><button class="secondary" onclick="show('start')">Back</button></div>
+    </div>
+  </section>
+
+  <section id="profile" class="hide"><div class="card"><h2>Review your business profile</h2><p class="sub">Confirm the facts before MoneyFinder searches for money.</p><div id="facts"></div>
+    <label>Authorized representative</label><div class="row"><input id="rep" placeholder="Full name"><input id="role" placeholder="Role"></div>
+    <label><input id="profileConsent" type="checkbox" checked style="width:auto;margin-right:8px"> I confirm this profile is accurate enough to search.</label>
+    <div class="actions"><button onclick="confirmProfile()">Search for possible money</button><button class="secondary" onclick="show('start')">Start over</button></div>
+  </div></section>
+
+  <section id="search" class="hide"><div class="card"><h2>Possible money</h2><p class="sub" id="searchMode"></p><div id="results"></div><div class="actions"><button id="prepare" disabled onclick="prepare()">Prepare selected claim</button></div></div></section>
+
+  <section id="form" class="hide"><div class="card"><h2>Review claim form</h2><p class="sub">Nothing is sent until you approve this exact form.</p><div id="formFields"></div><label><input id="approve" type="checkbox" style="width:auto;margin-right:8px" onchange="document.getElementById('submit').disabled=!this.checked"> I am authorized and approve this form.</label><div class="actions"><button id="submit" disabled onclick="submitClaim()">Submit to demo portal</button></div></div></section>
+
+  <section id="status" class="hide"><div class="card"><h2>Claim evidence timeline</h2><p class="sub">Agency approval and bank receipt are separate. This demo marks synthetic events.</p><div id="timeline" class="timeline"></div><div class="actions"><button onclick="show('start')">Find another business</button></div></div></section>
+  <div id="error" class="error hide"></div>
+</main>
+<script>
+let state={profile:null,research:null,hits:[],selected:null,claim:null};
+const $=id=>document.getElementById(id);
+function show(id){['start','research','manual','profile','search','form','status'].forEach(x=>$(x).classList.toggle('hide',x!==id));$('error').classList.add('hide');scrollTo(0,0)}
+function fail(e){$('error').textContent=e.message||String(e);$('error').classList.remove('hide')}
+async function api(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const x=await r.json();if(!r.ok)throw Error(x.error||'Request failed');return x}
+function renderProfile(p){state.research=p;$('facts').innerHTML='';const b=p.best||{};[['Legal name',b.legal_name],['Address',b.hq_address],['City',b.city],['State',b.state],['ZIP',b.zip],['Business type',b.entity_type],['Research source',p.domain]].forEach(([k,v])=>$('facts').insertAdjacentHTML('beforeend',`<div class="fact"><small>${k}</small><span>${v||'<span class="pill warn">Needs confirmation</span>'}</span></div>`));$('rep').value='';$('role').value='';show('profile')}
+async function research(){try{if(!$('researchConsent').checked)throw Error('Research consent is required');$('researchProgress').classList.remove('hide');$('progress').innerHTML=['Website','NYS Department of State','NYC Open Data','BBB / public snippets'].map(x=>`<div class="step"><span class="dot">…</span>${x}</div>`).join('');const p=await api('/api/research',{domain:$('domain').value});renderProfile(p)}catch(e){fail(e)}}
+function manualProfile(){if(!$('manualConsent').checked)return fail(Error('Search consent is required'));state.research={domain:null,best:{legal_name:$('manualName').value,hq_address:'',city:$('manualCity').value,state:'NY',zip:$('manualZip').value,entity_type:'User supplied'},fields:{},demo_only:true};renderProfile(state.research);$('rep').value=$('manualRep').value;$('role').value=$('manualRole').value}
+async function confirmProfile(){try{if(!$('profileConsent').checked)throw Error('Confirm the profile before searching');const p=state.research;p.best=p.best||{};p.best.authorized_representative={name:$('rep').value,role:$('role').value};const out=await api('/api/profile/review',{profile:{...p,dbas:p.best.dbas||[]},consent:true});state.profile=out.profile;const result=await api('/api/search',{profile:state.profile});state.hits=result.hits;$('searchMode').innerHTML=result.source_mode==='demo_only'?'<span class="pill demo">Demo corpus — not government data</span>':'<span class="pill">Imported NY data</span>';$('results').innerHTML=state.hits.length?state.hits.map((h,i)=>`<div class="card result" onclick="selectHit(${i})"><span class="amount">${h.amount_cents==null?'Amount unavailable':'$'+(h.amount_cents/100).toFixed(2)}</span><b>${h.found_name}</b><p class="sub">${h.property_type} · ${h.city} ${h.zip}</p><span class="pill">Confidence ${Math.round(h.confidence*100)}%</span><p class="muted">${h.reasons.join(' · ')} · Source: ${h.source}</p></div>`).join(''):'<p class="sub">No possible matches found. Try a DBA or former address.</p>';show('search')}catch(e){fail(e)}}
+function selectHit(i){state.selected=state.hits[i];document.querySelectorAll('.result').forEach((x,n)=>x.classList.toggle('selected',n===i));$('prepare').disabled=false}
+function prepare(){const h=state.selected;const p=state.profile;const fields=[['Legal name',p.legal_name,'profile'],['Representative',$('rep').value,'user'],['Role',$('role').value,'user'],['City',p.addresses[0].city,'profile'],['ZIP',p.addresses[0].zip,'profile'],['Property',h.found_name,'search result'],['Amount',h.amount_cents==null?'Unavailable':'$'+(h.amount_cents/100).toFixed(2),'search result']];$('formFields').innerHTML=fields.map(x=>`<div class="fact"><small>${x[0]}<br><span class="pill">${x[2]}</span></small><input value="${x[1]}" data-field="${x[0]}"></div>`).join('');$('approve').checked=false;$('submit').disabled=true;show('form')}
+async function submitClaim(){try{const event={claim_id:'claim_'+Date.now(),from_status:'USER_APPROVED',to_status:'SUBMITTED',evidence_kind:'submission',actor:'user',source:'local_demo'};await api('/api/events',event);await api('/api/events',{claim_id:event.claim_id,from_status:'SUBMITTED',to_status:'CLAIM_RECEIVED',evidence_kind:'agency_receipt',actor:'mock_portal',source:'mock_ny_portal'});state.claim=event.claim_id;$('timeline').innerHTML=['USER_APPROVED','SUBMITTED','CLAIM_RECEIVED'].map((x,i)=>`<div><b>${x}</b><br><span class="muted">${i===2?'Mock agency receipt — synthetic demo':'Recorded event'}</span></div>`).join('');show('status')}catch(e){fail(e)}}
+show('start');
+</script>
+</body></html>

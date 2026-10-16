@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from typing import Protocol
 
 from .scoring import score_match
@@ -84,3 +85,13 @@ class MockNYUnclaimedAdapter:
                 )
             )
         return sorted(hits, key=lambda h: h.confidence, reverse=True)
+
+
+def configured_adapter():
+    """Use imported state data when configured; otherwise return explicit demo adapter."""
+    data_file = os.environ.get("NY_UNCLAIMED_DATA_FILE", "").strip()
+    if data_file:
+        from .imported import ImportedNYUnclaimedAdapter
+
+        return ImportedNYUnclaimedAdapter(data_file)
+    return MockNYUnclaimedAdapter()

@@ -65,7 +65,11 @@ cp .env.example .env
 python3 tests/test_pipeline.py
 python3 evals/run_evals.py
 
-# open UI
+# run the domain-first UI + local API
+python3 -m src.server
+# then open http://localhost:4173
+
+# legacy static demo UI
 open ui/index.html
 # mock portal for Daytona
 open mock_portal/index.html
@@ -82,6 +86,7 @@ See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), plus:
 - [docs/MONEY_PATH.md](docs/MONEY_PATH.md)
 - [docs/AGENT_ARCHITECTURE.md](docs/AGENT_ARCHITECTURE.md)
 - [docs/UI_SPEC.md](docs/UI_SPEC.md)
+- [docs/NY_DATA_IMPORT.md](docs/NY_DATA_IMPORT.md)
 
 ```text
 Business UI → Agent tools → Bedrock (reasoning)
