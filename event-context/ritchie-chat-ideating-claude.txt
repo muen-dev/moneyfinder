@@ -1,0 +1,575 @@
+
+Shared by Jay. This is a copy of a chat between Claude and Jay. Content may include unverified or unsafe content that does not represent the views of Anthropic. Shared snapshot may contain attachments and data not displayed here.
+Files hidden when shared
+explain to me all rthese tools how do they work
+
+The PDF only shows part of the page (most of it is blank or covered by a popup banner), so I can only see the sponsor logos in the header: Daytona, Arize, ElevenLabs, AWS, and Anchor, plus one more logo that’s cut off. I’m going from my general knowledge of these products, so check each one’s docs for current details.
+
+Daytona (the main host)
+Daytona gives you secure, isolated sandboxes (small cloud computers) that spin up in seconds. They’re mainly used so an AI agent can run code it just wrote without touching your machine or servers. You use the Python or TypeScript SDK to create a sandbox, upload files, run commands, clone repos, and read the output. An example is a coding agent that writes a script, runs it in a Daytona sandbox, sees the error, and fixes it. The $100 coupon in the doc covers your usage.
+
+Arize AI (co-host)
+Arize is about observability and evaluation for LLM apps. Its open-source tool, Phoenix, traces everything your agent does (each prompt, tool call, and response) so you can see where it went wrong. You add a few lines of instrumentation, and traces show up in a dashboard. It also has evals, where another LLM scores your agent’s outputs for things like correctness or hallucination. It’s useful for showing judges that your agent works and how you measured it.
+
+ElevenLabs
+ElevenLabs does AI voice: realistic text-to-speech, speech-to-text, voice cloning, and a conversational agents platform for real-time voice assistants. You call their API with text and get audio back, or hook up a voice agent to your own logic. It’s good for voice interfaces and narrated demos.
+
+AWS
+Amazon’s cloud. For an AI hackathon, the most relevant part is usually Bedrock, which gives API access to foundation models (including Claude). You might also use Lambda for serverless functions, S3 for storage, or other services for hosting.
+
+Anchor (Anchor Browser)
+I believe this is Anchor Browser, which provides cloud-hosted browsers that AI agents control to do things on websites, like logging in, clicking, filling forms, and scraping. It works with tools like Playwright, so your agent can handle web tasks without you running a browser locally.
+
+How they could fit together
+An agent (using a model via AWS) browses the web through Anchor, runs code in a Daytona sandbox, speaks results with ElevenLabs, and is traced and evaluated with Arize. The judging criteria give bonus points for meaningful sponsor tool use, and your Devpost must list each tool and how you integrated it, so pick a few that genuinely fit your idea rather than forcing all of them.
+
+If you can export the page again without the popup banner, or tell me which logo is cut off, I can cover the rest. I can also help you brainstorm a project idea if you’d like.
+
+arise vs grafana vs langraph
+
+I’m assuming you mean Arize (the hackathon co-host), Grafana, and LangGraph. These aren’t really three competitors. Two are observability tools, and one is a different kind of tool entirely.
+
+Arize (Phoenix) is observability built specifically for LLM and agent apps. It records traces of each prompt, tool call, and model response, and it has evals, where an LLM scores outputs for things like hallucination or relevance. It’s open source and works with most frameworks, including LangGraph, through OpenTelemetry-based instrumentation. Use it to understand why your agent did something and to measure whether it’s good.
+
+Grafana is general-purpose monitoring and dashboards, mostly for infrastructure and application metrics, logs, and traces (usually paired with Prometheus, Loki, or Tempo). It’s excellent for “is my server healthy, how’s latency, what’s the error rate.” It isn’t LLM-aware out of the box, so it has no built-in evals, prompt views, or hallucination scoring, though you can build LLM dashboards with extra setup.
+
+LangGraph isn’t observability at all. It’s a framework for building agents, where you define a graph of steps with state, loops, branching, and human-in-the-loop checkpoints. It’s what you’d write your agent in. Its own observability companion is LangSmith, which is the closest direct competitor to Arize.
+
+What it is	Role
+Arize / Phoenix	LLM observability + evals	Debug and measure your agent
+Grafana	Infra/app monitoring dashboards	Monitor system health
+LangGraph	Agent-building framework	Build your agent
+For a hackathon, a sensible stack is to build the agent in LangGraph (or any framework), instrument it with Phoenix so you can show traces and eval results in your demo, and skip Grafana unless you’re also running real infrastructure. Since Arize is a sponsor, showing meaningful use of it, like an eval that caught and fixed a failure, would help with the bonus sponsor criterion.
+
+If you meant something else by “arise” or “langraph”, tell me and I’ll adjust.
+
+who else is competing in obeservability like arize
+
+
+Searched the web
+Searched the web
+Several companies compete with Arize in LLM and agent observability. These are the ones that come up most in 2026 comparisons.
+
+Open-source / developer-first
+
+Langfuse: the usual pick for open-source observability if you want to replace Arize Phoenix. It’s self-hostable and popular with developers. 
+latitude
+Helicone: combines an AI gateway with observability through a proxy-based setup, so it’s quick to drop in. 
+getmaxim
+MLflow: an open-source ML lifecycle platform with emerging LLM evaluation support, but it needs self-managed infrastructure. 
+confident-ai
+Eval-focused or enterprise platforms
+
+LangSmith: the observability tool from the LangChain/LangGraph team, and the most direct competitor to Arize if you build with LangGraph.
+Braintrust: an enterprise-grade eval and observability platform for AI products. 
+galileo
+Galileo: pitches itself as going beyond observation into evals and runtime guardrails. 
+galileo
+Confident AI, Maxim AI, Latitude, FutureAGI, and Weights & Biases Weave also show up in these roundups.
+Where Arize stands out
+Arize’s edge is its ML-monitoring background. It started in traditional model monitoring in 2020, and that shows in features like embedding drift detection and model comparison that newer tools haven’t matched. Phoenix, its open-source tool, is MIT licensed, free to self-host, and uses OpenTelemetry-native instrumentation. The common criticisms are enterprise pricing and a platform that grew out of ML monitoring rather than LLM-first design. 
+voiceflow
+latitude
+
+Most of these roundups come from competing vendors, so each ranks itself first. Treat them as a list of names, not as neutral rankings.
+
+For the hackathon, you don’t need to compare them. Arize is a sponsor, so using Phoenix, with traces and an eval in your demo, is the choice that helps your bonus score. Langfuse and LangSmith are the main alternatives to know if you’re asked “why Arize?” in Q&A.
+
+so theme of this hackathon is what based on the credits & tools
+
+The PDF doesn’t state a theme. Most of the page is blank or hidden behind the popup, so it may be written in a section I can’t see. Going by the tools and credits, the theme looks like building and running AI agents that take real actions, and being able to see and measure what they do.
+
+Daytona (the main host, with a $100 credit) provides sandboxes where agents safely run code.
+Anchor provides cloud browsers where agents act on websites.
+ElevenLabs gives agents a voice.
+AWS supplies the models and cloud infrastructure.
+Arize (co-host) provides traces and evals, so you can show your agent works and why.
+The judging criteria fit this reading. There’s a bonus for meaningful sponsor tool use, and your Devpost must explain how you integrated each tool. Partners also pick “Best Use” awards from all teams, not just finalists, so a project that uses one sponsor tool well can win a prize without reaching the final round.
+
+Ideas that fit this stack:
+
+A coding agent that writes and tests code in a Daytona sandbox, with Phoenix evals measuring how often it fixes its own bugs.
+A voice agent (ElevenLabs) that completes tasks on the web through Anchor.
+An agent that researches or automates a workflow, with traces showing where it fails and how you improved it.
+To confirm the theme, check the Devpost page (https://daytona-hacksprint-nyc.devpost.com/) or the original Notion page. The “detailed judging guidelines” are also being shared on Tuesday, before submissions.
+
+If you tell me what you’re interested in building, I can help narrow it to a project that fits within the event’s single day.
+
+these are all infra tools right
+
+Mostly yes. Four of the five are infrastructure for AI agents:
+
+Daytona: compute (sandboxes to run code)
+Anchor: browser infrastructure (cloud browsers for agents)
+AWS: cloud and model hosting
+Arize: observability and evals, which is tooling around the agent more than the agent itself
+ElevenLabs is the exception. It’s closer to a capability or model API (voice in and out) than infrastructure, though it’s still a building block.
+
+None of them is a finished product or a model that does the “thinking.” They’re the parts an agent needs to run, act, speak, and be monitored. So the judges aren’t looking for another infra tool. They want something built on top of these that solves a real problem, which is what the Impact Potential criterion (25%) is about. Projects that only show off the tools, like “an agent that runs code in a sandbox,” will probably blend together. The ones that stand out will be a specific use case where these tools make something possible that wasn’t before.
+
+For example, instead of “a browser agent,” think “an agent that files a tedious form for small businesses and shows its work with traces.”
+
+If you tell me what problem or domain you care about, I can help you map it onto two or three of these tools.
+
+how can they help really  use cases]
+
+Here’s what each tool makes possible that’s hard to do without it, with concrete use cases.
+
+Daytona (safe code execution)
+The problem it solves is that an agent that writes code needs somewhere safe to run it. Running it on your laptop or production server is risky.
+
+Data analyst agent: a user uploads a messy CSV, the agent writes pandas code, runs it in a sandbox, and returns charts and insights.
+Auto-fix bot: it clones a GitHub repo into a sandbox, reproduces a bug, writes a patch, runs the tests, and opens a PR only if they pass.
+Coding tutor: it runs a student’s code safely and explains the errors.
+Untrusted code review: it executes code from strangers (like a hiring take-home) without risking your machine.
+Anchor (cloud browsers)
+The problem is that most of the web has no API. Agents need to click through real sites.
+
+Paperwork agent: it fills out repetitive forms (permits, benefits, insurance claims) for people or small businesses.
+Price or availability tracker: it logs into sites, checks them regularly, and alerts you to changes.
+Research agent: it gathers info from sites that block simple scraping or need login.
+QA tester: it walks through your own web app like a user and reports what breaks.
+ElevenLabs (voice)
+The problem is that some people can’t or won’t use screens, and some tasks are naturally spoken.
+
+Phone-style agent: it calls or answers for a clinic or restaurant to book appointments.
+Accessibility assistant: it reads and navigates the web aloud for visually impaired users.
+Language practice partner: it gives real-time spoken conversation with feedback.
+Voice front-end for any agent: you talk to it, and it works in the background and reports back.
+AWS (models and hosting)
+
+It gives you model access (such as Claude via Bedrock) so the agent can reason and plan.
+It also provides storage for files and logs, and serverless functions to run your backend.
+Arize (see and measure)
+The problem is that agents fail in subtle ways, and without traces you can’t tell why.
+
+Debugging: you see that the agent picked the wrong tool at step 4 and everything after it went wrong.
+Proof for judges: you run 20 test cases, score them with an eval, and show “success rate went from 45% to 80% after I changed the prompt.”
+Safety checks: it flags hallucinated answers before users see them.
+Combined examples
+
+Small-business admin agent: you speak a task (“renew our business license”) and the agent uses Anchor to complete the online forms, Daytona to run any scripts it needs, and ElevenLabs to confirm by voice. Arize traces show each step.
+Self-improving code fixer: it fixes bugs in a Daytona sandbox, and Arize evals score each attempt. The demo shows the fix rate improving over iterations, which hits Technical Execution and the sponsor bonus.
+Accessible web assistant: Anchor browses, a model through AWS decides what to do, and ElevenLabs narrates, so someone who can’t use a screen can handle things like benefits or appointments.
+For a one-day hackathon, pick one narrow workflow, make it work reliably, and show the Arize eval proving it. That usually beats a broad idea that only half works.
+
+If any of these appeals to you, tell me which and I can sketch the architecture and a build plan for the hours you have.
+
+i am from the medical field what can i work on think of nyc problems
+
+Your medical background is an advantage here, because most teams won’t understand the real workflow pain. These ideas are NYC-specific, and each uses the sponsor tools for a reason. They also avoid real patient data, which you can’t use at a hackathon.
+
+1. Benefits and insurance navigator
+NYC has a huge Medicaid and uninsured population, and enrollment, renewals, and prior authorizations mean long, repetitive forms across clunky portals.
+
+Anchor walks through the portals and fills out forms.
+ElevenLabs lets a patient talk through their situation in their own language. NYC has a huge range of languages, which is a strong Impact angle.
+Arize traces each step and evals whether the form was filled correctly.
+2. Multilingual discharge instructions and follow-up
+Patients are sent home with instructions they often can’t read or understand, which contributes to readmissions.
+
+A model via AWS rewrites the instructions at a plain reading level and in the patient’s language.
+ElevenLabs reads them aloud, or runs a follow-up call asking “did you pick up your meds?”
+Arize evals check translation accuracy and flag anything that changes clinical meaning. Medical safety makes your evals meaningful, not decorative.
+3. Clinic-finder and appointment agent
+Finding an in-network specialist or a clinic with an open slot is painful, especially for sliding-scale or community clinics.
+
+Anchor checks availability across booking sites that have no API.
+ElevenLabs handles the voice front end for people who aren’t comfortable with apps.
+4. Clinical document extractor
+Messy referral letters, lab reports, and faxes (healthcare still runs on fax) need to become structured data.
+
+The agent writes extraction code and runs it in a Daytona sandbox against synthetic documents.
+Arize measures extraction accuracy, so your demo can say “accuracy went from X% to Y%.”
+5. Public-health data analyst
+A health department or community org wants to see patterns in public NYC data, such as asthma, heat-related illness, or ER visits by neighborhood.
+
+The agent writes analysis code and runs it safely in Daytona, then produces charts.
+Arize traces the reasoning so the analysis is auditable.
+Which to pick
+
+Best for Impact (25%): #1 or #2. Language access and benefit complexity are real NYC problems, and the story is easy to tell in a 3-minute pitch.
+Best for Technical Execution: #4 or #5, where results are measurable and demoable.
+Safest for one day: #2. It’s narrow, and you can show an eval catching a bad translation.
+Practical cautions
+
+Use only synthetic or public data. Never real PHI.
+Frame it as an assistant for patients or staff, not a diagnostic tool. Judges (and your own medical instincts) will want a human in the loop.
+Your clinical knowledge is useful for the eval. You can write test cases that a non-clinician wouldn’t think of, like drug name mix-ups or dosing units, and that makes your Arize results credible.
+Which area do you work in (clinical care, public health, admin, something else)? I can tailor one idea into a build plan with a timeline for the hackathon day.
+
+Daytona: compute (sandboxes to run code)
+Anchor: browser infrastructure (cloud browsers for agents)
+AWS: cloud and model hosting
+Arize: observability and evals, which is tooling around the agent more than the agent itself
+no actually oposite i need to do usmle, or learn imaging or emergency medicine so improve my profession
+
+or make money so scalable value idea clear problem non medical too
+
+or something too creative
+
+Here are ideas in your three buckets. Each uses the sponsor tools for a real reason.
+
+1. Learning tools for yourself (USMLE, imaging, EM)
+Adaptive USMLE tutor that finds your weak spots
+
+It gives you questions, tracks which concepts you miss, and generates new ones targeting those gaps.
+Daytona runs the code that analyzes your performance and builds your study plan.
+Arize evals check each generated question for medical accuracy, a single best answer, and plausible distractors. You can score a batch and show the numbers, and your clinical eye makes those test cases credible.
+ElevenLabs adds an oral “attending pimping” mode where it quizzes you out loud.
+Emergency medicine simulator
+
+A voice-driven patient case (chest pain, sepsis, trauma). You talk through your workup, order tests, and get results back. At the end it debriefs you on missed steps.
+ElevenLabs voices the patient, nurse, and consultant.
+Arize evals score the simulation against a rubric (did it flag the right red flags, was the debrief accurate).
+Imaging trainer
+
+It uses public datasets (such as open chest X-ray collections) to quiz you on reading studies, with a model giving feedback on your search pattern.
+Daytona runs the image processing.
+A caution: this is an education tool, not diagnostic. Say so clearly in the pitch.
+Why this bucket: it’s the easiest to make good, because you can judge quality yourself. The risk is that “study app” is a crowded space, so the voice simulator or the adaptive weak-spot engine is what sets it apart.
+
+2. Money-making and scalable (including non-medical)
+The strongest hackathon pitches name a specific buyer who already pays for the problem today.
+
+Compliance and paperwork agent for small businesses: renewing licenses, filing permits, and tax forms across NYC and state portals that have no API. Anchor does the clicking. Charge per filing or a monthly fee.
+Prior-authorization and insurance-claim appeals agent: practices lose a lot of staff time and revenue on denials. The agent uses Anchor to work the payer portals and drafts appeals, and Arize shows how often the appeals are complete and correct. This one is medical-adjacent but sells to a business buyer.
+Agent QA-as-a-service: it tests other companies’ web apps like a real user (Anchor), runs scripts in Daytona, and reports bugs. Every software team is a customer.
+Competitive price and listing monitor: it watches sites that block simple scraping and alerts sellers or landlords to changes. It’s simple and sells easily.
+Document-to-data service for fax-heavy industries: clinics, law offices, and logistics firms. It extracts structured data from messy documents, with Arize measuring accuracy as the selling point.
+Why this bucket: it scores well on Impact and the business story, but you need to show that it works reliably on a narrow workflow, not just claim scale.
+
+3. Creative
+A voice-first “house call” for language learning or interview prep: it runs a realistic ER-shift or residency-interview simulation you can practice anytime.
+An agent that builds interactive explainers: you give it a topic (for example, how the cardiac cycle works) and it writes code, runs it in Daytona, and returns a working animated visualization, with ElevenLabs narrating it like a lecture.
+A “debate” or “case conference” of multiple agents: several agents argue differential diagnoses on a synthetic case, and Arize traces show whose reasoning won and why. It’s an unusual demo, and judges remember it.
+An audio-drama generator: a user describes a scenario and the agent produces a narrated, multi-voice story with sound.
+Why this bucket: it scores on Creativity (25%) and Presentation (25%), but it has the weakest Impact story unless you tie it to a real use.
+
+My recommendation
+Combine buckets 1 and 2. Build the EM or USMLE voice simulator with an Arize-validated question engine. It fixes a problem you personally have, so you can judge quality and test it honestly. It has a clear market (millions of medical students and residents pay for study tools), and the voice demo is memorable in a 3-minute pitch. If you want it to feel less like a study app, pitch it as “a training platform for any high-stakes profession” and use medicine as the first vertical.
+
+Do you want to go with that one? If so, tell me how many people are on your team and how strong your coding is, and I’ll sketch the architecture and an hour-by-hour build plan for the day.
+
+not interested in either
+
+Fair enough. I gave you a lot of study apps and business ideas, and that may not be what you’re after. I’m not sure whether “either” means the two buckets I combined or all three, so here are ideas that are further from a study tool or a startup pitch:
+
+A medical mystery you can interrogate: an agent builds a hidden synthetic case, and you play the detective by questioning the patient by voice (ElevenLabs), ordering tests, and checking records. Arize traces show the full reasoning trail at the end, so it’s a game that’s also a transparent AI demo.
+A living city dashboard that talks: an agent pulls NYC public data, writes analysis code in Daytona, and narrates what’s happening in the city (heat, air quality, subway delays) like a radio host.
+An AI that argues with itself: several agents take opposing sides of a hard ethical or clinical dilemma and debate. You watch the live trace of their reasoning, and you can step in as the tiebreaker.
+A web-roaming “street reporter”: an agent uses Anchor to browse NYC sites (events, restaurant inspections, local news) and produces a short spoken daily briefing about a neighborhood.
+A tool that explains anything visually: you ask a question (“how does a heart murmur sound and why?”) and the agent builds and runs an interactive animation in Daytona, narrated aloud.
+Two questions would help me aim better: is it the type of idea that’s wrong (too study-focused, too business-y), or do you want something that doesn’t feel like a typical hackathon project at all? And is there any part of your day-to-day, in or out of medicine, that annoys you enough that you’d want a tool for it? The best hackathon ideas usually start from something that bugs the builder.
+
+value that can be offered to everyone globally starting nyc thats what i want you thinking
+
+Here’s the idea I’d pick for global value starting in NYC: an agent that turns any confusing official letter or form into done paperwork, in the person’s own language and voice.
+
+The universal problem
+Everyone on Earth deals with bureaucracy: benefits, housing notices, medical bills, immigration, taxes, school forms. It’s hardest for people with limited English, low literacy, disabilities, or no time. Most government and insurance systems have no API, only clunky web portals. NYC is the ideal launch market because it has hundreds of languages, huge benefit and housing systems (311, SNAP, Medicaid, NYCHA, housing court), and a large population that needs this daily.
+
+How it works
+
+The person photographs a letter or says what they need (“my landlord sent this” or “I need to renew my benefits”).
+The agent explains it in their language, by voice: what it says, the deadline, and what happens if they ignore it.
+It does the next step by filling out the online form or response, then asks for confirmation before anything is submitted.
+How the tools fit
+
+ElevenLabs: voice in and out in the person’s language, so no reading or typing is needed. This is the accessibility core.
+Anchor: operates the real government and insurer portals that have no API. This is what turns an explainer into something that acts.
+Daytona: runs document processing (OCR, extracting dates and amounts, parsing messy PDFs) safely in sandboxes.
+AWS: model access for understanding, translating, and planning.
+Arize: this is where your medical background helps. Wrong translations or missed deadlines cause real harm, so you build an eval set (letters with known deadlines, amounts, and required actions) and show accuracy per language. “Deadline extraction: 97%, across 6 languages” is a strong demo line.
+Why it scales globally
+The core agent is the same everywhere. Expanding to a new city or country means adding portal “playbooks” and languages, not rebuilding. The users are billions of people, and the buyers could be cities, health systems, banks, and nonprofits who already spend heavily on call centers and caseworkers for exactly this.
+
+Making it a one-day build
+Don’t try to cover every bureaucracy. Pick one flow, like a SNAP recertification notice or a housing notice, support three or four languages, and make it work end to end with synthetic letters and a mock or public portal. A reliable narrow demo beats a broad one that half-works.
+
+Important cautions
+
+Use only synthetic documents and fake identities.
+Present it as an assistant, not legal or medical advice, with a human confirming before any submission.
+Say in your pitch how it handles being wrong, because judges will ask.
+Two other universal angles if this one doesn’t click
+
+“Health information you can actually trust, in your language”: a voice agent that explains a diagnosis, medication label, or test result at the right reading level, with Arize evals checking for clinical accuracy. It’s closer to your expertise, but harder to demo safely.
+Scam shield: someone forwards a suspicious text, email, or call transcript and the agent says whether it’s a scam and what to do. Scams hit every country, and eval accuracy is easy to show.
+Do you want me to turn the paperwork idea into a build plan (architecture, what to build first, how to split the day)? Tell me your team size and coding level so I scope it right.
+
+ok so something like RAMP for consumers
+
+Yes, and that framing makes the pitch clearer than “paperwork agent.” Ramp’s value is that it finds and saves companies money automatically, and the same logic works for consumers, who have the same problems with no finance team.
+
+What “Ramp for consumers” would do
+
+Find money leaks: forgotten subscriptions, duplicate charges, price hikes, fees, and overpriced bills.
+Act on them, not just flag them: cancel the subscription, dispute the charge, request a lower rate, or appeal a medical bill.
+Prove the savings: a running total of dollars saved is a very easy number to put in front of judges.
+Where your medical background fits
+Medical bills are one of the biggest and most confusing consumer expenses. Errors and unnecessary charges are common, and most people don’t know they can dispute them. An agent that reads an itemized hospital bill or an EOB, flags likely errors (duplicate billing, wrong codes), and drafts the dispute is a wedge no generic finance app has. You can start there and expand to all bills, which keeps the global story intact.
+
+How the tools map
+
+Anchor: logs into provider and insurer portals to cancel, dispute, or submit. This is the “does the work” part, and it’s what separates you from apps that only show you a dashboard.
+Daytona: runs the analysis (parsing statements and bills, finding duplicates, calculating overcharges) in sandboxes.
+ElevenLabs: voice interface in the user’s language, or even the agent making the “call” to negotiate. This is a good fit for people who find finance intimidating.
+AWS: model access for reasoning and drafting.
+Arize: evals on “did it correctly identify the overcharge” and “did the dispute letter cite the right facts.” Wrong financial claims have consequences, so measured accuracy is a real selling point.
+Revenue model
+Take a percentage of what you save people, as services like Billshark do. Your incentives match the user’s, there’s no upfront cost for them, and it scales with usage. It’s also a clean business line for the pitch.
+
+An honest caution: this space is crowded
+Rocket Money, Billshark, and DoNotPay-style tools already exist. So the pitch shouldn’t be “we find subscriptions.” Your differentiators are:
+
+It acts autonomously through the browser, instead of just alerting.
+It starts with medical bills, a high-value area with real expertise behind it.
+It’s voice-first and multilingual, so it reaches people the existing apps don’t.
+It has measured accuracy, shown with Arize.
+Also, Ramp’s real moat is the card and the transaction data. You can’t replicate that in a day, so don’t claim to. Say “the agent layer” and let the scope be honest.
+
+What to build in one day
+Pick one flow: upload a synthetic itemized medical bill, the agent flags three planted errors, drafts the dispute, and uses Anchor to submit it to a mock portal. Show the dollar total saved and an Arize eval run across, say, 20 synthetic bills with known errors. Use only synthetic data. For the pitch, add that a human confirms before anything is submitted.
+
+Does the medical-bill wedge appeal to you, or would you rather start with something broader like subscriptions? Tell me your team size and coding level and I’ll turn it into a build plan.
+
+rocketmoney tracks tells me what im paying cashapp roundsapp
+
+so value here is agent make some outbound
+
+inbound money 
+
+thats what we are saying here
+
+assumption this can be in medical
+
+or the HSA
+
+inbound outbount clarity
+
+Yes. Rocket Money and Cash App show you where your money went. They’re read-only: they track and alert, but you still do the work. The gap is an agent that moves money in both directions and makes the picture clear.
+
+Outbound: stop paying what you shouldn’t
+
+Dispute billing errors on itemized medical bills.
+Negotiate or appeal bills, such as asking for a financial-assistance review or a prompt-pay discount.
+Cancel subscriptions and unused services.
+Inbound: collect what you’re owed
+
+Appeal denied insurance claims.
+Submit missing claims for out-of-network or forgotten visits.
+Claim HSA/FSA reimbursements for qualified expenses you paid out of pocket.
+Find refunds, credits, and unclaimed funds, since there are state unclaimed-property databases people rarely check.
+Clarity: one view of both
+A running ledger: “You overpaid $340, we recovered $210, you have $1,200 in reimbursable HSA expenses sitting unclaimed, and an appeal deadline in 9 days.” Turning confusing medical finance into a simple number is something Rocket Money doesn’t do.
+
+Why HSA is a strong wedge
+
+HSA money is yours, tax-advantaged, and often under-used.
+Many people pay medical costs out of pocket without knowing they can reimburse themselves later, as long as they have the receipts and the expense is qualified. Check the current IRS rules and your plan’s terms before you build the logic.
+FSAs have use-it-or-lose-it deadlines, which makes an agent that watches the calendar very valuable.
+Medical bills, EOBs, HSA claims, and appeals are exactly the messy, portal-based paperwork where an acting agent beats a dashboard.
+Tool mapping
+
+Anchor: logs into insurer, provider, and HSA portals to file claims, submit appeals, and dispute charges. No API exists for most of this.
+Daytona: parses bills and EOBs, matches charges to claims, and calculates what’s owed or recoverable, all in sandboxes.
+ElevenLabs: voice interface, or the agent “calling” a billing department, in the user’s language.
+AWS: model access for reasoning and drafting appeal letters.
+Arize: evals on whether it found real errors, correctly matched claims to EOBs, and cited the right facts in appeals. Your medical knowledge helps build the test set with realistic billing errors, code mismatches, and denial reasons.
+One-day build
+
+Upload a synthetic bill, EOB, and HSA balance.
+Show the agent finding outbound errors (a duplicate charge and an upcoding case).
+Show it finding inbound money (an unfiled HSA reimbursement and a denied claim worth appealing).
+Show it drafting the dispute and appeal, and using Anchor to submit to a mock portal.
+Show the dashboard: money saved, money recovered, deadlines.
+Show an Arize eval run over about 20 synthetic cases with planted errors and the accuracy numbers.
+Honest cautions
+
+Use only synthetic data, and have a human confirm before anything is submitted.
+Don’t present it as financial, tax, or legal advice.
+Existing players like bill-negotiation services and HSA administrators overlap with parts of this. Your differentiator is both directions, acting autonomously, with measured accuracy.
+Be careful with “scalable globally.” The US medical billing system is unusually complex, which is why the pain is so big here. Pitch NYC and the US as the first market and the agent layer as portable.
+One question so I can build you a plan: do you want to start from the HSA/claims side (inbound) or the billing-errors side (outbound) as the demo’s lead story? Inbound money is the more exciting hook for judges.
+
+thats a clear action right user outbound bills receipts -> agent -> action fills forms paperwork -> money inbound.  is this actually possible
+
+medical is hard you mentioned agnostic in NYc where would this actually work and you can back Paperwork agent. based on access bring money inbound 
+
+so research find facts data
+
+I’ll research this: what money is actually sitting unclaimed in NYC, how it’s claimed, and whether an agent can do it.
+
+
+Searched the web
+Searched the web
+Short answer: it’s possible, and the money is real. The part that isn’t proven is making an agent reliable enough to do it unsupervised.
+
+Where money is sitting unclaimed in NYC
+1. NY State unclaimed funds (the best hackathon target)
+
+The state’s pool has passed $20 billion across more than 55 million accounts. It’s made up of old bank accounts, uncashed checks, utility deposits, and unused gift cards. 
+waer
+In NYC, Manhattan residents are owed almost $3 billion across 5.3 million accounts, and Brooklyn and Queens each have more than $1 billion outstanding. 
+nbcnewyork
+There’s no fee and no time limit to claim, and the state returns about $2 million a day. Claiming is free, so users could do it themselves; the problem is that most people never check. 
+ny
+Amounts of $250 or less are now released directly with no claim needed. The state’s annual report also mentions an expedited process for claims up to $5,000. Verify the current threshold before you build logic around it. 
+nbcnewyork
+2. Tax credits (EITC and NYC credits)
+
+An estimated one-fifth of eligible households nationally fail to claim the federal EITC. 
+sufe
+NYC, the state, and the IRS are currently trying to reach city residents who appear eligible but didn’t claim the EITC on their 2022 returns, and NYC sent second notices in March 2026. That’s direct evidence that money is going unclaimed right now. 
+irs
+An older city estimate put it at 150,000 residents who never claim, worth more than $160 million. That document is undated and likely old, so treat it as a rough magnitude. 
+nyc
+Free help already exists. The city’s Free Tax Prep program covers the EITC and the NYC child care credit. So a paid agent would need to be better than free, which is a competitive risk. 
+secretnyc
+3. SNAP and other benefits
+
+A Columbia study found about 1 in 4 eligible New Yorkers doesn’t use SNAP, which adds up to more than 700,000 people. That’s a 2023 report, so the numbers may have moved. 
+robinhood
+Seniors and immigrant households are described as disproportionately under-enrolled. 
+citylimits
+Can an agent actually do the paperwork?
+Evidence that it’s possible: Propel tested Claude Cowork and ChatGPT Agent on SNAP applications. Both were willing to help. Also, AI agents are already being used to fill out forms and submit benefit applications, and early research suggests most people using them are genuinely eligible. 
+propel
+renascence
+
+Evidence it isn’t reliable yet: In that same Propel test, both agents failed to enter all the provided application data accurately. It was an internal test with no real applications submitted. That finding matters for your project: accuracy is the main weakness, which makes Arize evals the proof you need rather than a bonus feature. 
+propel
+
+Others are moving in: Code for America is partnering with Anthropic on Claude-based tools for benefit caseworkers. Nava, with Benefits Data Trust, is exploring an agent that completes applications with caseworker supervision at key decision points. That validates the idea, but it also means you’re not alone, and the serious players keep a human in the loop. Propel has started drafting a standard covering user consent, safe interfaces, and auditable interactions. That’s a good checklist for your design. 
+Our Anthropic partnership +2
+
+What I couldn’t verify
+Whether portals like ACCESS HRA, IRS, or insurer sites allow automated browser access under their terms, and how they handle MFA and CAPTCHAs. Check this before claiming it works on real portals.
+Whether NY restricts fees on finding unclaimed money for someone, or on charging for benefits help. A percentage-of-recovery model needs a legal check.
+Current eligibility rules for each program. Those change, so pull them from official sources.
+What I’d build
+The best one-day target is a money finder for NYC residents. It starts with unclaimed funds (public search, free to claim, clear dollar amounts) and adds an EITC and SNAP eligibility screen.
+
+The user enters their name and a few facts, and talks through it by voice (ElevenLabs).
+The agent searches the state database, matches likely hits, and screens for credits and benefits (Daytona runs the data work; the model comes from AWS).
+Anchor walks through the claim or application on a mock portal you build, prefilling every field.
+The user reviews and confirms before anything is submitted.
+Arize evaluates field-level accuracy over synthetic profiles, with a number like “fields correct: X of Y.”
+The accuracy number is your credibility. You’re measuring what Propel found weak, and showing it improving.
+
+Be honest in the pitch: the savings come from claims users could make themselves for free. Your value is that the agent does the work in their language and by voice, for people who currently don’t claim at all. Use synthetic identities only, and don’t present anything as legal or tax advice.
+
+Do you want me to turn this into a build plan with a split of the hours, or would you rather first check one of the unverified items, such as the portal terms or the fee rules?
+
+create the screens that i will need with the user journey ensure right copy + buttons works to move across different workflows
+
+be creative and use aesthetics that are very appealing to the eye 
+
+Name MoneyFinder be creative with logo design too
+
+
+Read a file, created a file
+Read a file, created a file
+P
+
+Artifact
+Published artifact: /artifact/2EyyEonbEeAXTggqnXMA1k
+
+MoneyFinder is built as a clickable prototype with every button working. I kept it lean, so I haven’t opened or tested it myself. Tap through it once to check it.
+
+Logo: a magnifying glass whose lens holds a green coin with a white arrow pointing down into it. It means money coming in, which is the idea behind the name. The colors are harbor navy, taxi gold, seafoam green, and coral for the handle.
+
+Journey (8 screens):
+
+Welcome: a language switch (English, Spanish, Chinese, Bengali) that changes the headline and button, then Start finding.
+Tell us about you: name, borough, and household size. The Tap and tell us button fakes voice input and fills in the situation text. Then Search for my money.
+Searching: three sources check off one by one, then the app moves on by itself.
+Found: the total updates as you tick or untick claims. Estimated amounts are labeled as estimates. Prepare my claims is next, or Edit my details to go back.
+Check before we send: the form is prefilled. There’s one deliberate ZIP mismatch you must resolve, plus a consent checkbox, and Send my claims stays disabled until both are done.
+Sending: a live log shows the cloud browser filling the form and pausing for your OK.
+Claims sent: the expected total and a timeline for each claim, with buttons to see the checks, find more money, or start over.
+How we checked our work: accuracy bars for the Arize evaluation story.
+Replace before the demo:
+
+The accuracy numbers on the last screen are placeholders, marked “Sample numbers.” Swap in real results from your Arize run.
+The claim amounts and the sending log are mock. Wire them to your real search, to a mock portal driven by Anchor, and to Daytona for the data checks.
+The page carries a “Demo · synthetic data” label. Keep it so no one enters real IDs.
+When you’re ready to connect the real tools, tell me your team’s coding level and I’ll plan the build order.
+
+afew adjustments when it creates the files i need to be able to see edit make changes - the human in the loop so if it creates the files before sending a user can view exactly the forms created the source can also cancel
+
+you also havent shown account and money 
+
+your design needs to sell cashapp like not ecommerce website 
+
+user wallet or account where moeny deposits isnt shown
+
+
+Ran a command
+Ran a command
+P
+
+Artifact
+Published artifact: /artifact/2EyyEonbEeAXTggqnXMA1k
+
+I rebuilt MoneyFinder with a wallet, editable forms, and cancel controls, and updated the same link. I haven’t opened it or clicked through it myself, so tap through it once to check.
+
+Forms you can see, edit, and cancel
+
+After you pick claims, the Your forms are ready screen lists one form per claim, with the agency name and a status. Nothing is sent at this point.
+View & edit opens the form as a paper document. Each field shows where it came from (your answers, the state record, or your wallet). If you change a field it’s marked “Edited by you,” and Save changes returns you to the list.
+The ZIP code field is flagged on purpose. Send my forms stays disabled until you fix the flagged field and tick the confirmation box.
+You can cancel at three points:
+Remove on a single form.
+Cancel and delete all forms.
+Stop and keep my forms while the cloud browser is submitting. Your edits are kept.
+Account and money
+
+Home now opens on a large balance, an “incoming” indicator, and a Find money and Cash out pair of buttons. A black card shows the MoneyFinder account number that agencies pay to, and the forms show it in a “Pay to” field.
+After sending, the Sent screen shows the amount on its way.
+Fast-forward: money arrives (a demo button) moves the money into the wallet. The balance goes up, the activity list shows green deposits, and Cash out sends it to a demo bank account.
+A new Activity tab shows claims in progress and money received.
+Look and feel: I moved away from the card-heavy style toward a Cash App-like look. It has a huge balance number, flat white or black screens, pill buttons, a bottom tab bar, and bright money green. The logo is the same, with the lens now in the text color.
+
+Changes to know about
+
+I replaced SNAP with the NYC child care credit, so all three claims pay into the wallet. SNAP is paid to a benefits card, which wouldn’t fit the account story.
+The account number, bank, amounts, and accuracy bars are demo placeholders. A real version of the wallet needs a licensed banking partner, which is out of scope for a hackathon.
+The language chips (English, Spanish, Chinese, Bengali) are now on the Tell us about you screen and only change that screen’s title and subtitle.
+nope return as was but ass the option to review and view the forms i like former design
+
+the only thing missing is the landing screen and signup cause your design assumes a loggined in user no landing screen web first so create landing screen signup/signin option
+
+
+Ran a command
+Ran a command
+P
+
+Artifact
+Published artifact: /artifact/2EyyEonbEeAXTggqnXMA1k
+
+I put the original harbor navy, gold, and seafoam design back and added a landing page and sign-up/sign-in on top of it. I updated the same link and haven’t clicked through it myself, so tap through it once to check.
+
+Landing page (web-first)
+
+A top bar with the logo, How it works, Sign in, and Get started.
+A large navy hero reading “Find the money New York owes you,” with Create free account and Sign in buttons.
+Three stat cards: $20B+ unclaimed in NY State, 1 in 5 eligible households missing the EITC, and $0 to claim state funds. These come from the research we did earlier.
+A three-step section, a “Nothing leaves without your OK” trust block, and a footer saying it’s a demo with synthetic data.
+Sign up and sign in
+
+One screen with a Sign up / Sign in toggle. Sign-up asks for name, email, and password. Sign-in drops the name field.
+Any email and a password of 6+ characters works, since it’s a demo. Wrong input shows a message.
+After signing in you land on a Home screen that greets you by name and shows your balance.
+The header switches once you’re in: Account $X and Sign out. Signing out returns you to the landing page, and any screen you try to open while signed out sends you to sign-in.
+Form review (same as requested before)
+
+View & edit on each form shows a paper-style document with a source label on every field. A deliberately flagged ZIP code must be fixed before Send my forms unlocks.
+You can remove one form, Cancel and delete all forms, or hit Stop and keep my forms while sending is in progress.
+Account and money
+
+Claims sent from the forms screen show as incoming money.
+Fast-forward: money arrives moves it into the account and adds green deposit rows to the Activity list.
+Not included: I didn’t add a Cash out button in this version. Tell me if you want it back.
+

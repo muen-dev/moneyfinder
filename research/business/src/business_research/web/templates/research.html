@@ -1,0 +1,64 @@
+{#- Company research card on the business page. Every value here is scraped from the web: it's
+    autoescaped, and only http(s) URLs (via the http_url filter) ever become links. -#}
+{% macro link(url, text) -%}
+  {%- set safe = url|http_url -%}
+  {%- if safe %}<a href="{{ safe }}" rel="noopener noreferrer nofollow" target="_blank">{{ text or safe }}</a>{% else %}{{ text or url }}{% endif -%}
+{%- endmacro %}
+{% macro show(value) -%}
+  {%- if value is mapping -%}
+    {{ link(value.get("url"), value.get("title") or value.get("code") or "") }}
+    {%- for key, item in value.items() if key not in ("url", "title") and item %} <span class="muted">{{ item }}</span>{% endfor %}
+  {%- elif value is sameas true %}yes{% elif value is sameas false %}no
+  {%- elif value is string and value|http_url %}{{ link(value, value) }}
+  {%- else %}{{ value }}{% endif -%}
+{%- endmacro %}
+
+<section class="card research">
+  <h2>Company research</h2>
+  {% if not domain %}
+    <p>No company domain yet. <a class="primary" href="{{ url_for('domain_form', business_id=conn.business_id) }}">Add your company's domain</a></p>
+  {% else %}
+    <p>Domain <strong>{{ domain }}</strong>
+      {% if research %}· <span class="status {{ research.status }}">{{ research.status }}</span>
+        {% if research.status in ("queued", "running") %}<span class="muted">(this page refreshes every few seconds)</span>{% endif %}
+        {% if research.finished_at %}<span class="muted">· finished {{ research.finished_at }}</span>{% endif %}
+      {% endif %}</p>
+    {% if research and research.status == "failed" %}<p class="flash error">Research failed: {{ research.error }}</p>{% endif %}
+    <div class="actions">
+      <form method="post" action="{{ url_for('rerun_research', business_id=conn.business_id) }}" data-busy="Starting…">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button {% if refresh %}disabled{% endif %}>Re-run research</button>
+      </form>
+      <a class="button" href="{{ url_for('domain_form', business_id=conn.business_id) }}">Change domain</a>
+    </div>
+  {% endif %}
+
+  {% if profile %}
+    <p class="muted">Profile of {{ profile.domain }} generated {{ profile.generated_at }}. Sources:
+      {% for name, info in profile.collectors.items() %}
+        <span class="status {{ info.status }}" title="{{ info.error or '' }}">{{ name }} {{ info.status }}</span>
+      {% endfor %}</p>
+    <div class="table-wrap">
+      <table class="profile">
+        <thead><tr><th>Fact</th><th>Value</th><th>Confidence</th><th>Sources</th></tr></thead>
+        <tbody>
+        {% for name, claims in profile.fields.items() if name in fields %}
+          {% set label, multi = fields[name] %}
+          {% for claim in (claims if multi else claims[:4]) %}
+            <tr class="{{ 'alt' if not multi and not loop.first else '' }}">
+              <th>{% if loop.first %}{{ label }}{% elif not multi %}<span class="muted">also reported</span>{% endif %}</th>
+              <td>{{ show(claim.value) }}</td>
+              <td>{{ "%.2f"|format(claim.confidence) }}</td>
+              <td>
+                {% for source in claim.sources[:4] %}
+                  <span class="source" title="{{ source.via }} · {{ source.fetched_at }}{% if source.note %} · {{ source.note }}{% endif %}">{{ link(source.url, source.via) }}</span>
+                {% endfor %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</section>
