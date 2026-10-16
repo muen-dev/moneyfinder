@@ -1,0 +1,1 @@
+"""MoneyFinder agentic pipeline package."""

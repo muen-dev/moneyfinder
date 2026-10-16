@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock NY Unclaimed Funds Claim Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;color:#0B2545}
+.banner{background:#FFF3CD;border:1px solid #FFC53D;padding:12px 14px;border-radius:10px;margin-bottom:20px;font-weight:600}
+label{display:block;margin:12px 0 4px;font-weight:600}
+input{width:100%;padding:10px;border:1px solid #D5E0EC;border-radius:8px}
+button{margin-top:16px;padding:12px 18px;border:0;border-radius:10px;background:#0B2545;color:#fff;font-weight:700;cursor:pointer}
+.flag{background:#FDE6E1;border-color:#E8553F}
+.ok{background:#DDF5EE;padding:12px;border-radius:10px;margin-top:16px}
+code{background:#EEF3F8;padding:2px 6px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="banner">DEMO ONLY — Synthetic New York claim portal for Daytona browser agents. Not the real OSC site.</div>
+<h1>Claim unclaimed property</h1>
+<p>Agent fills approved fields. Intentional mismatch field: ZIP may disagree with business profile.</p>
+<form id="claim">
+<label for="legal_name">Legal business name</label>
+<input id="legal_name" name="legal_name" data-field="legal_name">
+<label for="authorized_representative">Authorized representative</label>
+<input id="authorized_representative" name="authorized_representative" data-field="authorized_representative">
+<label for="role">Role</label>
+<input id="role" name="role" data-field="role">
+<label for="city">City</label>
+<input id="city" name="city" data-field="city">
+<label for="zip">ZIP code</label>
+<input id="zip" name="zip" data-field="zip" class="flag" value="11202">
+<label for="property_name">Property name on record</label>
+<input id="property_name" name="property_name" data-field="property_name">
+<label for="amount_requested">Amount requested</label>
+<input id="amount_requested" name="amount_requested" data-field="amount_requested">
+<label for="pay_to">Pay to</label>
+<input id="pay_to" name="pay_to" data-field="pay_to">
+<button type="submit">Submit claim</button>
+</form>
+<div id="result" class="ok hide" style="display:none"></div>
+<script>
+document.getElementById('claim').addEventListener('submit',e=>{
+  e.preventDefault();
+  const id='NY-DEMO-'+Math.random().toString(36).slice(2,7).toUpperCase();
+  const status={confirmation_id:id,status:'CLAIM_RECEIVED',submitted_at:new Date().toISOString()};
+  localStorage.setItem('mock_ny_claim_'+id,JSON.stringify(status));
+  const el=document.getElementById('result');
+  el.style.display='block';
+  el.innerHTML='<b>CLAIM_RECEIVED</b><br>Confirmation: <code>'+id+'</code><br>This is agency receipt evidence only — not payment.';
+});
+// Status simulation endpoints via query: ?status=APPROVED&id=...
+const params=new URLSearchParams(location.search);
+if(params.get('status')&&params.get('id')){
+  document.body.insertAdjacentHTML('beforeend','<div class="ok"><b>'+params.get('status')+'</b> for <code>'+params.get('id')+'</code> (mock agency page)</div>');
+}
+</script>
+</body>
+</html>

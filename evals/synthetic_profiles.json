@@ -1,0 +1,34 @@
+[
+  {
+    "id": "biz_001",
+    "profile": {
+      "entity_type": "business",
+      "legal_name": "Example NYC Foods LLC",
+      "dbas": ["Example Foods", "Example NYC Market"],
+      "business_type": "LLC",
+      "addresses": [
+        {"street": "123 Main Street", "city": "Brooklyn", "state": "NY", "zip": "11201", "current": true}
+      ],
+      "authorized_representative": {"name": "Maria Alvarez", "role": "Managing Member"},
+      "search_consent": true
+    },
+    "expected_min_hits": 1,
+    "expected_top_name_contains": "Example"
+  },
+  {
+    "id": "biz_002",
+    "profile": {
+      "entity_type": "business",
+      "legal_name": "Unrelated Widgets Inc",
+      "dbas": [],
+      "business_type": "Corp",
+      "addresses": [
+        {"street": "9 Pine St", "city": "Albany", "state": "NY", "zip": "12207", "current": true}
+      ],
+      "authorized_representative": {"name": "Sam Lee", "role": "President"},
+      "search_consent": true
+    },
+    "expected_min_hits": 0,
+    "expected_top_name_contains": null
+  }
+]
