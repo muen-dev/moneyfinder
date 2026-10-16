@@ -1,0 +1,25 @@
+[project]
+name = "company-research"
+version = "0.1.0"
+description = "Public-data company profiles for moneyfinder: website, BBB, LinkedIn, NY registries and news, with provenance."
+authors = [
+    { name = "NicholasSutin", email = "nicholas0sutin@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.35",
+    "httpx>=0.28",
+    "publicsuffixlist>=1.0",
+]
+
+[project.scripts]
+company-research = "company_research.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.14,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

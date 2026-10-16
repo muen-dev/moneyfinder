@@ -1,0 +1,84 @@
+"""Command line entry point: `uv run business-research <command>`."""
+
+import argparse
+import sys
+from collections.abc import Iterable, Iterator
+
+from googleapiclient.errors import HttpError
+
+from . import store
+from .gmail import auth
+from .gmail.client import DEFAULT_QUERY, GmailClient
+from .gmail.parse import EmailMessage
+
+
+def cmd_serve(args: argparse.Namespace) -> None:
+    from .web.app import create_app  # Flask is only needed for the server
+
+    print(f"Open http://localhost:{args.port}")
+    print(f"OAuth redirect URI (must be registered on the client): http://localhost:{args.port}/oauth/callback")
+    create_app(args.port).run(host="127.0.0.1", port=args.port)
+
+
+def cmd_list(args: argparse.Namespace) -> None:
+    connections = auth.list_connections()
+    if not connections:
+        print("No businesses connected.")
+    for conn in connections:
+        print(f"{conn.business_id}\t{conn.email}\tconnected {conn.connected_at}")
+
+
+def cmd_fetch(args: argparse.Namespace) -> None:
+    conn = auth.load(args.business_id)
+    # Always under DATA_DIR, which is git-ignored, so real mail can't land somewhere committable.
+    out = store.messages_path(args.business_id)
+    messages = GmailClient(conn.credentials).search(args.query, limit=args.limit)
+    count = store.write_messages(out, _with_progress(messages))
+    print(file=sys.stderr)
+    print(f"Wrote {count} messages from {conn.email} to {out}")
+
+
+def cmd_disconnect(args: argparse.Namespace) -> None:
+    revoked = auth.disconnect(args.business_id)
+    store.delete_messages(args.business_id)
+    status = "access revoked" if revoked else "token deleted (Google did not confirm the revoke)"
+    print(f"Disconnected {args.business_id}: {status}, fetched mail deleted")
+
+
+def _with_progress(messages: Iterable[EmailMessage]) -> Iterator[EmailMessage]:
+    for count, message in enumerate(messages, 1):
+        print(f"\rfetched {count}", end="", file=sys.stderr)
+        yield message
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="business-research", description="Gather business context for moneyfinder.")
+    commands = parser.add_subparsers(required=True)
+
+    serve = commands.add_parser("serve", help="run the local dev server to connect businesses with Google sign-in")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.set_defaults(func=cmd_serve)
+
+    commands.add_parser("list", help="show connected businesses").set_defaults(func=cmd_list)
+
+    fetch = commands.add_parser("fetch", help="download matching messages to JSONL")
+    fetch.add_argument("business_id", help="id shown by `list`")
+    fetch.add_argument("-q", "--query", default=DEFAULT_QUERY, help=f"Gmail search query (default: {DEFAULT_QUERY!r})")
+    fetch.add_argument("-n", "--limit", type=int, default=200, help="max messages (default: 200)")
+    fetch.set_defaults(func=cmd_fetch)
+
+    disconnect = commands.add_parser("disconnect", help="revoke access and delete the token and fetched mail")
+    disconnect.add_argument("business_id")
+    disconnect.set_defaults(func=cmd_disconnect)
+
+    args = parser.parse_args(argv)
+    try:
+        args.func(args)
+    except (auth.NotConnectedError, FileNotFoundError, ValueError, HttpError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

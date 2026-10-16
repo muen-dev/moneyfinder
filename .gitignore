@@ -1,4 +1,54 @@
-.env.*
+# Secrets and local config
 .env
+.env.*
 *.env
+!.env.example
+.netrc
+.pypirc
+# OAuth client files, keys and tokens
+credentials.json
+client_secret*.json
+service-account*.json
+token.json
+token.pickle
+.tokens/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Real business data and research output. Never commit; .githooks/pre-commit also
+# blocks these if force-added. Convention: a package writes local-only output to its
+# own data/ folder (research/business/data/, research/company/data/, form-filling/data/).
+/data/
+/*/data/
+/*/*/data/
+# Fetched mail, wherever BUSINESS_DATA_DIR points
+messages.jsonl
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
+.surreal-data/
+# kb: fetched pages and extracted text
+kb/lake/
+# Scraped pages (the firecrawl skill writes here)
+.firecrawl/
+# Logs can hold request and response bodies
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Node
 node_modules/
+
+# OS
+.DS_Store

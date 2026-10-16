@@ -1,0 +1,9 @@
+# API keys (copy .env.example to .env.local)
+.env.local
+.env.*
+!.env.example
+# Company profiles and raw API responses
+data/
+.venv/
+__pycache__/
+.pytest_cache/

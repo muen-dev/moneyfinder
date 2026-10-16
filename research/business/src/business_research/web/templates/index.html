@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h1>Connect a business inbox</h1>
+  <p>The business owner signs in with Google and grants <strong>read-only</strong> Gmail access.
+    Nothing is sent, labeled or deleted, and they can disconnect at any time.</p>
+  {% if setup_missing %}
+    <div class="flash error">
+      <p>No OAuth client at <code>{{ client_secrets }}</code>.</p>
+      <p>Create a <strong>Web application</strong> client with redirect URI <code>{{ redirect_uri }}</code>,
+        then save its JSON there. Steps are in <code>research/business/README.md</code>.</p>
+    </div>
+  {% else %}
+    <a class="primary" href="{{ url_for('login') }}">Sign in with Google</a>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Connected <span class="muted">{{ businesses|length }}</span></h2>
+  {% if not businesses %}
+    <p class="muted">None yet.</p>
+  {% else %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Account</th><th>Company</th><th>Connected</th><th>Messages</th><th>Last fetch</th></tr></thead>
+        <tbody>
+        {% for b in businesses %}
+          <tr>
+            <td><a href="{{ url_for('business', business_id=b.conn.business_id) }}">{{ b.conn.email }}</a></td>
+            <td>{{ b.domain or "not set" }}</td>
+            <td>{{ b.conn.connected_at }}</td>
+            <td>{{ b.count }}</td>
+            <td>{{ b.fetched_at or "never" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

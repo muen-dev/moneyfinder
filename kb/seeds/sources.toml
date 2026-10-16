@@ -1,0 +1,61 @@
+# Starting points for `kb seed`. Each seed is fetched, then links matching `follow`
+# (regexes on the absolute URL) are fetched too, up to `depth` hops away.
+# authority: statute | regulation | form | form_instructions | agency_guidance | program_page | dataset | secondary
+
+# NYS corporate franchise tax (Article 9-A) credits. Links to one page per credit,
+# and those pages link to the claim forms and instructions.
+[[source]]
+url = "https://www.tax.ny.gov/bus/ct/article9a_tax_credits.htm"
+authority = "agency_guidance"
+jurisdiction = "NYS"
+agency = "NYS DTF"
+tags = ["credit-index", "article-9a"]
+follow = [
+    '^https://www\.tax\.ny\.gov/pit/credits/[^/]+\.htm$',
+    '^https://www\.tax\.ny\.gov/bus/ct/[^/]+credit[^/]*\.htm$',
+    '^https://www\.tax\.ny\.gov/pdf/current_forms/ct/[^/]+\.pdf$',
+]
+depth = 2
+
+# Same credits for sole proprietors and pass-through owners (Article 22, personal income tax).
+[[source]]
+url = "https://www.tax.ny.gov/bus/article22-credits.htm"
+authority = "agency_guidance"
+jurisdiction = "NYS"
+agency = "NYS DTF"
+tags = ["credit-index", "article-22"]
+follow = [
+    '^https://www\.tax\.ny\.gov/pit/credits/[^/]+\.htm$',
+    '^https://www\.tax\.ny\.gov/pdf/current_forms/it/[^/]+\.pdf$',
+]
+depth = 2
+
+[[source]]
+url = "https://esd.ny.gov/sites/default/files/media/document/Excelsior-Jobs-Program-Overview-2025.pdf"
+authority = "program_page"
+jurisdiction = "NYS"
+agency = "Empire State Development"
+tags = ["excelsior"]
+
+[[source]]
+url = "https://www.tax.ny.gov/pdf/current_forms/ct/ct607i.pdf"
+authority = "form_instructions"
+jurisdiction = "NYS"
+agency = "NYS DTF"
+tags = ["excelsior", "CT-607"]
+
+[[source]]
+url = "https://www.nyc.gov/site/finance/business/business-reap.page"
+authority = "agency_guidance"
+jurisdiction = "NYC"
+agency = "NYC DOF"
+tags = ["REAP"]
+
+[[source]]
+url = "https://nyc-business.nyc.gov/nycbusiness/business-services/incentives/reduce-operating-expenses"
+authority = "program_page"
+jurisdiction = "NYC"
+agency = "NYC SBS"
+tags = ["incentive-index"]
+follow = ['^https://nyc-business\.nyc\.gov/nycbusiness/description/[^/]+$']
+depth = 1

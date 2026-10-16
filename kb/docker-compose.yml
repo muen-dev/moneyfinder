@@ -1,0 +1,14 @@
+# Local SurrealDB for development. Root credentials are for localhost only.
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v3.3.0
+    command: start --bind 0.0.0.0:8000 --user root --pass root --log info rocksdb:///data/kb.db
+    user: root
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - surreal-data:/data
+    restart: unless-stopped
+
+volumes:
+  surreal-data:
