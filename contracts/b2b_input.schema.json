@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://moneyfinder.local/contracts/b2b_input.schema.json",
+  "title": "BusinessSearchProfile",
+  "type": "object",
+  "required": ["entity_type", "legal_name", "addresses", "search_consent", "authorized_representative"],
+  "properties": {
+    "entity_type": { "const": "business" },
+    "legal_name": { "type": "string", "minLength": 2 },
+    "dbas": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "default": []
+    },
+    "business_type": {
+      "type": "string",
+      "enum": ["LLC", "Corp", "SoleProp", "Partnership", "Nonprofit", "Other"]
+    },
+    "addresses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["city", "state", "zip"],
+        "properties": {
+          "street": { "type": "string" },
+          "city": { "type": "string" },
+          "state": { "type": "string", "const": "NY" },
+          "zip": { "type": "string", "pattern": "^[0-9]{5}(-[0-9]{4})?$" },
+          "borough": {
+            "type": "string",
+            "enum": ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"]
+          },
+          "current": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "authorized_representative": {
+      "type": "object",
+      "required": ["name", "role"],
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      }
+    },
+    "search_consent": { "type": "boolean", "const": true },
+    "document_uploads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["authorization", "dba", "cancelled_check", "articles", "other"]
+          },
+          "filename": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

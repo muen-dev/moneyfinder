@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MoneyFinder — B2B Unclaimed Funds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF3F8;--card:#fff;--ink:#0B2545;--mut:#5B6F88;--line:#D5E0EC;--gold:#FFC53D;--sea:#14A98A;--seaS:#DDF5EE;--coral:#E8553F;--coralS:#FDE6E1;--hero:#0B2545;--heroInk:#F4F8FC;--doc:#FFFDF6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#061326;--card:#0F2441;--ink:#EAF1F8;--mut:#9DB1C8;--line:#1D3658;--seaS:#0E3A34;--coralS:#42201C;--hero:#0F2441;--doc:#14213A}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 'Instrument Sans',system-ui,sans-serif}
+h1,h2,h3,.num{font-family:'Bricolage Grotesque',sans-serif;margin:0;letter-spacing:-.02em;line-height:1.05}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:8px;font:800 21px 'Bricolage Grotesque',sans-serif;border:0;background:none;color:var(--ink);cursor:pointer}
+.sm{background:var(--gold);color:#0B2545;border:0;border-radius:12px;padding:10px 16px;font:700 15px inherit;cursor:pointer}
+.hide{display:none!important}
+.hero{background:var(--hero);color:var(--heroInk);border-radius:32px;padding:48px 36px;margin-top:20px}
+.hero h1{font-size:clamp(36px,6vw,64px);max-width:14ch}.hero p{color:#B9CBE0;font-size:18px;max-width:42ch;margin:16px 0 24px}
+.btn{border:0;border-radius:16px;padding:14px 20px;font:600 16px inherit;background:var(--gold);color:#0B2545;cursor:pointer}
+.btn.w{width:100%}.btn.ghost{background:transparent;border:1.5px solid var(--line);color:inherit}.btn.r{background:var(--coralS);color:var(--coral)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:18px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}.stat .num{font-size:36px;color:var(--sea)}.stat p{margin:6px 0 0;color:var(--mut);font-size:14px}
+.sec{margin:40px 0}.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}.step i{font-style:normal;width:36px;height:36px;border-radius:50%;background:var(--gold);display:grid;place-items:center;font-weight:800;margin-bottom:10px}
+.app{max-width:560px;margin:0 auto;padding:20px 20px 60px}
+h2.t{font-size:28px;font-weight:800;margin:8px 0 6px}.sub{color:var(--mut);margin:0 0 16px}
+label.l{display:block;font-weight:600;font-size:14px;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:400 16px inherit}
+textarea{min-height:72px;resize:vertical}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}
+.tag{display:inline-block;font-size:12px;border-radius:8px;padding:2px 8px;background:var(--seaS);color:var(--sea);font-weight:600}.tag.w{background:var(--coralS);color:var(--coral)}.tag.d{background:var(--line);color:var(--mut)}
+.item{display:flex;gap:12px;align-items:flex-start}.item input{width:22px;height:22px;margin-top:3px;accent-color:#14A98A;flex:none;padding:0}
+.amt{margin-left:auto;font:800 20px 'Bricolage Grotesque',sans-serif;white-space:nowrap}
+.row{display:flex;align-items:center;gap:12px;margin:12px 0}.tick{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px}
+.tick.run{border-color:var(--gold);border-top-color:transparent;animation:spin .8s linear infinite}.tick.ok{background:var(--sea);border-color:var(--sea);color:#fff}@keyframes spin{to{transform:rotate(360deg)}}
+.total{font:800 48px 'Bricolage Grotesque',sans-serif;color:var(--sea)}
+.paper{background:var(--doc);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(11,37,69,.12)}
+.paper label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin:12px 0 4px}
+.paper label em{font-style:normal;color:var(--sea);font-weight:700}.paper label em.w{color:var(--coral)}
+.paper input{border:0;border-bottom:1.5px solid var(--line);border-radius:0;background:transparent;padding:8px 0;font-weight:600}
+.paper input.flag{border-color:var(--coral);background:var(--coralS);padding-left:8px}
+.log{background:var(--hero);color:#CFE0F2;border-radius:16px;padding:14px;font:13px/1.7 ui-monospace,Menlo,monospace;min-height:180px}.log em{color:var(--gold);font-style:normal}
+.acct{background:var(--hero);color:var(--heroInk);border-radius:22px;padding:20px;margin-bottom:14px}.acct .num{font-size:44px;margin:4px 0}
+.act>div{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.act small{color:var(--mut);display:block}
+.back{background:none;border:0;color:var(--mut);font:500 15px inherit;cursor:pointer;padding:8px 0}
+.note{font-size:13px;color:var(--mut);margin-top:10px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:99px;font-weight:600;z-index:9}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.chip{border:1.5px solid var(--line);background:var(--card);border-radius:99px;padding:6px 12px;font:600 13px inherit}
+.bar{height:10px;border-radius:8px;background:var(--line);overflow:hidden;margin:6px 0 14px}.bar i{display:block;height:100%;background:var(--sea)}
+.mini{border:0;border-radius:99px;padding:7px 14px;font:700 13px inherit;cursor:pointer;background:var(--ink);color:var(--bg)}.mini.x{background:none;color:var(--coral)}
+.form{display:flex;gap:12px;align-items:center}.doc{width:44px;height:56px;background:var(--doc);border:1px solid var(--line);border-radius:6px;display:grid;place-items:center}
+.scr{animation:in .25s ease}@keyframes in{from{opacity:0;transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<header><div class="wrap">
+<button class="brand" data-go="landing">MoneyFinder</button>
+<button class="sm" data-go="onboard">Start business search</button>
+</div></header>
+
+<section class="scr" id="s-landing"><div class="wrap">
+<div class="hero">
+<h1>Find money New York may owe your business.</h1>
+<p>We build a search profile from your legal name, DBAs, and addresses—then prepare claim forms you must approve before anything is sent.</p>
+<button class="btn" data-go="onboard">Create business profile</button>
+</div>
+<div class="stats">
+<div class="stat"><div class="num">B2B</div><p>Primary pipeline: NY unclaimed funds for businesses (not consumers).</p></div>
+<div class="stat"><div class="num">Proof</div><p>Agency approval and bank deposit are separate evidence rails.</p></div>
+<div class="stat"><div class="num">$0</div><p>State claims are free. This demo uses synthetic data only.</p></div>
+</div>
+<div class="sec"><h2>How money status works</h2>
+<div class="steps">
+<div class="step"><i>1</i><h3>Match</h3><p>Possible money from name/address search—not approved yet.</p></div>
+<div class="step"><i>2</i><h3>Approve &amp; submit</h3><p>You review every field. We only send after your OK.</p></div>
+<div class="step"><i>3</i><h3>Evidence</h3><p>Agency receipt ≠ payment. Bank match confirms arrival.</p></div>
+</div></div>
+<p class="note">Hackathon demo. Synthetic identities and mock portal. Not legal or tax advice. Anchor is not used for NY search.</p>
+</div></section>
+
+<div class="app hide" id="appBox">
+<section class="scr hide" id="s-onboard">
+<button class="back" data-go="landing">‹ Back</button>
+<h2 class="t">Business profile</h2>
+<p class="sub">We need this before we can search. No real EINs in the demo.</p>
+<label class="l" for="legal">Legal business name</label>
+<input id="legal" value="Example NYC Foods LLC">
+<label class="l" for="dbas">DBAs (comma-separated)</label>
+<input id="dbas" value="Example Foods, Example NYC Market">
+<label class="l" for="btype">Business type</label>
+<select id="btype"><option>LLC</option><option>Corp</option><option>SoleProp</option><option>Partnership</option></select>
+<label class="l" for="street">Street</label>
+<input id="street" value="123 Main Street">
+<label class="l" for="city">City</label>
+<input id="city" value="Brooklyn">
+<label class="l" for="zip">ZIP</label>
+<input id="zip" value="11201">
+<label class="l" for="rep">Authorized representative</label>
+<input id="rep" value="Maria Alvarez">
+<label class="l" for="role">Role</label>
+<input id="role" value="Managing Member">
+<label class="card item" style="margin-top:12px"><input type="checkbox" id="consent" checked><span>I authorize MoneyFinder to search NY unclaimed funds using this business information (demo).</span></label>
+<label class="l" for="docs">Optional docs (placeholder)</label>
+<input id="docs" placeholder="authorization.pdf, dba.pdf">
+<div style="height:14px"></div>
+<button class="btn w" id="startSearch">Search for unclaimed funds</button>
+</section>
+
+<section class="scr hide" id="s-scan">
+<h2 class="t">Searching with your profile</h2>
+<p class="sub" id="variantsSub">Building name variants…</p>
+<div id="scanList"></div>
+</section>
+
+<section class="scr hide" id="s-found">
+<p class="sub" style="margin:0">Possible matches totaling up to</p>
+<div class="total" id="tot">$0</div>
+<p class="sub">Estimates are not approved money. Choose what to prepare.</p>
+<div id="items"></div>
+<button class="btn w" id="prep" disabled>Prepare forms</button>
+<button class="btn ghost w" data-go="onboard" style="margin-top:10px">Edit profile</button>
+</section>
+
+<section class="scr hide" id="s-review">
+<button class="back" data-go="found">‹ Back</button>
+<h2 class="t">Review claim forms</h2>
+<p class="sub">Every field shows its source. Conflicts must be fixed before send.</p>
+<div id="forms"></div>
+<label class="card item"><input type="checkbox" id="ok"><span>I am authorized for this business and approve sending these forms.</span></label>
+<button class="btn w" id="send" disabled>Send my forms</button>
+<button class="btn r w" id="cancelAll" style="margin-top:10px">Cancel</button>
+</section>
+
+<section class="scr hide" id="s-form">
+<button class="back" id="formBack">‹ Back to forms</button>
+<div class="paper" id="paper"></div>
+<div style="height:14px"></div>
+<button class="btn w" id="saveForm">Save changes</button>
+<button class="btn r w" id="delForm" style="margin-top:10px">Remove this form</button>
+</section>
+
+<section class="scr hide" id="s-submit">
+<h2 class="t">Sandbox submission</h2>
+<p class="sub">Daytona-style cloud browser fills the mock NY portal. You can stop it.</p>
+<div class="log" id="log"></div>
+<button class="btn r w" id="stop" style="margin-top:12px">Stop</button>
+</section>
+
+<section class="scr hide" id="s-done">
+<p class="sub" style="margin:0">Claims submitted — evidence timeline</p>
+<div class="total" id="dtot">$0</div>
+<div class="act" id="tl"></div>
+<button class="btn w" id="advanceAgency">Simulate agency update</button>
+<button class="btn ghost w" id="confirmBank" style="margin-top:10px" disabled>Simulate demo bank deposit</button>
+<button class="btn dark w" data-go="trace" style="margin-top:10px;background:var(--ink);color:var(--bg)">How we checked accuracy</button>
+</section>
+
+<section class="scr hide" id="s-trace">
+<button class="back" data-go="done">‹ Back</button>
+<h2 class="t">Arize-style accuracy</h2>
+<p class="sub">Field-level checks on synthetic business profiles.</p>
+<b>Fields filled correctly</b><div class="bar"><i style="width:96%"></i></div>
+<b>Source attribution</b><div class="bar"><i style="width:100%"></i></div>
+<b>Status transitions legal</b><div class="bar"><i style="width:100%"></i></div>
+<div class="card"><span class="tag w">Sample / replace with live Arize</span>
+<p class="note" style="margin:8px 0 0">Wire <code>ARIZE_SPACE_ID</code> before demo day.</p></div>
+</section>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const S={profile:null,hits:[],forms:{},sel:new Set(),status:'',confirmation:null,amount:0,agencyStep:0,timers:[]};
+const money=n=>'$'+(n/100).toLocaleString(undefined,{minimumFractionDigits:0});
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.append(d);setTimeout(()=>d.remove(),2200)}
+function show(id){S.timers.forEach(clearTimeout);S.timers=[];$$('.scr').forEach(s=>s.classList.toggle('hide',s.id!=='s-'+id));$('#appBox').classList.toggle('hide',id==='landing');scrollTo(0,0)}
+function go(id){({landing:()=>show('landing'),onboard:()=>show('onboard'),found:renderFound,review:renderForms,submit:runSubmit,done:renderDone,trace:()=>show('trace'),scan:runScan})[id]?.()||show(id)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b&&!b.disabled)go(b.dataset.go)});
+
+function variants(legal,dbas){const suf=/\b(llc|inc|corp|co|ltd|pllc)\b\.?/ig;const norm=s=>s.replace(/[^\w\s&]/g,' ').replace(/\s+/g,' ').trim();
+  const out=[],seen=new Set();
+  const add=s=>{[norm(s),norm(s.replace(suf,''))].forEach(c=>{const k=c.toLowerCase();if(c&&!seen.has(k)){seen.add(k);out.push(c)}})};
+  add(legal);dbas.forEach(add);return out}
+
+$('#startSearch').onclick=()=>{
+  if(!$('#consent').checked){toast('Consent required to search');return}
+  const legal=$('#legal').value.trim();if(legal.length<2){toast('Enter legal business name');return}
+  S.profile={entity_type:'business',legal_name:legal,dbas:$('#dbas').value.split(',').map(s=>s.trim()).filter(Boolean),
+    business_type:$('#btype').value,addresses:[{street:$('#street').value,city:$('#city').value,state:'NY',zip:$('#zip').value,current:true}],
+    authorized_representative:{name:$('#rep').value,role:$('#role').value},search_consent:true};
+  go('scan')};
+
+function runScan(){show('scan');
+  const v=variants(S.profile.legal_name,S.profile.dbas);
+  $('#variantsSub').textContent='Variants: '+v.join(' · ');
+  const steps=['Normalize legal name & DBAs','Query mock NY unclaimed corpus','Score name + city + ZIP'];
+  const el=$('#scanList');el.innerHTML=steps.map(s=>`<div class="row"><span class="tick"></span><b>${s}</b></div>`).join('');
+  steps.forEach((_,i)=>{S.timers.push(setTimeout(()=>el.children[i].firstChild.className='tick run',i*700));
+    S.timers.push(setTimeout(()=>{const t=el.children[i].firstChild;t.className='tick ok';t.textContent='✓'},i*700+600))});
+  S.timers.push(setTimeout(()=>{
+    // Synthetic hits aligned with src/search/adapter.py
+    S.hits=[
+      {id:'h1',found_name:'Example Foods',property_type:'Uncashed vendor check',city:'Brooklyn',zip:'11201',amount_cents:41200,confidence:0.95,reasons:['Exact/partial name','City match','ZIP match']},
+      {id:'h2',found_name:'Example NYC Foods LLC',property_type:'Utility deposit refund',city:'Brooklyn',zip:'11201',amount_cents:18500,confidence:0.99,reasons:['Exact name match','ZIP match']},
+      {id:'h3',found_name:'Example NYC Market',property_type:'Accounts payable credit',city:'Queens',zip:'11101',amount_cents:9750,confidence:0.55,reasons:['Partial name match']}
+    ];
+    S.sel=new Set(S.hits.map(h=>h.id));
+    go('found');
+  },2600))}
+
+function renderFound(){show('found');S.amount=[...S.sel].reduce((s,id)=>s+(S.hits.find(h=>h.id===id)?.amount_cents||0),0);$('#tot').textContent=money(S.amount);
+  $('#items').innerHTML=S.hits.map(h=>`<label class="card item"><input type="checkbox" data-id="${h.id}" ${S.sel.has(h.id)?'checked':''}>
+    <div><b>${h.found_name}</b><div class="sub" style="margin:2px 0;font-size:14px">${h.property_type} · ${h.city} ${h.zip}</div>
+    <span class="tag">Confidence ${Math.round(h.confidence*100)}%</span>
+    <div class="note">${h.reasons.join(' · ')}</div></div><span class="amt">${money(h.amount_cents)}</span></label>`).join('');
+  $('#prep').disabled=!S.sel.size;$('#prep').textContent=S.sel.size?`Prepare ${S.sel.size} form${S.sel.size>1?'s':''}`:'Choose at least one'}
+$('#items').onchange=e=>{const id=e.target.dataset.id;e.target.checked?S.sel.add(id):S.sel.delete(id);renderFound()};
+$('#prep').onclick=()=>{buildForms();go('review')};
+
+function buildForms(){S.forms={};const p=S.profile;const userZip=p.addresses[0].zip;
+  [...S.sel].forEach(id=>{const h=S.hits.find(x=>x.id===id);const conflict=h.zip!==userZip; // demo: force conflict on Queens hit vs Brooklyn profile when comparing record zip shown
+    // Always demo one conflict: show state_record zip for first selected as alternate if same zip — inject 11202 conflict for first form for hackathon accuracy demo
+    const forceConflict=id===S.hits[0].id;
+    const fields=[
+      {l:'Legal business name',v:p.legal_name,s:'Your profile'},
+      {l:'Authorized representative',v:p.authorized_representative.name,s:'Your profile'},
+      {l:'Role',v:p.authorized_representative.role,s:'Your profile'},
+      {l:'City',v:p.addresses[0].city,s:'Your profile'},
+      {l:'ZIP code',v:forceConflict?'11202':userZip,s:forceConflict?'State ID record':'Your profile',flag:forceConflict,conflict:forceConflict?userZip:null},
+      {l:'Property name on record',v:h.found_name,s:'Search result'},
+      {l:'Amount requested',v:money(h.amount_cents),s:'Search result'},
+      {l:'Pay to',v:'Business demo account ••4821',s:'Your account'}
+    ];
+    S.forms[id]={id,t:h.property_type,name:h.found_name,a:h.amount_cents,fields};
+  })}
+
+function ready(){const f=Object.values(S.forms);$('#send').disabled=!(f.length&&$('#ok').checked&&f.every(x=>!x.fields.some(y=>y.flag)))}
+function renderForms(){show('review');const f=Object.values(S.forms);
+  $('#forms').innerHTML=f.map(x=>{const fl=x.fields.some(y=>y.flag);return `<div class="card form"><div class="doc">📄</div><div><b>${x.t}</b><div style="color:var(--mut);font-size:13px">${x.name}</div>
+    <span class="tag ${fl?'w':''}">${fl?'Needs your check':'Ready'}</span></div>
+    <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px"><button class="mini" data-open="${x.id}">View &amp; edit</button><button class="mini x" data-rm="${x.id}">Remove</button></div></div>`}).join('')||'<p class="sub">No forms left.</p>';ready()}
+$('#forms').onclick=e=>{const o=e.target.dataset.open,r=e.target.dataset.rm;if(o)openForm(o);if(r){delete S.forms[r];S.sel.delete(r);renderForms();toast('Form removed')}};
+$('#ok').onchange=ready;$('#cancelAll').onclick=()=>{S.forms={};toast('Cancelled');go('onboard')};
+
+let cur=null;
+function openForm(id){cur=id;const x=S.forms[id];show('form');
+  $('#paper').innerHTML=`<h3>${x.t}</h3><div class="sub">${x.name} · Draft, not sent</div>`+x.fields.map((y,i)=>`<label for="f${i}"><span>${y.l}</span><em class="${y.flag?'w':''}">${y.flag?'Check this':'From: '+y.s}</em></label><input id="f${i}" data-i="${i}" class="${y.flag?'flag':''}" value="${y.v}">`).join('')+(x.fields.some(y=>y.flag)?'<p class="note" style="color:var(--coral)">State record ZIP differs from your profile ZIP. Confirm the correct value.</p>':'')}
+$('#saveForm').onclick=()=>{$$('#paper input').forEach(n=>{const y=S.forms[cur].fields[n.dataset.i];y.v=n.value;if(y.flag&&y.v.trim()){y.flag=false;y.s='Edited by you'}});toast('Saved');go('review')};
+$('#formBack').onclick=()=>go('review');$('#delForm').onclick=()=>{delete S.forms[cur];S.sel.delete(cur);go('review')};
+$('#send').onclick=()=>go('submit');
+
+function runSubmit(){show('submit');const T=['Opening mock NY claim portal in sandbox','Typing approved field values only','Read-back verification against form hash','<em>Paused for final OK</em>','Submitting claim pack','Saving confirmation evidence'];
+  const el=$('#log');el.innerHTML='';T.forEach((t,i)=>S.timers.push(setTimeout(()=>el.insertAdjacentHTML('beforeend','<p>› '+t+'</p>'),i*550)));
+  S.timers.push(setTimeout(()=>{S.confirmation='NY-DEMO-4821';S.agencyStep=0;S.status='CLAIM_RECEIVED';go('done')},T.length*550+400))}
+$('#stop').onclick=()=>{toast('Stopped. Nothing submitted.');go('review')};
+
+function renderDone(){show('done');const f=Object.values(S.forms);const amt=f.reduce((s,x)=>s+x.a,0);$('#dtot').textContent=money(amt);
+  const steps=[
+    {t:'CLAIM_RECEIVED',s:`Confirmation ${S.confirmation}`,tag:'Agency receipt'},
+    {t:S.status,s:'Current status — not the same as money in bank',tag:S.status}
+  ];
+  if(S.agencyStep>=1)steps.push({t:'APPROVED',s:'Mock agency approval notice',tag:'Agency evidence'});
+  if(S.agencyStep>=2)steps.push({t:'PAYMENT_ISSUED',s:'Mock agency payment-issued',tag:'Agency evidence'});
+  if(S.agencyStep>=3)steps.push({t:'PAYMENT_CONFIRMED',s:'Demo bank deposit matched (synthetic)',tag:'Demo bank'});
+  $('#tl').innerHTML=steps.map(x=>`<div><span style="font-size:20px">●</span><div><b>${x.t}</b><small>${x.s}</small><div><span class="tag ${x.tag==='Demo bank'?'d':''}">${x.tag}</span></div></div></div>`).join('');
+  $('#confirmBank').disabled=S.agencyStep<2||S.agencyStep>=3;
+  $('#advanceAgency').disabled=S.agencyStep>=2;
+  $('#advanceAgency').textContent=S.agencyStep===0?'Simulate agency → APPROVED':'Simulate agency → PAYMENT_ISSUED'}
+$('#advanceAgency').onclick=()=>{S.agencyStep=Math.min(2,S.agencyStep+1);S.status=S.agencyStep===1?'APPROVED':'PAYMENT_ISSUED';toast(S.status);renderDone()};
+$('#confirmBank').onclick=()=>{S.agencyStep=3;S.status='PAYMENT_CONFIRMED';toast('Demo deposit recorded');renderDone()};
+
+go('landing');
+</script></body></html>

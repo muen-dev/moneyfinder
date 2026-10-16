@@ -1,0 +1,3 @@
+# Optional for live Bedrock calls during the hackathon
+boto3>=1.34.0
+websockets>=12.0
