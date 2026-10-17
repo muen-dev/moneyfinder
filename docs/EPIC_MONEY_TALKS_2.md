@@ -6,6 +6,7 @@
 |---|---|
 | **Track** | **Money Operations** (primary) — with Money Intelligence research and Trust & Risk guardrails as supporting evidence |
 | **Builds on** | `thetradingdoc/moneyfinder` (Daytona HackSprint build). This is an **extension**, not a rewrite. |
+| **Execution** | 3-person split (Thuy / Kenan / Richard) in the repo's `docs/TEAM_PLAN.md`; interface frozen in `docs/CONTRACT.md` |
 | **Persona** | Marisol Vance, Managing Member, Gowanus Kettle Brewing Co. LLC (synthetic) |
 | **Status** | Build now — P0 |
 | **Demo target** | Today, ~5:00–6:00 PM ET · 2-min video + 3-min live pitch |
@@ -497,7 +498,9 @@ packet         id, year, generated_at, files[], open_questions[], exclusions[],
 
 ## 10. Build plan (today, timeboxed)
 
-It is ~13:00. Assume demos/submission 5:00–6:00 PM. Four lanes, four builders; if the team is smaller, cut from the bottom of §11, never the PRISM proofs.
+It is ~13:00. Assume demos/submission 5:00–6:00 PM.
+
+> **Three-person execution:** the repo's `docs/TEAM_PLAN.md` supersedes this four-lane table. Thuy owns onboarding UI + PRISM dashboard/proofs, Kenan owns the UI shell + Desk/Books + the demo, Richard owns the agent/ledger/PRISM emitter. The **demo spine** in `TEAM_PLAN.md` §6 is the real P0; this table is the scope inventory behind it.
 
 | Window | Lane A — Platform | Lane B — Agent / ledger | Lane C — UI | Lane D — Demo / voice |
 |---|---|---|---|---|
@@ -634,7 +637,7 @@ The original 13-point cap is respected by splitting the work into two pointed sl
 
 **P0 total: 16 pts, E ≈ 19.7h, σ ≈ 2.0h, p85 ≈ 22.3h.**
 
-- Capacity check: 4 builders × ~5h = **20 person-hours**. P0 fits at E but not at p85 → the cut line is mandatory, not optional. If the team is 2, move Slice B to P1 and keep the packet as a static generated artifact.
+- Capacity check for the actual team — **3 builders (Thuy, Kenan, Richard) × ~5h = 15 person-hours** — is below P0's E≈19.7h. The **demo spine** is therefore the real P0: onboarding, ledger + packet (XLSX/CSV), desk statuses + exceptions, PRISM 12-step session/alert/root-cause-v2, video. Deferred unless green before 15:35: live agency fetch, ElevenLabs voice, forecast, packet PDFs, optional guardrail. Full lanes, cut order and per-person acceptance criteria: repo `docs/TEAM_PLAN.md` §5–§6.
 - **P1 — Voice & showcase: 5 pts.** O = 3h, M = 5h, P = 8h → E ≈ 5.2h; starts only after the three PRISM proofs are captured.
 
 **If both slices and voice land:** 21 pts, E ≈ 24.9h (P1 is bonus).
@@ -644,7 +647,7 @@ The original 13-point cap is respected by splitting the work into two pointed sl
 ## 16. Open questions / assumptions
 
 1. **Submission time** — assumed 5:00–6:00 PM today; confirm in Discord/Builderbase. If earlier, cut P1 immediately.
-2. **Team size** — assumed 4 builders. If 2, do Slice A and a static packet; drop Slice B's UI.
+2. **Team size** — three builders: Thuy (design, PRISM, repo), Kenan (UI, demo), Richard (agent, ledger, platform). The demo spine fits ~15 person-hours; live fetch/voice/forecast/packet PDFs are deferred (see `docs/TEAM_PLAN.md` §6).
 3. **PRISM billing code** `MONEYTALKS#2` — project exists and the key works; confirm the code is redeemed under Settings → Billing.
 4. **ElevenLabs plan** — coupon redemption pending; TTS-only fallback regardless.
 5. **Ninoo** — not used; the Nicrron API satisfies the required platform. Revisit only if the UI lane is behind.
