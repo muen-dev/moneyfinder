@@ -22,9 +22,10 @@ Agent API / toolbox
 
 | Layer | Path |
 |-------|------|
-| UI | `ui/domain.html` (served by `src.server`) |
+| Send UI | Flask templates (`research/business/.../web/`) — green Gmail/Wallet |
+| Track UI | `ui/domain.html` (`/track/` or `src.server`) — blue claim path |
 | Mock portal | `mock_portal/index.html` |
-| Local API | `src/server.py` |
+| Track API | `src/server.py` (`dispatch_api`, also mounted on Flask `/api/*`) |
 | Persistence | `src/persistence.py` → `data/moneyfinder-events.json` (Surreal-ready shapes) |
 | Demo seed | `fixtures/demo-seed.json` (`POST /api/demo/reset`) |
 | Agent tools | `src/agent/tools.py` |
@@ -38,7 +39,7 @@ Agent API / toolbox
 
 Anchor is **not** on the NY search path. Banking connectors only confirm deposits after `PAYMENT_ISSUED`.
 
-Run the domain-first vertical slice with:
+Run Send + Track together with `make demo` (`http://localhost:8000/track/`), or Track-only with:
 
 ```bash
 python3 -m src.server

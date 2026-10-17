@@ -42,7 +42,12 @@ make business-serve     # then open http://localhost:8000
    Promotions/Social, up to 200 messages. You can change the Gmail search query and the limit.
 4. The page groups known senders into categories (payroll, banking, government, insurance, ...) and lists top
    sender domains and the messages. The data is in `data/<id>/messages.jsonl`.
-5. **Disconnect and delete data** revokes Google access and removes the token, fetched mail, company domain
+5. **Opportunity Wallet** on the business page (`/businesses/<id>/wallet`): search unclaimed-property
+   matches (imported file via `NY_UNCLAIMED_DATA_FILE`, else labeled demo corpus) and tax-credit leads from
+   the dossier. Selecting a match opens **Form review** (provenance, conflicts, approval). Approving creates
+   an immutable snapshot; **Run browser fill** verifies readback and **never submits**. Form jobs and claims
+   are scoped to that `business_id` under `data/<id>/wallet-events.json`.
+6. **Disconnect and delete data** revokes Google access and removes the token, fetched mail, company domain
    and research output.
 
 Each business's id comes from its Google address: `owner@joespizza.com` becomes `owner-joespizza-com`.
@@ -55,8 +60,10 @@ Each business's id comes from its Google address: `owner@joespizza.com` becomes 
   official form PDFs.
 - `/companies/<domain>` shows a profile stored by `make company-research DOMAIN=...` (in `research/company/data/`)
   with the same credits, no Google sign-in needed. The home page lists them under **Company profiles**.
-- `/unclaimed/` and `/mock-portal/` serve the static unclaimed-funds demo from the repo root (`ui/`, `mock_portal/`)
-  with their own CSP (inline script and Google Fonts); every other page keeps the strict one.
+- **Send** is this green Flask shell (Gmail → Wallet → form review → Form jobs). **Track** is the blue
+  claim-path UI at `/track/` (`ui/domain.html`) with `/api/*` on the same port; `/unclaimed/` redirects there.
+  `/mock-portal/` is the sandbox claim form. Track and mock-portal use a looser CSP (inline script + Google
+  Fonts); every other page keeps the strict one.
 
 ## Without the browser
 

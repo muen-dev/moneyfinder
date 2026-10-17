@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Form review · {{ claim.match_name or claim.id }}{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="eyebrow">Form review</p>
+  <h1>{{ claim.match_name or claim.business_name }}</h1>
+  <p class="sub muted">{{ claim.property_type }} · status <strong>{{ claim.status }}</strong>
+    · {{ 'Demo data' if claim.demo_only else 'Provider / catalog data' }}</p>
+  <p class="actions-inline">
+    <a class="button" href="{{ url_for('wallet', business_id=conn.business_id) }}">‹ Wallet</a>
+    <a class="button" href="{{ url_for('wallet_claim', business_id=conn.business_id, claim_id=claim.id) }}">Claim detail</a>
+  </p>
+  {% if form.form_url %}
+    <p class="small">Official form:
+      <a href="{{ form.form_url }}" target="_blank" rel="noopener noreferrer">{{ form.form_code or form.form_url }}</a>
+    </p>
+  {% endif %}
+  {% if errors %}
+    <div class="flash error">
+      <p>Approval blocked until these are resolved:</p>
+      <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Fields with provenance</h2>
+  <p class="muted small">Nothing is guessed. Confirm conflicts, fill missing values, then approve an immutable snapshot.
+    Browser fill never submits.</p>
+  <form method="post" action="{{ url_for('wallet_form_save', business_id=conn.business_id, claim_id=claim.id) }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <table class="field-table">
+      <thead>
+        <tr><th>Field</th><th>Value</th><th>Source</th><th>Confirm</th></tr>
+      </thead>
+      <tbody>
+        {% for f in fields %}
+        <tr class="{{ 'needs' if f.requires_confirmation or not f.value }}">
+          <td><code>{{ f.field }}</code>
+            {% if f.confidence is not none %}<span class="conf {{ 'high' if f.confidence >= 0.75 else 'medium' if f.confidence >= 0.5 else 'low' }}">{{ '%.2f'|format(f.confidence) }}</span>{% endif %}
+          </td>
+          <td>
+            <input name="field_{{ f.field }}" value="{{ f.value or '' }}" {% if claim.status not in ('FORM_READY', 'MATCH_FOUND', 'NEEDS_DOCS') and form.approved %}readonly{% endif %}>
+            {% if f.conflicting_value %}
+              <p class="muted small">Conflict: {{ f.conflicting_value }} ({{ f.source_of_conflict }})</p>
+            {% endif %}
+          </td>
+          <td class="small">{{ f.source }}{% if f.edited_by_user %} · edited{% endif %}</td>
+          <td>
+            {% if f.requires_confirmation %}
+              <label class="check"><input type="checkbox" name="confirm_{{ f.field }}" value="1"> Confirm</label>
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not form.approved %}
+      <button class="primary" type="submit">Save edits</button>
+    {% endif %}
+  </form>
+</section>
+
+<section class="card">
+  <h2>Approval &amp; browser fill</h2>
+  {% if not form.approved %}
+    <form method="post" action="{{ url_for('wallet_form_approve', business_id=conn.business_id, claim_id=claim.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label class="check">
+        <input type="checkbox" name="approved" value="1" required>
+        I am authorized for this business and approve this exact form snapshot.
+      </label>
+      <button class="primary" type="submit" {% if errors %}disabled{% endif %}>Approve snapshot</button>
+    </form>
+  {% else %}
+    <p class="flash ok">Snapshot approved · hash <code>{{ form.form_hash[:16] }}…</code></p>
+    <form method="post" action="{{ url_for('wallet_form_fill', business_id=conn.business_id, claim_id=claim.id) }}"
+          data-busy="Filling…">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="primary" type="submit">Run browser fill (no submit)</button>
+    </form>
+    <p class="muted small">Default runner simulates Anchor with readback verification.
+      Live Anchor: set <code>WALLET_LIVE_ANCHOR=1</code> or use <code>make fill</code> with <code>--claim-id</code>.</p>
+  {% endif %}
+</section>
+
+{% if fill_jobs %}
+<section class="card">
+  <h2>Fill receipts</h2>
+  {% for j in fill_jobs|reverse %}
+    <article class="opp">
+      <div>
+        <strong>{{ j.status }}</strong>
+        <p class="muted small">submitted={{ j.submitted }} · {{ j.updated_at }}</p>
+        {% if j.receipt and j.receipt.mismatches %}
+          <p class="flash error small">Mismatches: {{ j.receipt.mismatches|join('; ') }}</p>
+        {% endif %}
+      </div>
+    </article>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

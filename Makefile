@@ -36,10 +36,10 @@ test: business-test company-test legal-test kb-test pipeline-test ## Run all tes
 
 # MVP demo
 
-demo: business-serve ## The web app: company profiles, matched credits, unclaimed-funds demo at /unclaimed/ [PORT=8000]
+demo: business-serve ## Send shell (Gmail/Wallet) + Track at /track/ + /api/* [PORT=8000]
 
 # PORT defaults to 4173 here (not the 8000 above) unless given on the command line or in the environment.
-api: ## Domain-first API + UI (src/server.py) [PORT=4173]
+api: ## Track path only (ui/domain.html + src.server) [PORT=4173]
 	PORT=$(if $(filter command line environment,$(origin PORT)),$(PORT),4173) python3 -m src.server
 
 pipeline-test: ## Unclaimed-funds pipeline checks (src/, synthetic data)
@@ -74,7 +74,7 @@ fill: ## Agentic browser (Anchor): fill the mock portal from a SurrealDB dossier
 # research/business: Gmail connector
 
 business-serve: ## Dev server with Google sign-in [PORT=8000]
-	cd research/business && uv run business-research serve --port $(PORT)
+	cd research/business && PYTHONPATH="$(CURDIR)$${PYTHONPATH:+:$$PYTHONPATH}" uv run business-research serve --port $(PORT)
 
 business-list: ## Connected businesses and their ids
 	cd research/business && uv run business-research list

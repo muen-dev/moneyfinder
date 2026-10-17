@@ -1,4 +1,4 @@
-"""Matched credits on the profile pages, stored company profiles, and the mounted unclaimed-funds demo."""
+"""Matched credits on the profile pages, stored company profiles, and the mounted Track path UI."""
 
 import json
 
@@ -87,11 +87,42 @@ def test_business_page_without_catalog_still_renders(client, data):
     assert r.status_code == 200 and "No industry-specific credits matched" in r.get_data(as_text=True)
 
 
-@pytest.mark.parametrize("path, marker", [("/unclaimed/", "<html"), ("/mock-portal/", "Mock NY Unclaimed Funds")])
-def test_unclaimed_funds_demo_is_mounted_with_its_own_csp(client, path, marker):
+@pytest.mark.parametrize(
+    "path, marker",
+    [
+        ("/track/", "MoneyFinder Track"),
+        ("/track/", "Research my business"),
+        ("/mock-portal/", "Mock NY Unclaimed Funds"),
+    ],
+)
+def test_track_path_is_mounted_with_its_own_csp(client, path, marker):
     r = client.get(path, base_url=BASE)
     assert r.status_code == 200 and marker in r.get_data(as_text=True)
     assert "'unsafe-inline'" in r.headers["Content-Security-Policy"]
+    if path.startswith("/track"):
+        assert "connect-src 'self'" in r.headers["Content-Security-Policy"]
     strict = client.get("/", base_url=BASE).headers["Content-Security-Policy"]
     assert "unsafe-inline" not in strict and "script-src 'self'" in strict
-    assert 'href="/unclaimed/"' in client.get("/", base_url=BASE).get_data(as_text=True)
+    home = client.get("/", base_url=BASE).get_data(as_text=True)
+    assert 'href="/track/"' in home and ">Track<" in home
+
+
+def test_unclaimed_redirects_to_track(client):
+    r = client.get("/unclaimed/", base_url=BASE)
+    assert r.status_code in (301, 302)
+    assert r.headers["Location"].endswith("/track/")
+
+
+def test_track_api_on_flask(client):
+    health = client.get("/api/health", base_url=BASE)
+    assert health.status_code == 200
+    assert health.get_json().get("surface") == "track"
+    tracker = client.get("/api/tracker", base_url=BASE)
+    assert tracker.status_code == 200
+    assert isinstance(tracker.get_json(), dict)
+
+
+def test_track_api_post_skips_csrf(client):
+    r = client.post("/api/demo/reset", json={}, base_url=BASE)
+    assert r.status_code == 200
+    assert r.get_json().get("ok") is True

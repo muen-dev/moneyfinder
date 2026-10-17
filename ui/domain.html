@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>MoneyFinder — Find money NY may owe your business</title>
+  <title>MoneyFinder Track — Find money NY may owe your business</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
+    /* Track path: navy / gold / coral — distinct from Send (green Gmail/Wallet shell). */
     :root {
-      --bg: #f3f6fd;
+      --bg: #eef3f8;
       --card: #fff;
       --ink: #0b2545;
       --muted: #5b6f88;
@@ -17,29 +18,29 @@
       --gold: #ffc53d;
       --sea: #14a98a;
       --seaS: #ddf5ee;
-      --coral: #ff5d50;
+      --coral: #e8553f;
       --coralS: #fde6e1;
       --hero: #0b2545;
       --heroInk: #f4f8fc;
-      --sidebar: #1f1c2e;
-      --progress: #ff5d50;
+      --sidebar: #061326;
+      --progress: #e8553f;
       --ok: #14a98a;
-      --wait: #ffc53d;
-      --shadow: 0 10px 30px rgba(11, 37, 69, .08);
+      --wait: #c99200;
+      --shadow: 0 1px 2px rgb(11 37 69 / 0.06), 0 4px 16px rgb(11 37 69 / 0.06);
       --radius: 20px;
-      --focus: #3b82f6;
+      --focus: #ffc53d;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --bg: #111827; --card: #1f2937; --ink: #eaf1f8; --muted: #9db1c8;
-        --line: #334155; --seaS: #0e3a34; --coralS: #42201c; --hero: #0f2441;
-        --sidebar: #0b1220; --shadow: 0 10px 30px rgba(0,0,0,.35);
+        --bg: #061326; --card: #0f2441; --ink: #eaf1f8; --muted: #9db1c8;
+        --line: #1d3658; --sea: #3dd6b5; --seaS: #0e3a34; --coralS: #42201c; --hero: #0f2441;
+        --sidebar: #040b16; --shadow: none; --ok: #3dd6b5; --progress: #e8553f; --focus: #ffc53d;
       }
     }
     [data-theme="dark"] {
-      --bg: #111827; --card: #1f2937; --ink: #eaf1f8; --muted: #9db1c8;
-      --line: #334155; --seaS: #0e3a34; --coralS: #42201c; --hero: #0f2441;
-      --sidebar: #0b1220; --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --bg: #061326; --card: #0f2441; --ink: #eaf1f8; --muted: #9db1c8;
+      --line: #1d3658; --sea: #3dd6b5; --seaS: #0e3a34; --coralS: #42201c; --hero: #0f2441;
+      --sidebar: #040b16; --shadow: none; --ok: #3dd6b5; --progress: #e8553f; --focus: #ffc53d;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
@@ -61,7 +62,7 @@
       display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 20;
     }
     .brand { display: flex; align-items: center; gap: 10px; border: 0; background: none; color: var(--ink); cursor: pointer; font: 800 22px 'Bricolage Grotesque', sans-serif; }
-    .brand i { width: 12px; height: 12px; border-radius: 50%; background: var(--coral); display: block; box-shadow: 0 0 0 4px rgba(255,93,80,.2); }
+    .brand i { width: 12px; height: 12px; border-radius: 50%; background: var(--gold); display: block; box-shadow: 0 0 0 4px rgba(255,197,61,.25); }
     .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .pill {
       display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
@@ -155,7 +156,7 @@
     .result.selected { outline: 3px solid var(--sea); }
     .amount { float: right; font: 800 24px 'Bricolage Grotesque', sans-serif; color: var(--sea); }
     .bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 8px 0 4px; }
-    .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--sea), #3dd6b5); }
+    .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--progress), #f08a78); }
     .bar.warn > i { background: var(--wait); }
     .bar.bad > i { background: var(--coral); }
     .dash-head { display: flex; justify-content: space-between; gap: 12px; align-items: end; margin-bottom: 16px; flex-wrap: wrap; }
@@ -253,6 +254,7 @@
               <div class="actions">
                 <button class="btn" type="button" data-nav="research">Research my business</button>
                 <button class="btn secondary" type="button" data-nav="manual" style="color:#fff;border-color:rgba(255,255,255,.35)">I do not have a website</button>
+                <button class="btn secondary" type="button" id="resetDemoLanding">Load demo</button>
               </div>
             </div>
             <div class="counter-panel" aria-label="Possible funds counter">
@@ -1143,7 +1145,7 @@ $('themeBtn').onclick = () => {
   const cur = document.documentElement.getAttribute('data-theme');
   document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
 };
-$('resetDemo').onclick = async () => {
+const seedDemo = async () => {
   try {
     await api('/api/demo/reset', {});
     await loadTracker();
@@ -1152,6 +1154,8 @@ $('resetDemo').onclick = async () => {
     toast('Seeded Example NYC Foods LLC demo loaded');
   } catch (e) { fail(e); }
 };
+$('resetDemo').onclick = seedDemo;
+$('resetDemoLanding').onclick = seedDemo;
 
 window.addEventListener('hashchange', () => { routeFromHash().catch(fail); });
 

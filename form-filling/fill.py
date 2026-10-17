@@ -95,6 +95,72 @@ def load_dossier(slug: str, domain: str | None) -> tuple[dict[str, Any], str]:
     return d, "file"
 
 
+def claim_from_api(api_url: str, claim_id: str) -> dict[str, Any]:
+    """Load the user's selected claim, including its provider-backed match."""
+    url = f"{api_url.rstrip('/')}/api/claims/{claim_id}"
+    try:
+        response = httpx.get(url, timeout=15)
+        response.raise_for_status()
+        bundle = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise SystemExit(f"could not load claim {claim_id!r} from {url}: {exc}") from exc
+    if not isinstance(bundle, dict) or not isinstance(bundle.get("claim"), dict):
+        raise SystemExit(f"claim endpoint returned an invalid bundle for {claim_id!r}")
+    return bundle
+
+
+def dossier_for_claim(bundle: dict[str, Any], fallback: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Overlay the selected search hit onto a dossier without changing provenance."""
+    claim = bundle["claim"]
+    profile = claim.get("profile") or {}
+    dossier = json.loads(json.dumps(fallback)) if fallback else {
+        "schema_version": 1,
+        "slug": claim.get("business_id") or claim.get("id"),
+        "business": {},
+        "facts": [],
+    }
+    business = dossier.setdefault("business", {})
+    legal_name = profile.get("legal_name") or claim.get("business_name")
+    if legal_name:
+        business["legal_name"] = legal_name
+    representative = profile.get("authorized_representative") or {}
+    if representative.get("name"):
+        business["officer_name"] = representative["name"]
+    if representative.get("role"):
+        business["officer_title"] = representative["role"]
+    addresses = profile.get("addresses") or []
+    if addresses and not business.get("hq_address"):
+        address = addresses[0]
+        parts = [address.get("street"), address.get("city"), address.get("state"), address.get("zip")]
+        business["hq_address"] = ", ".join(str(part) for part in parts if part)
+
+    hit = claim.get("hit") or {}
+    source = str(hit.get("source") or "claim_search")
+    facts = dossier.setdefault("facts", [])
+    facts = [fact for fact in facts if fact.get("key") not in {"unclaimed_found_name", "unclaimed_amount"}]
+    if hit.get("found_name"):
+        facts.append({
+            "key": "unclaimed_found_name",
+            "value": hit["found_name"],
+            "source": source,
+            "source_kind": "provider",
+            "confidence": hit.get("confidence"),
+        })
+    amount_cents = hit.get("amount_cents")
+    if amount_cents is not None:
+        facts.append({
+            "key": "unclaimed_amount",
+            "value": f"{int(amount_cents) / 100:.2f}",
+            "source": source,
+            "source_kind": "provider",
+            "confidence": hit.get("confidence"),
+        })
+    dossier["facts"] = facts
+    dossier["claim_id"] = claim.get("id")
+    dossier["claim_source"] = source
+    return dossier
+
+
 def source_of(dossier: dict[str, Any], key: str, value: Any) -> str:
     """Best provenance for a business value, using the dossier's precedence (user > registry > ...)."""
     facts = [f for f in dossier.get("facts") or [] if f.get("key") == key and f.get("value") == value]
@@ -102,6 +168,22 @@ def source_of(dossier: dict[str, Any], key: str, value: Any) -> str:
         return "dossier"
     best = min(facts, key=lambda f: (SOURCE_RANK.get(f.get("source_kind"), 9), -(f.get("confidence") or 0)))
     return best.get("source_kind") or "dossier"
+
+
+def load_runtime_dossier(
+    slug: str, domain: str | None, claim_id: str | None, api_url: str
+) -> tuple[dict[str, Any], str]:
+    """Prefer the selected claim while retaining any existing business dossier."""
+    bundle = claim_from_api(api_url, claim_id) if claim_id else None
+    try:
+        dossier, origin = load_dossier(slug, domain)
+    except SystemExit:
+        if not bundle:
+            raise
+        return dossier_for_claim(bundle), f"api_claim:{claim_id}"
+    if bundle:
+        return dossier_for_claim(bundle, dossier), f"{origin}+claim:{claim_id}"
+    return dossier, origin
 
 
 def parse_address(addr: str) -> dict[str, str]:
@@ -262,6 +344,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--slug", default="gowanuskettle-example")
     ap.add_argument("--domain", help="dossier file fallback domain (default: slug with the last '-' as '.')")
+    ap.add_argument("--claim-id", help="load the selected claim from the local API")
+    ap.add_argument("--api-url", default=os.environ.get("MONEYFINDER_API_URL", "http://127.0.0.1:4173"),
+                    help="MoneyFinder API base URL used with --claim-id")
     ap.add_argument("--hold", type=float, default=10, help="seconds to keep the session open for recording")
     ap.add_argument("--watch-delay", type=float, default=2.5, help="seconds for the live view to load before typing")
     ap.add_argument("--type-delay", type=int, default=20, help="ms per typed character")
@@ -275,7 +360,7 @@ def main() -> int:
     log(f"starting: slug={args.slug}; creating Anchor session and loading dossier in parallel")
     with ThreadPoolExecutor(2) as pool:
         session_f = pool.submit(create_session, key)
-        dossier_f = pool.submit(load_dossier, args.slug, domain)
+        dossier_f = pool.submit(load_runtime_dossier, args.slug, domain, args.claim_id, args.api_url)
         session = session_f.result()
         sid, live = session.get("id"), session.get("live_view_url")
         log(f"Anchor session {sid}")

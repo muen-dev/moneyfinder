@@ -5,6 +5,17 @@
 {% block content %}
 {{ ui.steps(3 if domain else 2) }}
 
+<section class="card wallet-cta">
+  <h2>Opportunity Wallet</h2>
+  <p class="muted small">Search unclaimed-property matches and tax-credit leads for this connected business,
+    then review and approve forms before any browser fill (never auto-submitted).</p>
+  <p class="actions-inline">
+    <a class="primary" href="{{ url_for('wallet', business_id=conn.business_id) }}">Open Wallet</a>
+    <a class="button" href="{{ url_for('wallet_tracker', business_id=conn.business_id) }}">Form jobs</a>
+    <a class="button" href="{{ url_for('track') }}">Track</a>
+  </p>
+</section>
+
 {% include "dossier.html" %}
 {% include "research.html" %}
 

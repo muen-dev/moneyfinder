@@ -18,7 +18,7 @@ from legal_research import store as legal_store
 from legal_research.match import match_programs
 
 from .. import company, config, dossier as dossiers, inbox, kb_sync, store
-from . import live
+from . import live, track_routes, wallet_routes
 from ..gmail import auth
 from ..gmail.client import DEFAULT_QUERY, GmailClient
 
@@ -51,13 +51,14 @@ CSP = (
 )
 
 
-# Jeremiah's static unclaimed-funds demo (repo-root ui/ and mock_portal/): self-contained pages with inline
-# script and style plus Google Fonts, so they get their own, looser CSP. They read no business data.
+# Track UI + mock portal: self-contained pages with inline script/style + Google Fonts.
 REPO_DIR = config.PROJECT_DIR.parents[1]
-STATIC_DEMOS = {"/unclaimed/": REPO_DIR / "ui", "/mock-portal/": REPO_DIR / "mock_portal"}
+STATIC_DEMOS = {"/mock-portal/": REPO_DIR / "mock_portal"}
+TRACK_CSP_PREFIXES = ("/track",)
 DEMO_CSP = (
     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; "
-    "font-src https://fonts.gstatic.com; img-src 'self' data:; form-action 'self'; base-uri 'none'; frame-ancestors 'self'"
+    "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; "
+    "form-action 'self'; base-uri 'none'; frame-ancestors 'self'"
 )
 
 
@@ -79,16 +80,22 @@ def create_app(port: int) -> Flask:
         # Cookies are per-host and Google redirects to localhost, so keep the browser there.
         if request.host != canonical_host and request.method == "GET":
             return redirect(f"http://{canonical_host}{request.full_path}")
-        if request.method == "POST":
+        # Track JSON API uses fetch() without form CSRF; Wallet/Send form POSTs still require it.
+        if request.method == "POST" and not request.path.startswith("/api/"):
             token = session.get("csrf")
             if not token or not secrets.compare_digest(token, request.form.get("csrf", "")):
                 abort(403)
 
     @app.after_request
     def security_headers(response):
-        response.headers["Content-Security-Policy"] = (
-            DEMO_CSP if request.path in STATIC_DEMOS else live.CSP if request.path.startswith("/live") else CSP
-        )
+        path = request.path
+        if path in STATIC_DEMOS or path.startswith(TRACK_CSP_PREFIXES):
+            csp = DEMO_CSP
+        elif path.startswith("/live"):
+            csp = live.CSP
+        else:
+            csp = CSP
+        response.headers["Content-Security-Policy"] = csp
         if response.mimetype == "application/pdf":  # the browser's PDF viewer, framed by /live
             response.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -110,6 +117,8 @@ def create_app(port: int) -> Flask:
         return {"csrf": session["csrf"]}
 
     live.register(app)
+    wallet_routes.register(app)
+    track_routes.register(app)
 
     @app.get("/")
     def index():
@@ -219,10 +228,6 @@ def create_app(port: int) -> Flask:
     def business_dossier(business_id: str):
         _connection_or_404(business_id)
         return _json(_business_dossier(business_id, None, refresh=request.args.get("refresh") == "1"))
-
-    @app.get("/unclaimed/")
-    def unclaimed_demo():
-        return send_from_directory(STATIC_DEMOS["/unclaimed/"], "index.html")
 
     @app.get("/mock-portal/")
     def mock_portal():

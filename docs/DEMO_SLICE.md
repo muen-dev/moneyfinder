@@ -1,6 +1,6 @@
 # Minimum synthetic demo slice
 
-Walk this path at `http://localhost:4173` (`ui/domain.html` served by `python3 -m src.server`):
+Walk this **Track** path at `http://localhost:8000/track/` (`make demo`) or `http://localhost:4173` (`make api` / `python3 -m src.server`). UI is `ui/domain.html`; APIs are `/api/*`.
 
 1. **Landing** shows the MoneyFinder counter as **possible funds identified** (not recovered cash) and the journey thermometer.
 2. **Load seeded demo** from Start → “Load seeded demo business”, or begin with **example.com** research / manual onboarding for `Example NYC Foods LLC`.

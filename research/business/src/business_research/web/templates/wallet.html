@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Opportunity Wallet · {{ conn.email }}{% endblock %}
+{% block content %}
+<section class="card wallet-hero">
+  <p class="eyebrow">Opportunity Wallet</p>
+  <h1>{{ (dossier.business.legal_name if dossier and dossier.business else None) or conn.email }}</h1>
+  <p class="lead">Tax credits and New York unclaimed-property matches for this connected business.
+    Amounts are only shown when the data source discloses them.</p>
+  <div class="wallet-meta">
+    <span class="pill {{ 'demo' if source_mode == 'demo_only' else 'ok' }}">
+      {{ 'Demo corpus' if source_mode == 'demo_only' else 'Imported NY data' }}
+    </span>
+    {% if dossier %}<span class="pill muted">Dossier {{ dossier.slug or 'ready' }}</span>{% else %}
+    <span class="pill warn">No dossier yet</span>{% endif %}
+  </div>
+  <form method="post" action="{{ url_for('wallet_search', business_id=conn.business_id) }}" class="wallet-search"
+        data-busy="Searching…">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="check">
+      <input type="checkbox" name="consent" value="1" checked required>
+      I authorize MoneyFinder to search opportunities using this business's confirmed profile.
+    </label>
+    <button class="primary" type="submit">Find opportunities</button>
+  </form>
+  <p class="actions-inline">
+    <a class="button" href="{{ url_for('wallet_tracker', business_id=conn.business_id) }}">Form jobs</a>
+    <a class="button" href="{{ url_for('track') }}">Track money</a>
+    <a class="button" href="{{ url_for('business', business_id=conn.business_id) }}">Business profile</a>
+  </p>
+</section>
+
+<section class="card">
+  <h2>Unclaimed property <span class="count">{{ unclaimed|length }}</span></h2>
+  {% if not unclaimed %}
+    <p class="muted">No matches yet. Run <strong>Find opportunities</strong> after research finishes.</p>
+  {% else %}
+    <div class="opp-list">
+      {% for o in unclaimed %}
+        <article class="opp">
+          <div>
+            <strong>{{ o.title }}</strong>
+            <p class="muted small">{{ o.property_type }} · {{ o.city }} {{ o.zip }}
+              · {{ '%.0f'|format((o.confidence or 0) * 100) }}% confidence</p>
+            <p class="small">
+              {% if o.amount_status == 'disclosed' and o.amount_cents is not none %}
+                ${{ '%.2f'|format(o.amount_cents / 100) }}
+              {% else %}
+                <span class="pill muted">Amount not disclosed by source</span>
+              {% endif %}
+              <span class="pill {{ 'demo' if o.demo_only else 'ok' }}">{{ o.source }}</span>
+            </p>
+            {% if o.reasons %}<p class="muted small">{{ o.reasons|join(' · ') }}</p>{% endif %}
+          </div>
+          <form method="post" action="{{ url_for('wallet_open_opportunity', business_id=conn.business_id, opportunity_id=o.wallet_id) }}">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <button class="primary" type="submit">Prepare claim form</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Tax credits <span class="count">{{ credits|length }}</span></h2>
+  {% if not credits %}
+    <p class="muted">No tax-credit leads in the dossier yet. Finish company research or open a stored profile.</p>
+  {% else %}
+    <div class="opp-list">
+      {% for o in credits %}
+        <article class="opp">
+          <div>
+            <strong>{{ o.title }}</strong>
+            <p class="muted small">{{ o.jurisdiction }} · {{ o.status_hint }}</p>
+            {% if o.forms %}
+              <ul class="chips">
+                {% for f in o.forms[:4] %}
+                  <li>{{ f.code or f.title }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            {% if o.reasons %}<p class="muted small">{{ o.reasons[:2]|join(' · ') }}</p>{% endif %}
+          </div>
+          <form method="post" action="{{ url_for('wallet_open_opportunity', business_id=conn.business_id, opportunity_id=o.wallet_id) }}">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <button class="primary" type="submit">Review form</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+{% if claims %}
+<section class="card">
+  <h2>Open claims <span class="count">{{ claims|length }}</span></h2>
+  <div class="opp-list">
+    {% for c in claims %}
+      <article class="opp">
+        <div>
+          <strong>{{ c.match_name or c.business_name }}</strong>
+          <p class="muted small"><span class="status {{ 'done' if c.status == 'USER_APPROVED' else 'running' }}">{{ c.status }}</span>
+            · {{ c.next_action }}</p>
+        </div>
+        <a class="button" href="{{ url_for('wallet_form', business_id=conn.business_id, claim_id=c.id) }}">Open form</a>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
