@@ -8,7 +8,9 @@
 
 > **One line:** Moneyfinder turns a small business's scattered email and transaction evidence into a review-ready package and a next-year action plan — with every finding traceable, no eligibility calls, and no filing.
 
-## 0.1 Staleness audit — read before treating the PRD as settled
+## 0. Staleness & merge decisions
+
+### 0.1 Staleness audit — read before treating the PRD as settled
 
 **Checked 2026-10-17 ~12:45.** Kenan's PRD v1.0 is **unverified as current**. Its direction may still be intended, but its concrete artifacts are not present anywhere we can see.
 
@@ -47,9 +49,9 @@ hours, and it contradicts the PRD's safety line.
 
 ---
 
-## 0. Merge decision — read this first
+### 0.2 Merge decision — read this first
 
-The two documents disagreed about what the product is. The PRD wins the product; the epic supplies the delivery plan, demo craft, sponsor integration and team split.
+The two documents disagreed about what the product is. The PRD supplies the **provisional product direction**; the epic supplies delivery, demo craft, sponsor integration and the team split. Where they conflict, the PRD's safety constraints win — but **every "PRD wins" below is provisional pending the 13:00 gate (§0.1)**, because the PRD's concrete artifacts are unverified.
 
 | # | Area | Epic v1 said | Kenan PRD says | **Merged decision** |
 |---|---|---|---|---|
