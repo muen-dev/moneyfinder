@@ -1,7 +1,5 @@
 # MoneyFinder
 
-![MoneyFinder — Get your money](docs/assets/moneyfinder-intro.jpg)
-
 [Read the MoneyFinder problem and product overview](docs/assets/MoneyFinder_Problem_Slide.pdf)
 
 [![Watch the MoneyFinder demo](docs/assets/moneyfinder-intro.jpg)](https://youtu.be/ltOwx898b8c)
