@@ -1,234 +1,222 @@
-# Interface Contract — MONEY TALKS 2
+# Interface Contract — Moneyfinder (MONEY TALKS 2)
 
-**Frozen at 12:55.** Changes require a team-thread announcement + a `CONTRACT.md` update + ack from both consumers. No silent shape changes after 13:00.
+**Frozen at 12:55.** Product baseline: [`MONEY_TALKS_2_MASTER.md`](MONEY_TALKS_2_MASTER.md). Changes require a team-thread announcement + this file + ack from both consumers.
 
-**Rule:** every UI screen must render from `fixtures/api/*.json`. The live API is an enhancement, not a prerequisite. `?fixture=1` forces fixture mode.
+**Rule:** every UI screen must render from `fixtures/*.json` in fixture mode. Live API is an enhancement, not a prerequisite. `?fixture=1` forces replay; the UI labels it `demo-only`.
+
+**Global rules:** all rows scoped by `business_id`; money in integer cents; evidence IDs immutable; no endpoint sends email, writes Gmail, files, modifies transactions or submits to a third party; every response in demo mode carries `synthetic: true`.
 
 ---
 
-## 1. Run + steps (PRISM session mirror)
+## 1. Analysis run + steps (PRISM session mirror)
 
-One back-office run = one `run_id` = one PRISM `session_id`.
+One analysis = one run = one PRISM `session_id`.
 
 ```json
 {
-  "run_id": "backoffice-run-it643-001",
-  "status": "running|done|failed",
+  "run_id": "run_case002_v1",
+  "case_id": "case_002",
+  "version": "v1",
+  "status": "queued|running|succeeded|failed|partial",
+  "started_at": "ISO",
+  "ended_at": "ISO|null",
+  "error": null,
+  "telemetry": "ok|pending|failed",
+  "prism_url": null,
   "steps": [
-    {"name": "gmail_scan", "status": "pending|running|done|failed", "started_at": "ISO", "ended_at": "ISO"}
+    {"tool": "search_mail", "status": "queued|running|succeeded|failed", "started_at": "ISO", "ended_at": "ISO", "error": null}
   ]
 }
 ```
 
-Demo step order (12):
-`gmail_scan → extract_facts → extract_purchases → categorize_ledger → reconcile_ledger → program_candidates → agency_fetch → eligibility_extract → match_score → form_prep → human_approve → build_accountant_packet`
+Tool order (8; ≥7 substantive executions):
+`search_mail → fetch_messages → extract_attachments → load_transactions → retrieve_checklist → compare_evidence → generate_recommendations → compose_review_package`
 
 ---
 
 ## 2. Endpoints
 
-All JSON, `Content-Type: application/json`, served by the Flask app (`src/server.py`). `GET /api/health` returns `{ok:true}`.
-
 | Method | Path | Request | Response | Owner |
 |---|---|---|---|---|
-| POST | `/api/run` | `{mode:"demo"}` | `{run_id}` | Richard |
-| GET | `/api/run/{run_id}` | — | Run (above) | Richard |
-| POST | `/api/demo/reset` | — | `{ok:true}` | Richard |
-| GET | `/api/onboarding/profile` | — | ProfileBundle | Richard |
-| GET | `/api/ledger?year=2025` | — | LedgerBundle | Richard |
-| GET | `/api/ledger/exceptions` | — | Exceptions | Richard |
-| POST | `/api/ledger/packet` | `{year:2025}` | Packet | Richard |
-| GET | `/api/applications` | — | `{applications:[Application]}` | Richard |
-| GET | `/api/applications/{id}` | — | `{application, events[], evidence[]}` | Richard |
-| POST | `/api/applications/{id}/transition` | `{to_status, actor, note}` | `{application}` | Richard |
-| GET | `/api/eligibility` | — | `{verdicts:[Verdict]}` | Richard |
-| GET | `/api/voice/summary` | — | `{text}` | Richard/P1 |
+| GET | `/api/health` | — | `{ok, mode}` | Richard |
+| POST | `/api/demo/reset` | — | `{ok}` | Richard |
+| GET | `/api/cases` | — | `{cases:[Case]}` | Richard |
+| GET | `/api/cases/{case_id}` | — | `{case, requirements[], actions[]}` | Richard |
+| GET | `/api/inbox?case_id=&q=&category=` | — | `{messages:[Message]}` | Richard |
+| GET | `/api/messages/{message_id}` | — | `{message, attachments[]}` | Richard |
+| GET | `/api/transactions?case_id=` | — | `{transactions:[Transaction], summary}` | Richard |
+| POST | `/api/transactions/import` | CSV upload or `{rows[]}` | `{imported, skipped, errors[]}` | Richard |
+| GET | `/api/checklist?case_id=` | — | `{checklist, requirements[]}` | Richard |
+| POST | `/api/analysis/run` | `{case_id, mode:"live|replay"}` | `{run_id}` | Richard |
+| GET | `/api/analysis/runs/{run_id}` | — | Run (above) | Richard |
+| GET | `/api/analysis/runs/{run_id}/findings` | — | `{findings:[Finding], requirements[]}` | Richard |
+| GET | `/api/next-year?case_id=` | — | `{recommendations:[Recommendation]}` | Richard |
+| POST | `/api/next-year/{id}/accept` | `{owner?, due_date?}` | `{recommendation, task}` | Richard |
+| POST | `/api/next-year/{id}/dismiss` | `{reason}` | `{recommendation}` | Richard |
+| GET | `/api/tasks?case_id=` | — | `{tasks:[Task]}` | Richard |
+| PATCH | `/api/tasks/{id}` | `{owner?, due_date?, status?}` | `{task}` | Richard |
+| GET | `/api/package?case_id=` | — | `{package_id, markdown, preview}` | Richard |
+| GET | `/api/package/{package_id}/download` | — | `text/markdown` file | Richard |
+| GET | `/api/integrations/status` | — | `{integrations:[Integration]}` | Richard |
+| GET | `/api/settings` | — | `{profile, mode, integrations}` | Richard |
+| PATCH | `/api/settings` | `{mode?}` | `{settings}` | Richard |
 
-Errors: `{"error": {"code": "...", "message": "..."}}` with a 4xx/5xx status; the UI shows a non-blocking toast and keeps the last fixture data.
+Errors: `{"error":{"code":"...","message":"..."}}` with 4xx/5xx. UI shows a non-blocking toast and keeps the last fixture data.
 
 ---
 
 ## 3. Shapes
 
-### ProfileBundle
-
+### Case
 ```json
-{
-  "profile": {
-    "id": "demo-gowanuskettle",
-    "legal_name": "Gowanus Kettle Brewing Co. LLC",
-    "entity_type": "LLC",
-    "state": "NY",
-    "naics": "312120",
-    "headcount": 14,
-    "address": {"street": "417 Sackett Street", "city": "Brooklyn", "state": "NY", "zip": "11231"},
-    "tax_year": 2025,
-    "consent": true
-  },
-  "facts": [
-    {"key": "headcount", "value": "14", "source_kind": "email", "source_ref": "synthetic-gk-001",
-     "quote": "12 employees paid … 14 employees at the end of 2025", "confidence": 0.95, "requires_confirmation": false}
-  ],
-  "conflicts": [
-    {"field": "headcount", "profile_value": "14", "email_value": "12", "source_ref": "synthetic-gk-001",
-     "status": "open|resolved|deferred", "options": ["Use 14", "Use 12", "Ask me"]}
-  ]
-}
+{"id": "case_002", "business_id": "harbor_studio", "title": "DEMO-CREDIT-001 — Case-002",
+ "program_id": "DEMO-CREDIT-001", "program_fictional": true, "status": "needs_evidence",
+ "unresolved_requirements": 2, "pending_actions": 1, "last_run_id": "run_case002_v1"}
 ```
 
-### LedgerBundle
-
+### Message + Attachment
 ```json
-{
-  "summary": {
-    "year": 2025,
-    "revenue_cents": 214000000,
-    "expense_cents": 143730000,
-    "capital_cents": 22800000,
-    "payroll_cents": 50300000,
-    "tips_cents": 14860000,
-    "reconciled_delta_cents": 0,
-    "missing_receipts": 6,
-    "duplicates": 2
-  },
-  "transactions": [
-    {"id": "txn_2025_0042", "date": "2025-07-28", "vendor": "ProBrew Equipment",
-     "description": "Canning line — 24-head filler/seamer", "amount_cents": 18650000,
-     "direction": "purchase", "category": "capital_assets", "tax_treatment": "capitalized",
-     "payment_account": "Chase ...4410 (equipment financing)",
-     "source_message_id": "synthetic-gk-0xx",
-     "source_quote": "invoice total $186,500.00, placed in service July 28, 2025",
-     "confidence": 0.98, "needs_receipt": false, "duplicate_of": null, "status": "verified"}
-  ]
-}
+{"id": "msg_014", "case_id": "case_002", "sender": "training@vendor.example", "date": "2025-09-12",
+ "subject": "Paid training invoice", "category": "tax-credit",
+ "attachment_state": "claimed|available|missing|unreadable|none",
+ "attachment_claim": "see attached invoice", "excerpt": "…", "source": "demo mailbox"}
+```
+```json
+{"id": "att_003", "message_id": "msg_014", "filename": "invoice.pdf", "available": false,
+ "extracted_text_ref": null, "error": "attachment referenced but not present"}
 ```
 
-`category` ∈ `payroll|payroll_taxes|cogs_ingredients|cogs_packaging|rent|utilities|insurance|software|professional_fees|marketing|repairs|licenses|travel|capital_assets|other`.
-`tax_treatment` ∈ `expense|capitalized|needs_review` (a flag for the accountant, not advice).
-`direction` ∈ `purchase|sale`.
-
-### Exceptions
-
+### Transaction
 ```json
-{
-  "duplicates": [{"transaction_id": "txn_...", "duplicate_of": "txn_..."}],
-  "missing_receipts": [{"transaction_id": "txn_...", "vendor": "...", "amount_cents": 12345}],
-  "delta_cents": 0
-}
+{"id": "txn_020", "case_id": "case_002", "date": "2025-09-15", "counterparty": "Northline Training Co.",
+ "amount_cents": 185000, "direction": "expense", "category": "training",
+ "receipt_ref": "msg_014", "review_flag": "duplicate_candidate|recurring|capex|none",
+ "duplicate_of": "txn_019", "source": "transactions.csv"}
+```
+`direction` is explicit: `expense` or `credit`. No tax-treatment field, no benefit estimate.
+
+### Checklist + Requirement
+```json
+{"id": "cl_demo_001", "program_id": "DEMO-CREDIT-001", "jurisdiction": "demo", "period": "2025",
+ "version": "1.0", "source": "demo fixture", "fictional": true}
+```
+```json
+{"id": "req_identity", "label": "Consistent business identity",
+ "state": "supported|missing|conflicting|needs_review",
+ "rationale": "…", "evidence_ids": ["ev_001"], "unresolved_questions": []}
+```
+No state is ever `eligible`. `supported` requires a verified evidence record; a claimed attachment cannot set it.
+
+### Finding
+```json
+{"id": "find_003", "run_id": "run_case002_v1", "requirement_id": "req_payment",
+ "state": "missing", "evidence_ids": ["ev_002"], "rationale": "…", "excerpt": "…"}
 ```
 
-### Application
-
+### Recommendation
 ```json
-{
-  "id": "app_it643",
-  "program_id": "nys_hire_a_veteran",
-  "program": "Hire a Veteran Credit",
-  "form": "IT-643",
-  "agency": "NYS Department of Taxation and Finance",
-  "amount_estimate_cents": 1507500,
-  "status": "MATCH_FOUND|FORM_READY|USER_APPROVED|SUBMITTED|CLAIM_RECEIVED|PROCESSING|APPROVED|PAYMENT_ISSUED|PAYMENT_CONFIRMED|NEEDS_DOCS|REJECTED|STOPPED_BY_USER",
-  "next_action": "Upload DD-214 and sign",
-  "deadline": "2026-01-15",
-  "expected_by": "2027-02-01",
-  "evidence_count": 2
-}
+{"id": "rec_001", "case_id": "case_002", "category": "documentation|spending_review|credit_readiness",
+ "finding": "Payment evidence is missing", "evidence_ids": ["ev_002"],
+ "action": "Collect the paid training invoice or a bank confirmation",
+ "conditions": ["Invoice must show the business name and amount"],
+ "proposed_reviewer": "Owner", "timing_basis": "source_backed|owner_selected|none",
+ "status": "open|accepted|dismissed", "dismiss_reason": null, "owner": null, "due_date": null}
+```
+`timing_basis` is mandatory; never infer a legal deadline from an email date.
+
+### Task
+```json
+{"id": "task_001", "case_id": "case_002", "recommendation_id": "rec_001",
+ "title": "Collect paid training invoice", "owner": "Owner", "due_date": null,
+ "due_date_basis": "owner_selected|none", "status": "open"}
 ```
 
-Desk column mapping:
-`FOUND = MATCH_FOUND + FORM_READY` · `IN PROCESS = USER_APPROVED + SUBMITTED + CLAIM_RECEIVED + PROCESSING + NEEDS_DOCS` · `APPROVED = APPROVED` · `PAID = PAYMENT_ISSUED + PAYMENT_CONFIRMED` (visually distinct).
+### Run + RunStep
+See §1. `prism_url` is populated **only** after PRISM verifies the trace; otherwise `null` and `telemetry` = `pending|failed`. Local steps are always shown separately from the PRISM link.
 
-### Verdict
-
+### Package
 ```json
-{
-  "program_id": "nys_hire_a_veteran",
-  "program": "Hire a Veteran Credit",
-  "verdict": "eligible|needs_info|not_eligible|expired",
-  "reasons": ["Two veterans hired in 2025", "NY employer"],
-  "questions": [],
-  "source_url": "https://www.tax.ny.gov/...",
-  "as_of": "2026-10-17",
-  "confidence": 0.9
-}
+{"package_id": "pkg_case002_001", "case_id": "case_002", "run_id": "run_case002_v1",
+ "markdown": "# Review Package …", "generated_at": "ISO",
+ "fictional_warning": "Synthetic demo — Not tax advice. No eligibility decision.",
+ "limitations": ["Evidence sufficiency only", "Synthetic data"]}
 ```
 
-### Packet
-
+### Integration
 ```json
-{
-  "packet_id": "pkt_2025_001",
-  "year": 2025,
-  "status": "prepared_for_review",
-  "files": [
-    {"name": "02_summary.xlsx", "url": "/api/ledger/packet/pkt_2025_001/02_summary.xlsx", "kind": "xlsx"},
-    {"name": "03_ledger.csv", "url": "/api/ledger/packet/pkt_2025_001/03_ledger.csv", "kind": "csv"}
-  ],
-  "open_questions": ["§179 vs bonus depreciation on the canning line", "..."],
-  "disclaimer": "Prepared for professional review. Not filed. Not tax advice."
-}
+{"name": "Nicrron", "status": "configured|verified|unavailable|demo-only",
+ "detail": "nicrron/auto", "checked_at": "ISO"}
 ```
 
 ---
 
 ## 4. Fixtures (Richard commits by 12:55)
 
-`fixtures/api/profile.json` · `ledger.json` · `applications.json` · `eligibility.json` · `packet.json` · `run.json`
+`fixtures/cases.json` · `inbox.json` · `transactions.csv` · `checklist.json` · `findings.json` · `next_year.json` · `package.md` · `run.json`
 
-Each fixture file contains the exact response body above. UI client: `fetchJson(path, {fixture: true})` → loads `/fixtures/api/<name>.json` instead of the API. `?fixture=1` in the URL forces fixture mode for the whole app.
+Each mirror file holds the response body above. Demo dataset: **Harbor Studio Demo LLC**, fictional `DEMO-CREDIT-001`, Cases 001–003 + control. The repo's Gowanus Kettle data is a legacy regression fixture and is **not** loaded in demo mode.
+
+UI client: `fetchJson(path)` → API in live mode, `/fixtures/<name>` in replay mode (`?fixture=1` or `DEMO_MODE=replay`). Replay is labeled `demo-only` and makes no model call.
 
 ---
 
-## 5. PRISM emitter (Richard implements, Thuy consumes dashboard)
+## 5. PRISM emitter (Richard implements; Thuy consumes dashboard)
 
 ```python
 # src/observability/prism.py
-with prism_run(session_id, agent_id="moneyfinder-backoffice"):
-    prism_step(step_name, tool=tool_name, status="ok", latency_ms=940,
-               input_summary="…", output_summary="…")
+with prism_run(run_id, agent_id="moneyfinder", version="v1"):
+    prism_step("extract_attachments", tool="extract_attachments", status="failed",
+               latency_ms=820, input_summary="…", output_summary="…", error="attachment missing")
 ```
 
-- One trace/step per model or tool call; `step_name` must match §1 exactly.
-- Attach `model`, `prompt_version`, `cost_usd`, `status` as metadata.
-- No raw PII in payloads; summaries only.
-- Env: `PRISMTRACE_API_KEY`, `PRISMTRACE_PROJECT_ID`, `PRISMTRACE_HOST`.
+- One trace/step per tool/model call; step names must match §1.
+- Metadata: `model`, `version`, `status`, `cost_usd`, `error`.
+- No raw PII; summaries only.
+- If only model-level HTTP traces are possible, set `telemetry="pending"` and mark trajectory integration incomplete. **Never claim a bare `POST /api/traces` captures tools.**
 
 ---
 
 ## 6. Environment
 
 ```bash
-MODEL_PROVIDER=nicrron            # default; bedrock fallback
+MODEL_PROVIDER=nicrron
 NICRRON_API_KEY=
 NICRRON_BASE_URL=https://api.nicrron.ai/v1
 NICRRON_MODEL=nicrron/auto
 PRISMTRACE_API_KEY=
 PRISMTRACE_PROJECT_ID=6e1051f7-8dce-498f-9846-d6acaa087737
 PRISMTRACE_HOST=https://api.prism.blockconvey.com
-ELEVENLABS_API_KEY=               # P1 only
+ELEVENLABS_API_KEY=      # P2 only
 ```
 
-`.env` is local and gitignored. `.env.example` carries names only.
+`.env` is local and gitignored; `.env.example` carries names only.
 
 ---
 
 ## 7. UI routes + owners
 
-| Route | Screen | Owner | Fixture |
+| Route | Screen | Owner | Fixtures |
 |---|---|---|---|
-| `/onboarding` | connect → scan → profile → conflicts → consent | Thuy | `profile.json` |
-| `/desk` | four columns, detail, exceptions, reconciliation | Kenan | `applications.json` |
-| `/books` | summary, ledger table, exceptions, packet | Kenan | `ledger.json`, `packet.json` |
-| `/` | redirect to onboarding or desk | Kenan | — |
+| `/` | redirect → dashboard | Kenan | — |
+| `/dashboard` | case status, unresolved requirements, pending actions, last run, integrations | Thuy | `cases.json`, `run.json` |
+| `/inbox` | search/filter/category/source drawer/attachment state | Thuy | `inbox.json` |
+| `/transactions` | table, direction, receipt, duplicate flag, CSV import errors | Kenan | `transactions.csv` |
+| `/credit-review` | checklist, requirement states, evidence, questions | Thuy | `checklist.json`, `findings.json` |
+| `/next-year` | cards, accept/dismiss, owner/due date | Kenan | `next_year.json` |
+| `/package` | preview + real Markdown download | Thuy | `package.md` |
+| `/run-history` | run status, steps, errors, telemetry, verified PRISM link | Kenan | `run.json` |
+| `/settings` | profile, modes, integrations, reset demo | Kenan | — |
 
-Design tokens: `ui/static/css/design.css` (Thuy). UI shell: `ui/index.html` (Kenan). No one else edits those files without the owner.
+Design tokens: `ui/static/css/design.css` (Thuy). Shell: `ui/index.html` (Kenan). Shared docs change by announcement.
 
 ---
 
 ## 8. Non-negotiables
 
-- Synthetic data only: `.example` domains, `00-` EIN, 555-01xx phones.
-- No real agency submission; mock portal only. Human approval before any submit.
-- Money semantics: identified ≠ approved ≠ paid; `PAYMENT_ISSUED` is not a deposit.
-- Packet says **"Prepared for professional review. Not filed. Not tax advice."**
-- Never commit `.env`, keys, real personal data, or large video files.
+- Synthetic data only; persistent banner on every screen and export.
+- No "Eligible", no eligibility percentage, no benefit estimate, no invented deadline.
+- A claimed attachment is not evidence; `extract_attachments` must return an extracted record before `supported`.
+- Failed tool ⇒ no complete finding; run `failed`/`partial`.
+- No email send, Gmail write, filing, transaction modification, third-party submission.
+- Export is a real Markdown file; buttons must work.
+- Never commit `.env`, keys, real personal data or video files.
