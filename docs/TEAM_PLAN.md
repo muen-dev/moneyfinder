@@ -6,6 +6,10 @@
 **Demo:** 2-min video + 3-min live pitch · Product: evidence-status checklist → Next Year → Markdown review package
 
 > **Merge note:** this plan replaces the Epic-v1 claims/ledger lanes. The product is now the **review assistant** from Kenan's PRD: no filing, no eligibility, no approved/paid tracking, no dollar figures. Read `MONEY_TALKS_2_MASTER.md` §0 for the full conflict record.
+>
+> **⚠ Staleness warning:** Kenan's PRD v1.0 is **unverified as current** — its fixtures, Harbor Studio dataset and Ninoo path are not in the repo or on disk (audit in `MONEY_TALKS_2_MASTER.md` §0.1). Until the **13:00 confirmation gate**, build only the **shared core**: app shell, case/evidence model, inbox, transactions, review package, Nicrron + PRISM. Do **not** build claims/filing screens or depend on the missing fixtures.
+>
+> **13:00 gate:** Kenan confirms (a) the PRD is current, (b) where `fixtures.json`/`transactions.csv` or the Ninoo app are, (c) Flask vs Ninoo. If no answer by 13:00, the fallback is the shared core on the Gowanus synthetic dataset with a fictional `DEMO-CREDIT-001`-style checklist.
 
 | Person | Role | Owns | Branch (historical name) |
 |---|---|---|---|
@@ -71,6 +75,7 @@ The full shapes are in [`CONTRACT.md`](CONTRACT.md). Key points:
 | Clock | Thuy | Kenan | Richard | Integration |
 |---|---|---|---|---|
 | **12:40–12:55** | PRISM check, branches, contract ack | UI shell + client + fixture mode | Contract + fixtures commit; Nicrron client skeleton | Kickoff |
+| **12:55–13:00** | — | — | — | **GATE:** Kenan confirms PRD/fixtures/runtime (§0 staleness) |
 | **12:55–14:10** | Dashboard + Inbox against fixtures | Transactions + Next Year against fixtures | Case/message/transaction APIs; CSV load; deterministic checks | — |
 | **14:10–14:25** | — | — | — | **CP1:** merge, fixture→API swap, mismatch list |
 | **14:25–15:35** | Credit Review + Review Package; PRISM alert setup/monitoring | Run History + Settings; demo script draft | Analysis orchestrator + 8 tools; package composer; PRISM emitter + 50 runs | — |
@@ -149,7 +154,7 @@ Credential is already verified in `.env` (handshake 200). Your job is the dashbo
 ## 7. Open items (before 13:00)
 
 1. **Kenan's GitHub username** → invite.
-2. **Seed data:** Kenan's `fixtures.json` + `transactions.csv` — if absent, Richard generates the Harbor Studio schema from the PRD by 13:00. Confirm Harbor Studio is the demo dataset (Gowanus stays legacy).
+2. **Seed data:** Kenan's `fixtures.json` + `transactions.csv` are **not in the repo or on disk** (checked 12:45). If Kenan confirms/provides them, use Harbor Studio; if not by 13:00, Richard generates a fictional `DEMO-CREDIT-001`-style checklist over the existing Gowanus synthetic dataset. Do not block the UI on missing fixtures.
 3. **Runtime:** Flask repo vs Ninoo app — recommendation: Flask only; Ninoo optional prototype. One runtime on stage.
 4. **Submission deadline** — confirm in Discord/`#hackathon-support`; move freeze earlier if needed.
 5. **PRISM billing code** — confirm `MONEYTALKS#2` redeemed.

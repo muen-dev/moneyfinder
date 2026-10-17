@@ -8,6 +8,43 @@
 
 > **One line:** Moneyfinder turns a small business's scattered email and transaction evidence into a review-ready package and a next-year action plan — with every finding traceable, no eligibility calls, and no filing.
 
+## 0.1 Staleness audit — read before treating the PRD as settled
+
+**Checked 2026-10-17 ~12:45.** Kenan's PRD v1.0 is **unverified as current**. Its direction may still be intended, but its concrete artifacts are not present anywhere we can see.
+
+| Check | Result |
+|---|---|
+| Repo HEAD | `b0708fa` + our docs commits — the **claims/forms build** from Oct 16, not the PRD app |
+| `fixtures.json` / `transactions.csv` | **Not in the repo**; not in `~/Downloads`, `~/Desktop`, `~/Documents`, `~/.kun` |
+| `Harbor Studio Demo LLC` / `DEMO-CREDIT-001` | **No matches** in the repo, home dirs, or GitHub code search |
+| Ninoo export / app | **Not found**; no Ninoo files on disk; Ninoo dashboard session unavailable |
+| Open PRs on the fork | None. Upstream PRs are the Oct 16 claims build (merged/closed) |
+| `merge/teammate-ui` branch | Oct 16, Nicholas Sutin — "Jeremiah's journey UI and claim tracker"; **not** the PRD screens |
+| Gowanus Kettle fixtures | Present and working — the only runnable synthetic dataset in the repo |
+
+**Confidence levels for the merged baseline**
+
+| Level | Items |
+|---|---|
+| **Confirmed by the repo** | Flask app + tests; synthetic Gmail/email extraction; provenance/evidence; status machine; Nicrron + PRISM env; real NY catalog (legacy) |
+| **PRD-only, unverified** | Harbor Studio Demo LLC; `DEMO-CREDIT-001`; Cases 001–003 + control; `fixtures.json`/`transactions.csv`; the 8-screen IA; Next Year cards; Markdown package; CSV import; modes/banner; Ninoo build path |
+| **Conflicting / needs a decision** | Claims/filing/eligibility/approved-paid (Epic v1) vs review assistant (PRD) |
+| **Adopted provisionally** | Review-assistant direction; no eligibility/filing; evidence provenance; persistent synthetic banner; Markdown package; Nicrron + PRISM proofs |
+
+**13:00 confirmation gate (Kenan):**
+1. Is PRD v1.0 still the target, or superseded?
+2. Where are `fixtures.json` and `transactions.csv` (or the Ninoo app URL)?
+3. Is the demo runtime Flask or Ninoo?
+
+**If confirmed:** execute the PRD baseline in this document.
+**If not confirmed by 13:00:** fall back to the **shared core** on the existing repo with the Gowanus synthetic dataset —
+case file → evidence → transactions → **review package** → Nicrron → PRISM, using a fictional `DEMO-CREDIT-001`-style
+checklist. No filing, no eligibility, no dollar figures. This core is compatible with either direction and is what the
+team should start on now.
+**Regardless of the gate:** do **not** build the claims/filing/approved-paid pipeline in P0 — too risky for the remaining
+hours, and it contradicts the PRD's safety line.
+
+
 ---
 
 ## 0. Merge decision — read this first
