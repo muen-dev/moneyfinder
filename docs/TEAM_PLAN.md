@@ -24,11 +24,11 @@ The epic is the scope of record: [`EPIC_MONEY_TALKS_2.md`](EPIC_MONEY_TALKS_2.md
 
 ## 1. Repo setup (Thuy, 12:40–12:50)
 
-Already done in this workspace: fork created under `muen-dev`, `origin` points at the fork, `upstream` at Richard's original, `main` tracks `origin/main`.
+**Setup status (2026-10-17):** fork `muen-dev/moneyfinder` created; `origin` = fork, `upstream` = thetradingdoc; `main` + the three feature branches pushed; docs committed (`3c99f45`, `364b1fb`); **Richard (`thetradingdoc`) invited with write access** (pending acceptance).
 
 ```bash
-# Thuy: invite collaborators (need Kenan's GitHub username; Richard = thetradingdoc)
-gh api -X PUT repos/muen-dev/moneyfinder/collaborators/thetradingdoc -f permission=push
+# Thuy: invite Kenan once his GitHub username is known
+gh api -X PUT repos/muen-dev/moneyfinder/collaborators/<kenan-username> -f permission=push
 
 # Everyone: clone and branch
 git clone https://github.com/muen-dev/moneyfinder.git
