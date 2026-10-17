@@ -43,10 +43,13 @@ demo business's web research are stored synthetic data; everything else runs liv
    fewest claimants first (data.ny.gov claim counts), then credits most employers can claim. Each shows why it
    matched and links to the program page and the official form PDFs (tax.ny.gov, irs.gov).
    CLI: `make legal-match DOMAIN=gowanuskettle.example`.
-4. **Unclaimed funds.** **Unclaimed funds** in the header opens the B2B NY unclaimed-funds flow (`ui/index.html`,
-   synthetic data) at `/unclaimed/`; its mock claim portal is at `/mock-portal/`.
+4. **Send path (Opportunity Wallet).** On a connected business page, **Open Wallet** searches unclaimed-property
+   matches and tax-credit leads, then opens Form review → approve snapshot → browser fill (never auto-submits).
+5. **Track path.** Claim-path progress and agency vs bank evidence live in the blue Track UI at `/track/`
+   (`ui/domain.html` + `/api/*` on the same Flask port). `/unclaimed/` redirects to `/track/`. Mock portal at
+   `/mock-portal/`.
 
-5. **Dossier in SurrealDB.** Each business gets one form-ready `dossier.json` (best value per field, every fact
+6. **Dossier in SurrealDB.** Each business gets one form-ready `dossier.json` (best value per field, every fact
    with provenance, matched credits and forms, `missing_info` to ask the user). Load it into SurrealDB Cloud
    (ns `moneyfinder`, db `main`) and read it back with `fn::business_dossier`:
    ```bash
@@ -57,7 +60,7 @@ demo business's web research are stored synthetic data; everything else runs liv
    ```
    The web app pushes each dossier it builds automatically (`KB_AUTO_PUSH=0` turns this off). The form filler
    reads it; see [docs/FORM_FILLER_HANDOFF.md](docs/FORM_FILLER_HANDOFF.md).
-6. **Agentic form filling.** `make fill` opens an Anchor Browser cloud session (the live view opens so you can
+7. **Agentic form filling.** `make fill` opens an Anchor Browser cloud session (the live view opens so you can
    watch), loads the business's dossier from SurrealDB, fills the mock claim portal field by field, reads every
    value back, and stops before submit for the user's OK. Fields with no source value are marked "Needs your
    input", never guessed. About 10 seconds; see `form-filling/`.
@@ -90,17 +93,16 @@ cp .env.example .env
 python3 tests/test_pipeline.py
 python3 evals/run_evals.py
 
-# run the product UI + local API (landing, tracker, money flow)
+# Track path UI + local API (possible funds, claim path, money evidence)
 python3 -m src.server
 # then open http://localhost:4173
+# or from the Flask shell: http://localhost:8000/track/
 
-# optional: legacy static prototype
-open ui/index.html
-# mock portal for Daytona
+# mock portal for Daytona / Anchor fill
 open mock_portal/index.html
 ```
 
-The served UI is the complete B2B journey: research/onboarding → matches → conflict-gated forms → sandbox submit → dashboard tracker → agency vs bank evidence → agent-memory trail. Demo state is JSON-backed (`data/moneyfinder-events.json`) and Surreal-ready.
+**Send** is the green Gmail/Wallet shell (`make demo`). **Track** is the blue claim-path UI: research/onboarding → matches → conflict-gated forms → sandbox submit → dashboard tracker → agency vs bank evidence → agent-memory trail. Demo state is JSON-backed (`data/moneyfinder-events.json`) and Surreal-ready.
 
 ## Architecture
 

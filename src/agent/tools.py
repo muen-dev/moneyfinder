@@ -14,13 +14,15 @@ from src.forms.provenance import (
 from src.pipeline.status import can_transition
 from src.providers.mock_agency import MockAgencyStatusProvider
 from src.providers.mock_bank import MockBankTransactionProvider
-from src.search.adapter import MockNYUnclaimedAdapter
+from src.search.adapter import configured_adapter
 from src.search.variants import generate_name_variants
 
 
 class AgentToolbox:
     def __init__(self) -> None:
-        self.search = MockNYUnclaimedAdapter()
+        # Use imported/provider data when configured. The explicit mock remains
+        # the safe local fallback for demos and tests.
+        self.search = configured_adapter()
         self.agency = MockAgencyStatusProvider()
         self.bank = MockBankTransactionProvider()
         self._claims: dict[str, dict[str, Any]] = {}

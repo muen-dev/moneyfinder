@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Form jobs · {{ conn.email }}{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="eyebrow">Send path · Form jobs</p>
+  <h1>Claims for this business</h1>
+  <p class="muted">Scoped to <code>{{ conn.business_id }}</code> — Wallet form review and fill jobs (not the Track money path).</p>
+  <div class="stats">
+    <div><strong>{{ tracker.summary.claims_total }}</strong><span>claims</span></div>
+    <div><strong>{{ tracker.summary.needs_review }}</strong><span>needs review</span></div>
+    <div><strong>{{ tracker.summary.processing }}</strong><span>processing</span></div>
+    <div><strong>
+      {% if tracker.summary.possible_funds_cents %}
+        ${{ '%.2f'|format(tracker.summary.possible_funds_cents / 100) }}
+      {% else %}$0{% endif %}
+    </strong><span>possible (disclosed only)</span></div>
+  </div>
+  <p class="actions-inline">
+    <a class="button primary" href="{{ url_for('wallet', business_id=conn.business_id) }}">Wallet</a>
+  </p>
+</section>
+
+<section class="card">
+  <h2>Claims</h2>
+  {% if not claims %}
+    <p class="muted">No claims yet. Open the Wallet and prepare a form.</p>
+  {% else %}
+    <div class="opp-list">
+      {% for c in claims %}
+        <article class="opp">
+          <div>
+            <strong>{{ c.match_name or c.business_name }}</strong>
+            <p class="muted small"><span class="status">{{ c.status }}</span> · {{ c.next_action }}</p>
+          </div>
+          <div class="actions-inline">
+            <a class="button" href="{{ url_for('wallet_form', business_id=conn.business_id, claim_id=c.id) }}">Form</a>
+            <a class="button" href="{{ url_for('wallet_claim', business_id=conn.business_id, claim_id=c.id) }}">Detail</a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+{% if tracker.opportunities %}
+<section class="card">
+  <h2>Cached opportunities <span class="count">{{ tracker.opportunities|length }}</span></h2>
+  <ul class="chips">
+    {% for o in tracker.opportunities %}
+      <li>{{ o.title }} <span class="muted">{{ o.opportunity_type }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

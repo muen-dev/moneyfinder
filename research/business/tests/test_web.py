@@ -19,6 +19,13 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "TOKEN_DIR", tmp_path / "tokens")
     monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data")
     monkeypatch.setattr(config, "CLIENT_SECRETS_FILE", tmp_path / "credentials.json")
+    # Isolate Track /api/* JSON store from the developer's real demo event file.
+    from src import server as track_server
+
+    events_path = tmp_path / "moneyfinder-events.json"
+    monkeypatch.setattr(track_server.EVENTS, "path", events_path)
+    if track_server.SEED_PATH.exists():
+        track_server.EVENTS.reset_demo(track_server._load_seed())
     return create_app(8000).test_client()
 
 

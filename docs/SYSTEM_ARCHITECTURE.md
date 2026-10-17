@@ -24,32 +24,59 @@ flowchart LR
 
 ## Runtime modes
 
-### Local synthetic demo
+MoneyFinder has two product surfaces:
+
+| Path | Look | Job |
+|---|---|---|
+| **Send** | Green Flask shell (Gmail + Wallet) | Research → opportunities → form review → approve → fill (never auto-submit) |
+| **Track** | Blue claim-path UI (`ui/domain.html`) | Possible funds → claim-path progress → agency vs bank evidence |
+
+### Send path (Gmail + Wallet)
 
 ```text
 Browser
   ↓
-ui/domain.html
-  ↓
-src/server.py
-  ├─ MoneyFinderAgent
-  ├─ mock NY search corpus
-  ├─ deterministic form provenance
-  ├─ mock agency provider
-  ├─ synthetic bank provider
-  └─ JsonEventRepository
-       ↓
-  data/moneyfinder-events.json
+research/business Flask app (make demo / make business-serve)
+  ├─ Gmail OAuth (read-only)
+  ├─ Company research + dossier
+  ├─ Opportunity Wallet (/businesses/<id>/wallet)
+  │    ├─ unclaimed search (imported or demo adapter)
+  │    ├─ tax-credit matches from dossier
+  │    ├─ Form review + immutable approval snapshot
+  │    ├─ Form jobs (business-scoped fill status)
+  │    └─ browser fill job (simulate or Anchor; never auto-submit)
+  ├─ Track mount: /track/ → ui/domain.html
+  ├─ Track API: /api/* → src.server.dispatch_api (same process)
+  └─ per-business JSON under research/business/data/<id>/
 ```
 
-Start it from the repository root:
+Start:
 
 ```bash
-python3 -m src.server
+make demo
+# http://localhost:8000 → Sign in with Google → Open Wallet (Send)
+# http://localhost:8000/track/ → Track (domain.html + /api/* on the same port)
+```
+
+### Track path (claim status + money evidence)
+
+```text
+Browser → ui/domain.html → /api/* (dispatch_api) → data/moneyfinder-events.json
+```
+
+Same UI and API are available two ways:
+
+```bash
+# Preferred: Send + Track together
+make demo
+# http://localhost:8000/track/
+
+# Track-only process (optional)
+python3 -m src.server   # or: make api
 # http://localhost:4173
 ```
 
-The deterministic fixture is [`fixtures/demo-seed.json`](../fixtures/demo-seed.json). The UI can reload it through `POST /api/demo/reset`.
+The deterministic fixture is [`fixtures/demo-seed.json`](../fixtures/demo-seed.json). The UI can reload it through `POST /api/demo/reset`. `/unclaimed/` redirects to `/track/`. Optional marketing landing: `/track/landing` (`ui/index.html`).
 
 ### Configured provider mode
 
@@ -65,8 +92,9 @@ The same API boundary can use configured adapters:
 
 | Component | Location | Responsibility |
 |---|---|---|
-| Primary UI | [`ui/domain.html`](../ui/domain.html) | Landing, onboarding, search, form review, tracker, claim detail, money flow, and agent-memory views |
-| HTTP API | [`src/server.py`](../src/server.py) | Serves the UI and exposes research, search, claims, forms, events, tracker, reset, and status-advance endpoints |
+| Send UI | Flask templates under [`research/business/.../web/`](../research/business/src/business_research/web/) | Gmail connect, Opportunity Wallet, form review/approval, fill jobs |
+| Track UI | [`ui/domain.html`](../ui/domain.html) | Possible funds, claim-path tracker, claim detail, money flow, agent-memory views |
+| Track HTTP API | [`src/server.py`](../src/server.py) | Serves Track UI and exposes research, search, claims, forms, events, tracker, reset, and status-advance endpoints |
 | Agent orchestration | [`src/agent/orchestrator.py`](../src/agent/orchestrator.py) | Coordinates deterministic tools and optional Bedrock tracing |
 | Agent tools | [`src/agent/tools.py`](../src/agent/tools.py) | Search, form preparation, approval checks, portal submission, agency polling, bank matching, and transition validation |
 | Search | [`src/search/`](../src/search/) | Mock and imported NY unclaimed-funds adapters |
@@ -270,13 +298,14 @@ The journey test covers:
 - Rejection and needs-docs states
 - Illegal transition blocking
 
-For a visual check, start the server and open:
+For a visual check, start `make demo` (or `make api`) and open:
 
 ```text
-http://localhost:4173/#landing
-http://localhost:4173/#tracker
-http://localhost:4173/#claim/claim_demo_vendor_check
-http://localhost:4173/#memory
+http://localhost:8000/track/#landing
+http://localhost:8000/track/#tracker
+http://localhost:8000/track/#claim/claim_demo_vendor_check
+http://localhost:8000/track/#memory
+# Track-only equivalent: http://localhost:4173/#…
 ```
 
 ## Known implementation boundary

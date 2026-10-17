@@ -23,7 +23,7 @@ from urllib.parse import parse_qs, urlparse
 
 from .agent.orchestrator import MoneyFinderAgent
 from .forms.provenance import FormField, form_hash, validate_fields
-from .persistence import new_id, now_iso, repository
+from .persistence import JsonEventRepository, new_id, now_iso
 from .pipeline.status import can_transition
 from .profile_mapper import company_profile_to_search_profile
 
@@ -35,7 +35,7 @@ COMPANY_PROJECT = ROOT / "research" / "company"
 COMPANY_DATA_DIR = Path(os.environ.get("COMPANY_DATA_DIR", COMPANY_PROJECT / "data"))
 COMPANY_RESEARCH_TIMEOUT_S = int(os.environ.get("COMPANY_RESEARCH_TIMEOUT", "240"))
 SEED_PATH = ROOT / "fixtures" / "demo-seed.json"
-EVENTS = repository()
+EVENTS = JsonEventRepository(os.environ.get("MONEYFINDER_EVENT_FILE") or str(ROOT / "data" / "moneyfinder-events.json"))
 AGENT = MoneyFinderAgent()
 
 
@@ -201,6 +201,390 @@ def _claim_bundle(claim_id: str) -> dict:
     }
 
 
+
+def ensure_seeded() -> None:
+    """Load fixtures/demo-seed.json when the event file is missing or empty."""
+    path = EVENTS.path
+    if not path.exists() or not json.loads(path.read_text() or "{}").get("claims"):
+        if SEED_PATH.exists():
+            EVENTS.reset_demo(_load_seed())
+
+
+def dispatch_api(
+    method: str,
+    path: str,
+    query: dict | None = None,
+    body: dict | None = None,
+) -> tuple[int, dict | list]:
+    """Shared Track API used by src.server and the Flask Send shell (/track/ + /api/*)."""
+    query = query or {}
+    body = body or {}
+    method = method.upper()
+    try:
+        if method == "GET":
+            if path == "/api/health":
+                return 200, {
+                    "ok": True,
+                    "money_source": "imported" if os.getenv("NY_UNCLAIMED_DATA_FILE") else "demo",
+                    "persistence": "json",
+                    "surreal_live": False,
+                    "surface": "track",
+                }
+            if path == "/api/events":
+                claim_id = (query.get("claim_id") or [None])[0]
+                return 200, EVENTS.events(claim_id)
+            if path == "/api/tracker":
+                return 200, EVENTS.tracker()
+            if path == "/api/claims":
+                return 200, {"claims": EVENTS.claims()}
+            if path.startswith("/api/claims/"):
+                claim_id = path.split("/api/claims/", 1)[1].strip("/")
+                return 200, _claim_bundle(claim_id)
+            return 404, {"error": "not_found"}
+
+        if method != "POST":
+            return 405, {"error": "method_not_allowed"}
+
+        if path == "/api/research":
+            profile = research_domain(str(body.get("domain", "")).strip())
+            return 200, profile
+
+        if path == "/api/profile/review":
+            profile = body.get("profile") or {}
+            mapped = company_profile_to_search_profile(profile, consent=bool(body.get("consent")))
+            if not mapped["search_consent"]:
+                return 400, {"error": "consent_required"}
+            if body.get("manual"):
+                mapped.update({k: v for k, v in body["manual"].items() if v is not None})
+                mapped["search_consent"] = True
+            saved = EVENTS.save_profile(mapped)
+            EVENTS.append_memory(
+                {
+                    "claim_id": None,
+                    "kind": "profile_saved",
+                    "summary": f"Remembered business profile for {saved.get('legal_name')}",
+                    "reason": "User confirmed profile facts before search",
+                    "facts": {
+                        "legal_name": saved.get("legal_name"),
+                        "dbas": saved.get("dbas"),
+                        "addresses": saved.get("addresses"),
+                        "representative": saved.get("authorized_representative"),
+                    },
+                    "actor": "user",
+                    "source": "profile_review",
+                }
+            )
+            return 200, {"profile": saved}
+
+        if path == "/api/search":
+            profile = body.get("profile") or {}
+            hits = AGENT.build_and_search(profile)
+            return 200, {
+                "hits": hits,
+                "source_mode": "imported" if os.getenv("NY_UNCLAIMED_DATA_FILE") else "demo_only",
+                "agent": AGENT.explain_mode(),
+            }
+
+        if path == "/api/claims":
+            profile = body.get("profile") or {}
+            hit = body.get("hit") or {}
+            claim = EVENTS.create_claim(
+                {
+                    "business_name": profile.get("legal_name"),
+                    "business_id": profile.get("id"),
+                    "match_name": hit.get("found_name"),
+                    "property_type": hit.get("property_type"),
+                    "city": hit.get("city"),
+                    "zip": hit.get("zip"),
+                    "amount_cents": hit.get("amount_cents"),
+                    "confidence": hit.get("confidence"),
+                    "status": "MATCH_FOUND",
+                    "hit": hit,
+                    "profile": profile,
+                    "demo_only": str(hit.get("source", "")).startswith(("mock_", "demo:")),
+                    "next_action": "Prepare claim form",
+                }
+            )
+            EVENTS.append_memory(
+                {
+                    "claim_id": claim["id"],
+                    "kind": "match_selected",
+                    "summary": f"Selected match {hit.get('found_name')}",
+                    "reason": ", ".join(hit.get("reasons") or []) or "User selected search hit",
+                    "actor": "user",
+                    "source": hit.get("source", "search"),
+                }
+            )
+            return 201, {"claim": claim}
+
+        if path == "/api/forms/prepare":
+            claim_id = body.get("claim_id")
+            claim = EVENTS.get_claim(claim_id)
+            if not claim:
+                return 404, {"error": "claim_not_found"}
+            profile = body.get("profile") or claim.get("profile") or {}
+            hit = body.get("hit") or claim.get("hit") or {}
+            prepared = AGENT.prepare(profile, hit)
+            fields = prepared["fields"]
+            form = EVENTS.save_form(
+                {
+                    "claim_id": claim_id,
+                    "fields": fields,
+                    "status": "FORM_READY",
+                    "validation_errors": prepared["validation_errors"],
+                    "agency": "NY Office of Unclaimed Funds (mock)",
+                    "form_hash": None,
+                    "approved": False,
+                }
+            )
+            EVENTS.update_claim(
+                claim_id,
+                {
+                    "status": "FORM_READY",
+                    "next_action": (
+                        "Resolve conflicts before approval"
+                        if prepared["validation_errors"]
+                        else "Approve and submit form"
+                    ),
+                },
+            )
+            EVENTS.append_event(
+                {
+                    "claim_id": claim_id,
+                    "from_status": "MATCH_FOUND",
+                    "to_status": "FORM_READY",
+                    "actor": "agent",
+                    "source": "form_prepare",
+                    "note": "Form prepared with provenance",
+                }
+            )
+            EVENTS.append_memory(
+                {
+                    "claim_id": claim_id,
+                    "kind": "form_prepared",
+                    "summary": "Prepared claim form with field provenance",
+                    "reason": (
+                        "Conflicts require confirmation"
+                        if prepared["validation_errors"]
+                        else "All required fields present"
+                    ),
+                    "validation_errors": prepared["validation_errors"],
+                    "actor": "agent",
+                    "source": "forms.provenance",
+                }
+            )
+            return 200, {"form": form, "claim": EVENTS.get_claim(claim_id)}
+
+        if path == "/api/forms/save":
+            claim_id = body.get("claim_id")
+            fields_raw = body.get("fields") or []
+            objs = [FormField(**f) for f in fields_raw]
+            errors = validate_fields(objs)
+            fh = form_hash(objs) if not errors else None
+            form = EVENTS.save_form(
+                {
+                    "claim_id": claim_id,
+                    "fields": [f.__dict__ for f in objs],
+                    "status": "FORM_READY",
+                    "validation_errors": errors,
+                    "agency": body.get("agency") or "NY Office of Unclaimed Funds (mock)",
+                    "form_hash": fh,
+                    "approved": False,
+                }
+            )
+            EVENTS.update_claim(
+                claim_id,
+                {
+                    "form_hash": fh,
+                    "next_action": "Resolve conflicts before approval" if errors else "Approve and submit form",
+                },
+            )
+            return 200, {"form": form, "ok": not errors, "errors": errors}
+
+        if path == "/api/forms/approve":
+            claim_id = body.get("claim_id")
+            form = EVENTS.get_form(claim_id)
+            if not form:
+                return 404, {"error": "form_not_found"}
+            objs = [FormField(**f) for f in form["fields"]]
+            errors = validate_fields(objs)
+            if errors:
+                return 400, {"error": "form_not_ready", "errors": errors}
+            if not body.get("approved"):
+                return 400, {"error": "authorization_required"}
+            fh = form_hash(objs)
+            result = EVENTS.transition_claim(
+                claim_id=claim_id,
+                to_status="USER_APPROVED",
+                actor="user",
+                evidence_kind=None,
+                source="user_approval",
+                note="Authorized representative approved immutable form snapshot",
+                claim_updates={"form_hash": fh, "next_action": "Submit to demo portal"},
+            )
+            form = EVENTS.save_form({**form, "approved": True, "form_hash": fh, "status": "USER_APPROVED"})
+            return 200, {"form": form, **result}
+
+        if path == "/api/claims/submit":
+            claim_id = body.get("claim_id")
+            claim = EVENTS.get_claim(claim_id)
+            form = EVENTS.get_form(claim_id)
+            if not claim or not form:
+                return 404, {"error": "claim_or_form_not_found"}
+            if claim["status"] != "USER_APPROVED":
+                return 409, {"error": f"Claim must be USER_APPROVED, got {claim['status']}"}
+            objs = [FormField(**f) for f in form["fields"]]
+            readback = {f.field: f.value for f in objs}
+            submitted = AGENT.tools.daytona_fill_and_submit(
+                approved_fields=[f.__dict__ for f in objs],
+                browser_readback=readback,
+                claim_id=claim_id,
+            )
+            if not submitted.get("ok"):
+                return 409, {"error": "readback_mismatch", "details": submitted}
+            confirmation_id = submitted["confirmation_id"]
+            EVENTS.transition_claim(
+                claim_id=claim_id,
+                to_status="SUBMITTED",
+                actor="user",
+                evidence_kind="submission",
+                source="daytona_mock_portal",
+                reference=confirmation_id,
+                note="Sandbox browser submitted approved form values",
+                payload={"submit_log": body.get("submit_log") or []},
+            )
+            result = EVENTS.transition_claim(
+                claim_id=claim_id,
+                to_status="CLAIM_RECEIVED",
+                actor="mock_portal",
+                evidence_kind="agency_receipt",
+                source="mock_ny_portal",
+                reference=confirmation_id,
+                note="Mock agency receipt recorded",
+                claim_updates={"confirmation_id": confirmation_id},
+            )
+            return 200, {"submission": submitted, **result, "bundle": _claim_bundle(claim_id)}
+
+        if path == "/api/claims/advance":
+            claim_id = body.get("claim_id")
+            claim = EVENTS.get_claim(claim_id)
+            if not claim:
+                return 404, {"error": "claim_not_found"}
+            action = body.get("action") or "agency"
+            status = claim["status"]
+
+            if action == "agency":
+                sequence = {
+                    "CLAIM_RECEIVED": ("PROCESSING", None, "Agency moved claim to processing"),
+                    "PROCESSING": ("APPROVED", "agency_approval", "Mock agency approval notice"),
+                    "APPROVED": ("PAYMENT_ISSUED", "agency_payment_issued", "Mock agency payment issued"),
+                }
+                if status == "CLAIM_RECEIVED" and body.get("reject"):
+                    result = EVENTS.transition_claim(
+                        claim_id=claim_id,
+                        to_status="REJECTED",
+                        actor="mock_agency",
+                        evidence_kind=None,
+                        source="mock_ny_portal",
+                        note=body.get("note") or "Identity documentation insufficient (demo rejection)",
+                    )
+                    return 200, result
+                if status == "CLAIM_RECEIVED" and body.get("needs_docs"):
+                    result = EVENTS.transition_claim(
+                        claim_id=claim_id,
+                        to_status="NEEDS_DOCS",
+                        actor="mock_agency",
+                        evidence_kind=None,
+                        source="mock_ny_portal",
+                        note=body.get("note") or "Agency requested authorization letter (demo)",
+                    )
+                    return 200, result
+                if status not in sequence:
+                    return 409, {"error": f"Cannot advance agency from {status}"}
+                to_status, evidence_kind, note = sequence[status]
+                result = EVENTS.transition_claim(
+                    claim_id=claim_id,
+                    to_status=to_status,
+                    actor="mock_agency",
+                    evidence_kind=evidence_kind,
+                    source="mock_ny_portal",
+                    reference=claim.get("confirmation_id"),
+                    note=note,
+                )
+                return 200, result
+
+            if action == "bank":
+                if status != "PAYMENT_ISSUED":
+                    return 409, {"error": "Bank confirmation requires PAYMENT_ISSUED"}
+                amount = claim.get("amount_cents") or 0
+                bank = AGENT.tools.match_bank_transaction(
+                    "acct_demo",
+                    amount_cents=amount,
+                    confirmation_id=claim.get("confirmation_id") or claim_id,
+                    emit_demo_deposit=True,
+                )
+                if not bank.get("matched"):
+                    return 409, {"error": "bank_not_matched", "details": bank}
+                result = EVENTS.transition_claim(
+                    claim_id=claim_id,
+                    to_status="PAYMENT_CONFIRMED",
+                    actor="mock_bank",
+                    evidence_kind="bank_deposit",
+                    source="synthetic_bank",
+                    reference=claim.get("confirmation_id"),
+                    note="Synthetic demo bank deposit matched",
+                    payload=bank,
+                )
+                return 200, {**result, "bank": bank}
+
+            if action == "stop":
+                result = EVENTS.transition_claim(
+                    claim_id=claim_id,
+                    to_status="STOPPED_BY_USER",
+                    actor="user",
+                    evidence_kind=None,
+                    source="ui",
+                    note="User stopped the claim",
+                )
+                return 200, result
+
+            if action == "resume_docs":
+                if status != "NEEDS_DOCS":
+                    return 409, {"error": "Claim is not NEEDS_DOCS"}
+                result = EVENTS.transition_claim(
+                    claim_id=claim_id,
+                    to_status="PROCESSING",
+                    actor="user",
+                    evidence_kind=None,
+                    source="ui",
+                    note="User provided requested documents (demo)",
+                )
+                return 200, result
+
+            return 400, {"error": f"Unknown action {action}"}
+
+        if path == "/api/events":
+            event = body
+            if event.get("from_status") and event.get("to_status"):
+                result = can_transition(event["from_status"], event["to_status"], event.get("evidence_kind"))
+                if not result.ok:
+                    return 409, {"error": result.error}
+            return 201, EVENTS.append_event(event)
+
+        if path == "/api/demo/reset":
+            seed = _load_seed()
+            payload = EVENTS.reset_demo(seed)
+            return 200, {"ok": True, "tracker": EVENTS.tracker(), "seed_meta": payload.get("meta")}
+
+        return 404, {"error": "not_found"}
+    except KeyError as exc:
+        return 404, {"error": str(exc)}
+    except FileNotFoundError as exc:
+        return 503, {"error": str(exc), "hint": "Configure provider/data file or use demo mode"}
+    except Exception as exc:  # local API must return useful UI errors
+        return 400, {"error": str(exc)}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "MoneyFinderLocal/1.0"
 
@@ -238,394 +622,33 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         path = parsed.path
-        query = parse_qs(parsed.query)
-
-        if path == "/api/health":
-            return self._json(
-                200,
-                {
-                    "ok": True,
-                    "money_source": "imported" if os.getenv("NY_UNCLAIMED_DATA_FILE") else "demo",
-                    "persistence": "json",
-                    "surreal_live": False,
-                },
-            )
-        if path == "/api/events":
-            claim_id = (query.get("claim_id") or [None])[0]
-            return self._json(200, EVENTS.events(claim_id))
-        if path == "/api/tracker":
-            return self._json(200, EVENTS.tracker())
-        if path == "/api/claims":
-            return self._json(200, {"claims": EVENTS.claims()})
-        if path.startswith("/api/claims/"):
-            claim_id = path.split("/api/claims/", 1)[1].strip("/")
-            try:
-                return self._json(200, _claim_bundle(claim_id))
-            except KeyError as exc:
-                return self._json(404, {"error": str(exc)})
+        if path.startswith("/api/"):
+            status, value = dispatch_api("GET", path, parse_qs(parsed.query), None)
+            return self._json(status, value)
         if path in ("/", "/index.html", "/domain.html"):
             return self._static(UI_ENTRY, "text/html; charset=utf-8")
-        if path == "/ui/legacy.html" and (UI_ROOT / "index.html").exists():
+        # Alternate Track landing (ui/index.html); /ui/legacy.html redirects conceptually to track-landing.
+        if path in ("/ui/track-landing.html", "/ui/legacy.html") and (UI_ROOT / "index.html").exists():
             return self._static(UI_ROOT / "index.html", "text/html; charset=utf-8")
         return self._json(404, {"error": "not_found"})
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
+        if not path.startswith("/api/"):
+            return self._json(404, {"error": "not_found"})
         try:
             body = self._body()
-
-            if path == "/api/research":
-                profile = research_domain(str(body.get("domain", "")).strip())
-                return self._json(200, profile)
-
-            if path == "/api/profile/review":
-                profile = body.get("profile") or {}
-                mapped = company_profile_to_search_profile(profile, consent=bool(body.get("consent")))
-                if not mapped["search_consent"]:
-                    return self._json(400, {"error": "consent_required"})
-                # Preserve explicit manual fields when provided.
-                if body.get("manual"):
-                    mapped.update({k: v for k, v in body["manual"].items() if v is not None})
-                    mapped["search_consent"] = True
-                saved = EVENTS.save_profile(mapped)
-                EVENTS.append_memory(
-                    {
-                        "claim_id": None,
-                        "kind": "profile_saved",
-                        "summary": f"Remembered business profile for {saved.get('legal_name')}",
-                        "reason": "User confirmed profile facts before search",
-                        "facts": {
-                            "legal_name": saved.get("legal_name"),
-                            "dbas": saved.get("dbas"),
-                            "addresses": saved.get("addresses"),
-                            "representative": saved.get("authorized_representative"),
-                        },
-                        "actor": "user",
-                        "source": "profile_review",
-                    }
-                )
-                return self._json(200, {"profile": saved})
-
-            if path == "/api/search":
-                profile = body.get("profile") or {}
-                hits = AGENT.build_and_search(profile)
-                return self._json(
-                    200,
-                    {
-                        "hits": hits,
-                        "source_mode": "imported" if os.getenv("NY_UNCLAIMED_DATA_FILE") else "demo_only",
-                        "agent": AGENT.explain_mode(),
-                    },
-                )
-
-            if path == "/api/claims":
-                profile = body.get("profile") or {}
-                hit = body.get("hit") or {}
-                claim = EVENTS.create_claim(
-                    {
-                        "business_name": profile.get("legal_name"),
-                        "business_id": profile.get("id"),
-                        "match_name": hit.get("found_name"),
-                        "property_type": hit.get("property_type"),
-                        "city": hit.get("city"),
-                        "zip": hit.get("zip"),
-                        "amount_cents": hit.get("amount_cents"),
-                        "confidence": hit.get("confidence"),
-                        "status": "MATCH_FOUND",
-                        "hit": hit,
-                        "profile": profile,
-                        "demo_only": True,
-                        "next_action": "Prepare claim form",
-                    }
-                )
-                EVENTS.append_memory(
-                    {
-                        "claim_id": claim["id"],
-                        "kind": "match_selected",
-                        "summary": f"Selected match {hit.get('found_name')}",
-                        "reason": ", ".join(hit.get("reasons") or []) or "User selected search hit",
-                        "actor": "user",
-                        "source": hit.get("source", "search"),
-                    }
-                )
-                return self._json(201, {"claim": claim})
-
-            if path == "/api/forms/prepare":
-                claim_id = body.get("claim_id")
-                claim = EVENTS.get_claim(claim_id)
-                if not claim:
-                    return self._json(404, {"error": "claim_not_found"})
-                profile = body.get("profile") or claim.get("profile") or {}
-                hit = body.get("hit") or claim.get("hit") or {}
-                prepared = AGENT.prepare(profile, hit)
-                fields = prepared["fields"]
-                form = EVENTS.save_form(
-                    {
-                        "claim_id": claim_id,
-                        "fields": fields,
-                        "status": "FORM_READY",
-                        "validation_errors": prepared["validation_errors"],
-                        "agency": "NY Office of Unclaimed Funds (mock)",
-                        "form_hash": None,
-                        "approved": False,
-                    }
-                )
-                EVENTS.update_claim(
-                    claim_id,
-                    {
-                        "status": "FORM_READY",
-                        "next_action": (
-                            "Resolve conflicts before approval"
-                            if prepared["validation_errors"]
-                            else "Approve and submit form"
-                        ),
-                    },
-                )
-                EVENTS.append_event(
-                    {
-                        "claim_id": claim_id,
-                        "from_status": "MATCH_FOUND",
-                        "to_status": "FORM_READY",
-                        "actor": "agent",
-                        "source": "form_prepare",
-                        "note": "Form prepared with provenance",
-                    }
-                )
-                EVENTS.append_memory(
-                    {
-                        "claim_id": claim_id,
-                        "kind": "form_prepared",
-                        "summary": "Prepared claim form with field provenance",
-                        "reason": (
-                            "Conflicts require confirmation"
-                            if prepared["validation_errors"]
-                            else "All required fields present"
-                        ),
-                        "validation_errors": prepared["validation_errors"],
-                        "actor": "agent",
-                        "source": "forms.provenance",
-                    }
-                )
-                return self._json(200, {"form": form, "claim": EVENTS.get_claim(claim_id)})
-
-            if path == "/api/forms/save":
-                claim_id = body.get("claim_id")
-                fields_raw = body.get("fields") or []
-                objs = [FormField(**f) for f in fields_raw]
-                errors = validate_fields(objs)
-                fh = form_hash(objs) if not errors else None
-                form = EVENTS.save_form(
-                    {
-                        "claim_id": claim_id,
-                        "fields": [f.__dict__ for f in objs],
-                        "status": "FORM_READY",
-                        "validation_errors": errors,
-                        "agency": body.get("agency") or "NY Office of Unclaimed Funds (mock)",
-                        "form_hash": fh,
-                        "approved": False,
-                    }
-                )
-                EVENTS.update_claim(
-                    claim_id,
-                    {
-                        "form_hash": fh,
-                        "next_action": "Resolve conflicts before approval" if errors else "Approve and submit form",
-                    },
-                )
-                return self._json(200, {"form": form, "ok": not errors, "errors": errors})
-
-            if path == "/api/forms/approve":
-                claim_id = body.get("claim_id")
-                form = EVENTS.get_form(claim_id)
-                if not form:
-                    return self._json(404, {"error": "form_not_found"})
-                objs = [FormField(**f) for f in form["fields"]]
-                errors = validate_fields(objs)
-                if errors:
-                    return self._json(400, {"error": "form_not_ready", "errors": errors})
-                if not body.get("approved"):
-                    return self._json(400, {"error": "authorization_required"})
-                fh = form_hash(objs)
-                result = EVENTS.transition_claim(
-                    claim_id=claim_id,
-                    to_status="USER_APPROVED",
-                    actor="user",
-                    evidence_kind=None,
-                    source="user_approval",
-                    note="Authorized representative approved immutable form snapshot",
-                    claim_updates={"form_hash": fh, "next_action": "Submit to demo portal"},
-                )
-                form = EVENTS.save_form({**form, "approved": True, "form_hash": fh, "status": "USER_APPROVED"})
-                return self._json(200, {"form": form, **result})
-
-            if path == "/api/claims/submit":
-                claim_id = body.get("claim_id")
-                claim = EVENTS.get_claim(claim_id)
-                form = EVENTS.get_form(claim_id)
-                if not claim or not form:
-                    return self._json(404, {"error": "claim_or_form_not_found"})
-                if claim["status"] != "USER_APPROVED":
-                    return self._json(409, {"error": f"Claim must be USER_APPROVED, got {claim['status']}"})
-                objs = [FormField(**f) for f in form["fields"]]
-                readback = {f.field: f.value for f in objs}
-                submitted = AGENT.tools.daytona_fill_and_submit(
-                    approved_fields=[f.__dict__ for f in objs],
-                    browser_readback=readback,
-                    claim_id=claim_id,
-                )
-                if not submitted.get("ok"):
-                    return self._json(409, {"error": "readback_mismatch", "details": submitted})
-                confirmation_id = submitted["confirmation_id"]
-                EVENTS.transition_claim(
-                    claim_id=claim_id,
-                    to_status="SUBMITTED",
-                    actor="user",
-                    evidence_kind="submission",
-                    source="daytona_mock_portal",
-                    reference=confirmation_id,
-                    note="Sandbox browser submitted approved form values",
-                    payload={"submit_log": body.get("submit_log") or []},
-                )
-                result = EVENTS.transition_claim(
-                    claim_id=claim_id,
-                    to_status="CLAIM_RECEIVED",
-                    actor="mock_portal",
-                    evidence_kind="agency_receipt",
-                    source="mock_ny_portal",
-                    reference=confirmation_id,
-                    note="Mock agency receipt recorded",
-                    claim_updates={"confirmation_id": confirmation_id},
-                )
-                return self._json(200, {"submission": submitted, **result, "bundle": _claim_bundle(claim_id)})
-
-            if path == "/api/claims/advance":
-                claim_id = body.get("claim_id")
-                claim = EVENTS.get_claim(claim_id)
-                if not claim:
-                    return self._json(404, {"error": "claim_not_found"})
-                action = body.get("action") or "agency"
-                status = claim["status"]
-
-                if action == "agency":
-                    sequence = {
-                        "CLAIM_RECEIVED": ("PROCESSING", None, "Agency moved claim to processing"),
-                        "PROCESSING": ("APPROVED", "agency_approval", "Mock agency approval notice"),
-                        "APPROVED": ("PAYMENT_ISSUED", "agency_payment_issued", "Mock agency payment issued"),
-                    }
-                    if status == "CLAIM_RECEIVED" and body.get("reject"):
-                        result = EVENTS.transition_claim(
-                            claim_id=claim_id,
-                            to_status="REJECTED",
-                            actor="mock_agency",
-                            evidence_kind=None,
-                            source="mock_ny_portal",
-                            note=body.get("note") or "Identity documentation insufficient (demo rejection)",
-                        )
-                        return self._json(200, result)
-                    if status == "CLAIM_RECEIVED" and body.get("needs_docs"):
-                        result = EVENTS.transition_claim(
-                            claim_id=claim_id,
-                            to_status="NEEDS_DOCS",
-                            actor="mock_agency",
-                            evidence_kind=None,
-                            source="mock_ny_portal",
-                            note=body.get("note") or "Agency requested authorization letter (demo)",
-                        )
-                        return self._json(200, result)
-                    if status not in sequence:
-                        return self._json(409, {"error": f"Cannot advance agency from {status}"})
-                    to_status, evidence_kind, note = sequence[status]
-                    result = EVENTS.transition_claim(
-                        claim_id=claim_id,
-                        to_status=to_status,
-                        actor="mock_agency",
-                        evidence_kind=evidence_kind,
-                        source="mock_ny_portal",
-                        reference=claim.get("confirmation_id"),
-                        note=note,
-                    )
-                    return self._json(200, result)
-
-                if action == "bank":
-                    if status != "PAYMENT_ISSUED":
-                        return self._json(409, {"error": "Bank confirmation requires PAYMENT_ISSUED"})
-                    amount = claim.get("amount_cents") or 0
-                    bank = AGENT.tools.match_bank_transaction(
-                        "acct_demo",
-                        amount_cents=amount,
-                        confirmation_id=claim.get("confirmation_id") or claim_id,
-                        emit_demo_deposit=True,
-                    )
-                    if not bank.get("matched"):
-                        return self._json(409, {"error": "bank_not_matched", "details": bank})
-                    result = EVENTS.transition_claim(
-                        claim_id=claim_id,
-                        to_status="PAYMENT_CONFIRMED",
-                        actor="mock_bank",
-                        evidence_kind="bank_deposit",
-                        source="synthetic_bank",
-                        reference=claim.get("confirmation_id"),
-                        note="Synthetic demo bank deposit matched",
-                        payload=bank,
-                    )
-                    return self._json(200, {**result, "bank": bank})
-
-                if action == "stop":
-                    result = EVENTS.transition_claim(
-                        claim_id=claim_id,
-                        to_status="STOPPED_BY_USER",
-                        actor="user",
-                        evidence_kind=None,
-                        source="ui",
-                        note="User stopped the claim",
-                    )
-                    return self._json(200, result)
-
-                if action == "resume_docs":
-                    if status != "NEEDS_DOCS":
-                        return self._json(409, {"error": "Claim is not NEEDS_DOCS"})
-                    result = EVENTS.transition_claim(
-                        claim_id=claim_id,
-                        to_status="PROCESSING",
-                        actor="user",
-                        evidence_kind=None,
-                        source="ui",
-                        note="User provided requested documents (demo)",
-                    )
-                    return self._json(200, result)
-
-                return self._json(400, {"error": f"Unknown action {action}"})
-
-            if path == "/api/events":
-                event = body
-                if event.get("from_status") and event.get("to_status"):
-                    result = can_transition(event["from_status"], event["to_status"], event.get("evidence_kind"))
-                    if not result.ok:
-                        return self._json(409, {"error": result.error})
-                return self._json(201, EVENTS.append_event(event))
-
-            if path == "/api/demo/reset":
-                seed = _load_seed()
-                payload = EVENTS.reset_demo(seed)
-                return self._json(200, {"ok": True, "tracker": EVENTS.tracker(), "seed_meta": payload.get("meta")})
-
-            return self._json(404, {"error": "not_found"})
-        except KeyError as exc:
-            return self._json(404, {"error": str(exc)})
-        except FileNotFoundError as exc:
-            return self._json(503, {"error": str(exc), "hint": "Configure provider/data file or use demo mode"})
-        except Exception as exc:  # local API must return useful UI errors
+        except Exception as exc:  # noqa: BLE001 — local API must return useful UI errors
             return self._json(400, {"error": str(exc)})
+        status, value = dispatch_api("POST", path, {}, body)
+        return self._json(status, value)
+
 
 
 def main() -> None:
-    # Ensure seeded demo exists for first run / empty state.
-    data_file = Path(os.environ.get("MONEYFINDER_EVENT_FILE", "data/moneyfinder-events.json"))
-    if not data_file.exists() or not json.loads(data_file.read_text() or "{}").get("claims"):
-        if SEED_PATH.exists():
-            EVENTS.reset_demo(_load_seed())
+    ensure_seeded()
     port = int(os.environ.get("PORT", "4173"))
-    print(f"MoneyFinder running at http://localhost:{port}")
+    print(f"MoneyFinder Track running at http://localhost:{port}")
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
 
 

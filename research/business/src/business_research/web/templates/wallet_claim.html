@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Claim · {{ claim.match_name or claim.id }}{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="eyebrow">Claim</p>
+  <h1>{{ claim.match_name or claim.business_name }}</h1>
+  <p class="muted">{{ claim.property_type }} · <span class="status">{{ claim.status }}</span></p>
+  <p class="actions-inline">
+    <a class="button" href="{{ url_for('wallet_form', business_id=conn.business_id, claim_id=claim.id) }}">Form review</a>
+    <a class="button" href="{{ url_for('wallet_tracker', business_id=conn.business_id) }}">Form jobs</a>
+    <a class="button" href="{{ url_for('wallet', business_id=conn.business_id) }}">Wallet</a>
+  </p>
+  <div class="stats">
+    <div><strong>
+      {% if claim.amount_cents is not none %}${{ '%.2f'|format(claim.amount_cents / 100) }}
+      {% else %}n/a{% endif %}
+    </strong><span>amount</span></div>
+    <div><strong>{{ claim.progress_pct or 0 }}%</strong><span>progress</span></div>
+    <div><strong>{{ 'Demo' if claim.demo_only else 'Live source' }}</strong><span>data mode</span></div>
+  </div>
+  <p class="small">Next: {{ claim.next_action }}</p>
+</section>
+
+<section class="card">
+  <h2>Timeline</h2>
+  {% if not events %}<p class="muted">No events yet.</p>{% endif %}
+  <ul class="timeline">
+    {% for e in events|reverse %}
+      <li>
+        <strong>{{ e.from_status or '—' }} → {{ e.to_status }}</strong>
+        <span class="muted small">{{ e.created_at }} · {{ e.actor }} · {{ e.source }}</span>
+        {% if e.note %}<p class="small">{{ e.note }}</p>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Evidence</h2>
+  {% if not evidence %}<p class="muted">No evidence yet. Browser fill records readback evidence without submitting.</p>{% endif %}
+  <ul class="timeline">
+    {% for e in evidence|reverse %}
+      <li><strong>{{ e.kind }}</strong> <span class="muted small">{{ e.source }} · {{ e.created_at }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Agent memory</h2>
+  {% for m in memory|reverse %}
+    <div class="mem">
+      <strong>{{ m.kind }}</strong>
+      <p class="small">{{ m.summary }}</p>
+      <p class="muted small">{{ m.reason }} · {{ m.created_at }}</p>
+    </div>
+  {% else %}
+    <p class="muted">No memory trail yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -10,7 +10,7 @@ Show a qualified **possible funds** counter and journey thermometer on the landi
 
 Value prop: research the business first, then search for possible unclaimed funds. Disclaimer: synthetic demo; not legal advice.
 
-Primary experience: `ui/domain.html` (served by `src.server`). Tracker dashboard, claim detail, rejection/needs-docs states, money-flow rails, and agent-memory trail are required screens.
+**Track** experience: `ui/domain.html` (via `/track/` on the Flask shell or `src.server`). Distinct from **Send** (green Gmail/Wallet). Tracker dashboard, claim detail, rejection/needs-docs states, money-flow rails, and agent-memory trail are required screens.
 
 ### 2. Business research progress
 
