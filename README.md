@@ -12,6 +12,13 @@
 Built for small and medium-sized businesses (New York first) that don't have a tax team watching for credits, not for
 large companies that already pay tax professionals to do this.
 
+## Agent composer (prototype)
+
+A conversational front end for the pipeline lives in [`ui/composer/`](ui/composer/README.md): composer,
+agent activity stream, approval gates and citations, proxied to two backend routes
+(`POST /api/agent/turn`, `POST /api/agent/approve`). Run it with `make composer` (port 3100)
+while the MoneyFinder app runs on :8000. Design and contract: [`docs/agent-composer-plan.md`](docs/agent-composer-plan.md).
+
 ## MVP demo
 
 ```bash

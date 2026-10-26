@@ -168,3 +168,10 @@ kb-ping: ## Check the SurrealDB connection (root .env: SurrealDB Cloud; kb/.env 
 
 kb-test: ## kb tests (in-process SurrealDB, no server needed)
 	cd kb && uv run pytest -q
+
+# Agent composer prototype (ui/composer) on :3100; needs the app on :8000.
+.PHONY: composer composer-install
+composer-install:
+	cd ui/composer && npm install
+composer:
+	cd ui/composer && MONEYFINDER_API_URL=http://127.0.0.1:8000 npm run dev
