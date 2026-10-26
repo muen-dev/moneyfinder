@@ -1,0 +1,28 @@
+# Reviewers per path. Keep in sync with docs/TEAM.md.
+# Three founders: Thuy (@thuyqpham), Richard (@thetradingdoc), Kenan (@kenwon22).
+
+*                                        @thuyqpham
+
+# Design, docs, research and data
+/docs/                                   @thuyqpham
+/research/                               @thuyqpham
+/ui/                                     @kenwon22 @thuyqpham
+/mock_portal/                            @kenwon22
+/ui/composer/                            @kenwon22
+
+# Product surface: the Flask app (shell + templates live inside research/business)
+/research/business/src/business_research/web/   @kenwon22 @thuyqpham
+
+# Agent, pipeline, contracts, persistence, infra
+/src/                                    @thetradingdoc
+/contracts/                              @thetradingdoc
+/schemas/                                @thetradingdoc
+/evals/                                  @thetradingdoc
+/fixtures/                               @thetradingdoc
+/Makefile                                @thetradingdoc
+/Dockerfile                              @thetradingdoc
+/.github/                                @thuyqpham
+
+# Money semantics: both must review
+/docs/MONEY_PATH.md                      @thuyqpham @thetradingdoc
+/docs/STATUS_MODEL.md                    @thuyqpham @thetradingdoc

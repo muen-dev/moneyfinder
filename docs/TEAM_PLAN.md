@@ -1,5 +1,10 @@
 # MONEY TALKS 2 — 3-Person Parallel Build Plan (v2 — merged PRD)
 
+> **Historical — hackathon-era plan, kept as a record.** It is not the current way we work. For who owns
+> what now see [`TEAM.md`](TEAM.md); for what we build next see [`ROADMAP.md`](ROADMAP.md); for the
+> single-repo decision see [`CONSOLIDATION.md`](CONSOLIDATION.md). The 13:00 gate and the "staleness
+> warning" below are closed; Kenan is `@kenwon22` and owns the app UI.
+
 **Scope of record:** [`MONEY_TALKS_2_MASTER.md`](MONEY_TALKS_2_MASTER.md) · **Interface:** [`CONTRACT.md`](CONTRACT.md)
 **Event:** Saturday, October 17, 2026 · Track: **Money Operations** · **Freeze: 16:15** (`demo-freeze`)
 **Repo:** https://github.com/muen-dev/moneyfinder (`origin`) · `upstream` = thetradingdoc/moneyfinder

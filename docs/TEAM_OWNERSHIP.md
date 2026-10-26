@@ -1,5 +1,9 @@
 # Team ownership (4 developers)
 
+> **Superseded by [`TEAM.md`](TEAM.md).** This file describes four abstract seats (A–D) from the
+> hackathon build; the team is three founders with real handles now. Kept because the handoff rules
+> below still hold.
+
 | Seat | Focus | Suggested branches | Owns in repo |
 |------|-------|--------------------|--------------|
 | A | AWS Bedrock agent + tools | `feature/agent-*` | `src/agent/` |

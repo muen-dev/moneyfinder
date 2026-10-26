@@ -109,6 +109,12 @@ open mock_portal/index.html
 
 **Send** is the green Gmail/Wallet shell (`make demo`). **Track** is the blue claim-path UI: research/onboarding → matches → conflict-gated forms → sandbox submit → dashboard tracker → agency vs bank evidence → agent-memory trail. Demo state is JSON-backed (`data/moneyfinder-events.json`) and Surreal-ready.
 
+## Working on this repo
+
+Three founders, one repo. Who owns what: [docs/TEAM.md](docs/TEAM.md). Branch, commit and review rules:
+[CONTRIBUTING.md](CONTRIBUTING.md). What ships next: [docs/ROADMAP.md](docs/ROADMAP.md). Why
+`hackathon-lab` is archived and how its screens moved here: [docs/CONSOLIDATION.md](docs/CONSOLIDATION.md).
+
 ## Architecture
 
 See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), plus:
@@ -120,6 +126,10 @@ See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), plus:
 - [docs/MONEY_PATH.md](docs/MONEY_PATH.md)
 - [docs/AGENT_ARCHITECTURE.md](docs/AGENT_ARCHITECTURE.md)
 - [docs/UI_SPEC.md](docs/UI_SPEC.md)
+- [docs/DESIGN.md](docs/DESIGN.md) — visual spec: the two design systems, tokens, components, one-pager order
+- [docs/TEAM.md](docs/TEAM.md) — three founders, lanes, decision rights
+- [docs/ROADMAP.md](docs/ROADMAP.md) — demo → real product, with done tests
+- [docs/CONSOLIDATION.md](docs/CONSOLIDATION.md) — one repo, hackathon-lab retirement
 - [docs/NY_DATA_IMPORT.md](docs/NY_DATA_IMPORT.md)
 
 ```text
